@@ -129,16 +129,16 @@ We show that our system has similar performance to other flow-based anomaly dete
 However, for practical use, high accuracy is not enough. With the recent rise of interest in \gls{aml} techniques, also \gls{aml} for \glspl{ids} has been investigated. For example, \cite{bachl_walling_2019} investigates remedies for poisoning attacks on \glspl{ids}.
 In this research, we investigate whether adversarial samples can be found for our \gls{rnn}-based model, i.e. minimally different attack flows which are classified as benign. This is not a trivially answerable question since adversarial samples have mostly been analyzed in the context of computer vision. Our scenario significantly deviates from this in several ways because \begin{enumerate*}
 \item the number of features is significantly smaller and
-\item only certain features can be manipulated by an adversary (for example the destination port cannot be manipulated)
-\end{enumerate*}.
+\item only certain features can be manipulated by an adversary. % (for example the destination port cannot be manipulated)
+\end{enumerate*}
 
 Surprisingly, we can confirm that adversarial samples can be found even when considering these tight constraints. % mentioned before.
 Thus, we argue that traditional methods like, e.g., accuracy are not sufficient for evaluating security-sensitive \gls{ml} systems.
 We propose the \acrfull{ars} as a new performance score, which precisely captures the notion of how easily an adversary can generate adversarial samples.
 
-Due to the threat of adversarial attacks, a further crucial requirement for \gls{ml}-based \glspl{ids} is that the classifier's decisions are interpretable by humans. This recently stirred up increased interest in explainability methods. Also in this case, common methods are designed to work with images or tabular data but not with sequences. Hence, we extend existing explainability methods such as \glspl{pdp} \cite{friedman_greedy_2001} for sequential data. %These show the varying characteristics of different attacks and they aid with visualizing potentially vulnerable features for adversaries.
+Due to the threat of adversarial attacks, a further crucial requirement for \gls{ml}-based \glspl{ids} is that the classifier's decisions are interpretable by humans. This recently stirred up increased interest in explainability methods. Also in this case, common methods are designed to work with images or tabular data, but not with sequences. Hence, we extend existing explainability methods such as \glspl{pdp} \cite{friedman_greedy_2001} for sequential data. %These show the varying characteristics of different attacks and they aid with visualizing potentially vulnerable features for adversaries.
 Astonishingly, feature importance methods reveal that
-features manipulable for adversarial flows,
+features, manipulated for successful adversarial flows,
 %the that are manipulable features, that are left for modification by adversaries
 are not even particularly important for the \gls{rnn}'s classification outcome. %Especially the first packets of a flow are critical for determining the decision of a recurrent \gls{ids}.
 
@@ -332,8 +332,9 @@ and we can confirm the recommendation by \cite{carlini_towards_2017} to perform 
 %\autoref{fig:adv_cw} depicts the ratio of attack flows which were successfully misclassified as benign with respect to the final packet along with the resulting distance from the original sample.
 Evidently, the larger $c$, the better the attack works, but also distances from original flows become higher. With acceptable distances, we were able to generate adversarial samples for about 80\% of attack samples.
 
-Note, however, that for successful adversarial samples, the second term in \autoref{eq:carliniWagner} becomes constant and, hence, is no longer relevant for optimization. Hence, $c$ is irrelevant for the achieved distance, but governs if for one sample an adversarial sample is found.
-However, to avoid overly large steps when using a large $c$ in \autoref{eq:carliniWagner}, it is necessary to reduce the gradient descent learning rate. Since the distance term is not affected by $c$, it is furthermore necessary to scale the iteration count inversely with the learning rate. \gls{cw} with a large $c$ therefore needs more time than with a small $c$.
+%Note, however, that f
+For successful adversarial samples, the second term in \autoref{eq:carliniWagner} becomes constant and, hence, is no longer relevant for optimization. Hence, $c$ is irrelevant for the achieved distance, but governs if for one sample an adversarial sample is found.
+However, when using a large $c$ in \autoref{eq:carliniWagner}, to avoid overly large steps that impede convergence, it is necessary to reduce the gradient descent learning rate. Since the distance term is not affected by $c$, it is furthermore necessary to scale the iteration count inversely with the learning rate. \gls{cw} with a large $c$ therefore needs more time than with a small $c$.
 
 
 % The figure suggests that a tradeoff value between 0.5 and 1 would be ideal to find adversarial samples with a low enough distance from real samples.
@@ -394,7 +395,7 @@ If we, for example, consider a classification problem as in this document, we ex
 \textbf{Multiple prediction outputs.}
 Often an \gls{rnn} produces an output at each time step. When  applying explainability methods, the question arises which output to consider for the method. The natural choice is to base the methods on the prediction output which occurs at the same time step as the feature under investigation. Not only does this approach require a substantially lower amount of computational resources compared to predictions occurring at a later time step, but we also expect the immediately occurring prediction outcome to exhibit a stronger dependence of the investigated feature, compared to a prediction outcome occurring many time steps later.
 However, due to the complex decision processes of deep neural networks,
-this does not hold true and a feature might influence a decision many time steps later.
+this does not always hold true and a feature might influence a decision many time steps later.
 \end{itemize}
 
 Many explainability methods proposed recently are local and thus provide explanations for a particular data sample \cite{shapley_value_1953,lundberg_unified_2017,dhurandhar_model_2018,ribeiro_why_2016}. However, for the particular problem of network traffic, due to the high number of flows and the characteristics of data, analyzing individual samples is of low interest. Explainability methods presented in this paper therefore aim to understand a model by analyzing which features are important, at which time step they are important and which feature values lead to classification as attack.
@@ -637,10 +638,10 @@ We now propose two approaches to increase robustness of the \gls{rnn} against ad
 The most obvious defence, which is only possible because of the nature of the dataset, is to simply omitting features an attacker can manipulate. We try two different approaches:
 \begin{itemize}[topsep=0pt,wide,labelwidth=!,labelindent=0pt]
 \item Leaving out all manipulable features: packet size and \gls{iat}
-\item Leaving out manipulable features when the attacker can manipulate them: only in the direction from the attacker to the victim (This, however does not prevent adversarial samples for botnets, for which both sides are malicious)
+\item Leaving out manipulable features only when the attacker can manipulate them, i.e. only in the direction from the attacker to the victim. This, however, does not prevent adversarial samples for botnets, for which both sides are malicious.
 \end{itemize}
 
-Both approaches lead to complete resistance to adversarial samples (as we left out all manipulable features), except for botnets, which can still operate when only leaving out manipulable features in one direction. The results show that -- surprisingly -- there is only a small difference in classification performance when only computing the accuracy for the last packet of each flow (flow accuracy): Flow accuracy stays over 99.93\%. However, packet accuracy is only 98\% when leaving out the features in one direction and 96.7\% when leaving them out in both directions, Thus, apparently the \gls{iat} and packet size are especially important for determining whether a flow is malicious in the first packets of a flow.
+Both approaches lead to complete resistance to adversarial samples (as we left out all manipulable features), except for botnets, which can still operate when only leaving out manipulable features in one direction. The results show that -- surprisingly -- there is only a small difference in classification performance when only computing the accuracy for the last packet of each flow (flow accuracy): Flow accuracy stays over 99.93\%. However, packet accuracy is only 98\% when leaving out the features in one direction and 96.7\% when leaving them out in both directions. Thus, apparently the \gls{iat} and packet size are especially important for determining whether a flow is malicious in the first packets of a flow.
 
 \subsection{Adversarial training}
 As alternative to omitting manipulable features, we attempted to make the classifier more robust against adversarial samples by augmenting the training set by adversarial flows generated using  \gls{cw}, labeled as additional attacks.
