@@ -49,7 +49,7 @@
 %%
 %% The "title" command has an optional parameter,
 %% allowing the author to define a "short title" to be used in page headers.
-\title{An in-depth study of Explainability and Adversarial Robustness for RNNs}
+\title{Explainability and Adversarial Robustness for RNNs}
 
 \author{\IEEEauthorblockN{Alexander Hartl,
 Maximilian Bachl, Joachim Fabini, Tanja Zseby}
@@ -268,7 +268,7 @@ Youden	&	97.2\%	&	99.0\%	&	87.3\%	&	71.9\%	\\
 \label{sec:adv}
 We now investigate whether known \gls{aml} methods can be used for generating adversarial flows for our \gls{rnn}. \cite{hashemi_towards_2019} previously studied the behavior of several Network \glspl{ids} under adversarial attacks but unlike us did not investigate \glspl{rnn}.
 
-A network packet contains significantly less features than, e.g., an image and, furthermore, most features such as \gls{tcp} flags cannot be easily manipulated, as their manipulation might violate the protocol specifications and thus cause communication to fail. We identify the packet length and the \gls{iat} as features which are most likely to be exploited, but even these features cannot be manipulated freely. Beside the non-negativity constraint,  there are also more problem-specific constraints:
+A network packet contains significantly less features than, e.g., an image and, furthermore, most features such as \gls{tcp} flags cannot be easily manipulated, as their manipulation might violate the protocol specifications and thus cause communication to fail. We identify the packet length and the \gls{iat} as features which are most likely to be exploited and thus choose them to be modified by adversary. But even these features cannot be manipulated freely. Beside the non-negativity constraint,  there are also more problem-specific constraints:
 \begin{itemize}[topsep=0pt,wide,labelwidth=!,labelindent=0pt]
 \item Only packets can be manipulated which are transmitted by the attacker.
 Except for botnet and backdoor traffic, which is entirely controlled by an attacker, thus only packets travelling in one direction can be manipulated.
@@ -352,15 +352,14 @@ However, when using a large $c$ in \autoref{eq:carliniWagner}, to avoid overly l
 \section{Adversarial Robustness Metric}
 
 As \autoref{fig:adv_per_family} shows, for most attack types, most samples can be modified by an adversary to be classified as benign by using \gls{cw}. High accuracy for a particular attack category does not imply that adversarial attacks are  likely to fail for these attacks. Thus we argue that beside the classical metrics such as accuracy, false positives etc., a new metric is needed, which quantifies how easily an \gls{ids} classifier can be fooled.
-Such a metric should be easy to compute, easy to interpret and robust with respect to outliers. We thus propose the \gls{ars} as the average distance of the adversarial samples to the original samples for the 50\% of the samples which an adversary could successfully modified and which have the smallest distances. Since \gls{cw} is able to find adversarial samples with minimum distance, it can be used for finding the \gls{ars} efficiently. 
+Such a metric should be easy to compute, easy to interpret and robust with respect to outliers. We consider an adversary successful if they manage more than 50\% of all samples to be misclassified. In this case, the \gls{ars} is the average of the distances of the adversarial samples to the original samples for the 50\% of all samples which have the smallest distances. If the adversary doesn't manage to manipulate more than 50\% then the \gls{ars} is $\infty$. Since \gls{cw} is able to find adversarial samples with minimum distance, it can be used for finding the \gls{ars} efficiently. 
 
 Since \gls{cw} becomes slow for large $c$, the \gls{ars} can be efficiently found as follows: Use \gls{cw} with a small tradeoff, trying to generate adversarial samples for an attack type. If, of a total of $N$ samples,
  more than $N/2$  are wrongly classified, and
- the smallest distance of non-adversarial samples is not smaller than  the $\lceil\frac{N}{2}\rceil$th smallest distance of adversarial samples,
-stop. Otherwise increase $c$ and repeat. If after a predefined number of iterations -- e.g. 100 -- still not more than half of the samples are adversarial, also break.
+ the smallest distance of non-adversarial samples is not smaller than the $\lceil\frac{N}{2}\rceil$th smallest distance of adversarial samples,
+stop and compute the \gls{ars}. Otherwise increase $c$ and repeat. If after a predefined number of iterations -- e.g. 100 -- still not more than half of the samples are adversarial, also break and set the \gls{ars} to $\infty$.
 
-
-The result is a number of adversarial samples and some that could not be made adversarial. If at least half of the samples are misclassified, we sort the adversarial samples by ascending distance to the original samples. Then we take samples by ascending distance until we took 50\% of all samples. Of these samples, the distance of each adversarial sample to the original sample is taken and averaged, resulting in the \gls{ars}. The larger it is the better since then an adversary needs to modify the samples more to make them adversarial. If not more than half of the samples could be made adversarial, our metric is $\infty$ since then apparently it is not possible for an adversary to reliably conduct adversarial attacks on the majority of samples. Then the ratio of samples that could be made adversarial ($<$50\%) can be a useful metric to determine the exact extent of the adversarial threat. Setting the threshold for the \gls{ars} to 50\% is arbitrary, but
+The larger the \gls{ars} is the better since then an adversary needs to modify the samples more to make them adversarial. If not more than half of the samples could be made adversarial, our metric is $\infty$ since then apparently it is not possible for an adversary to reliably conduct adversarial attacks on the majority of samples. Then the ratio of samples that could be made adversarial ($<$50\%) can be a useful metric to determine the exact extent of the adversarial threat. Setting the threshold for the \gls{ars} to 50\% is arbitrary, but
  % reasonable as this way the \gls{ars} approximates the median of the distances of all samples and, additionally, marks the distance where an adversarial attack is more likely to be successful than unsuccessful.
  reasonable as outliers with very large distances are ignored and if an attacker can make the majority of samples adversarial, we think that its attack is ``successful''.
 %we think that it is reasonable since if an attacker can make the majority of samples adversarial, we think that its attack is ``successful''.
