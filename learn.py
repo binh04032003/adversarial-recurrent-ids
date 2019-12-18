@@ -1156,7 +1156,6 @@ def adv_until_less_than_half():
 	MAX = 10
 	SCALING = 0.5
 	THRESHOLD = 0.5
-	# FIXME: Max: I guess it should be < THRESHOLD not <= THRESHOLD as it is currently in the code
 	i = 0
 	prev_results = []
 	prev_flows = []
@@ -1167,19 +1166,47 @@ def adv_until_less_than_half():
 	tradeoff = 0
 	lr = opt.lr
 	iterations = 1
+
 	while True:
 		results_dict = list(adv_internal(False, tradeoff, lr, iterations, next_filter))[0]
 		modified_flows_by_attack, modified_results_by_attack, original_flows_by_attack, original_results_by_attack = results_dict["modified_flows_by_attack_number"], results_dict["results_by_attack_number"], results_dict["orig_flows_by_attack_number"], results_dict["orig_results_by_attack_number"]
 		ratio_modified_by_attack_number = np.array([np.mean(np.round(numpy_sigmoid(np.array([item[-1] for item in modified_results])))) if len(modified_results)>0 else -float("inf") for modified_results in modified_results_by_attack])
-		next_filter = [index for index, item in enumerate(ratio_modified_by_attack_number) if item <= THRESHOLD or (len(prev_ratios) > 0 and prev_ratios[-1][index] <= THRESHOLD)]
 		if i==0:
 			orig_results = original_results_by_attack
 			orig_flows = original_flows_by_attack
+			distances_packets = [None]*len(orig_results)
+			min_non_adv_distance = [None]*len(orig_results)
+			max_distance_packets = [None]*len(orig_results)
+			distances_flows = [None]*len(orig_results)
+			max_distance_flows = [None]*len(orig_results)
+			final_ratios = [None]*len(orig_results)
 		prev_results.append(modified_results_by_attack)
 		prev_flows.append(modified_flows_by_attack)
 		prev_ratios.append(ratio_modified_by_attack_number)
+		
+		for attack_index, ratio in enumerate(prev_ratios[i]):
+			if ratio > -float("inf"):
+				print(f"Looking at attack {attack_index} with a ratio of {ratio}")
+				final_ratios[attack_index] = ratio
+
+				successfully_changed_flows_mask = (np.round(numpy_sigmoid(np.array([item[-1] for item in prev_results[i][attack_index]]))) == 0).flatten()
+				# guess it makes sense to use the same distance metric as in training
+				distances = np.array([np.linalg.norm((orig_flows[attack_index][flow_index]-flow).flatten(), ord=opt.order) for flow_index, flow in enumerate(prev_flows[i][attack_index])])
+				argsorted_distances = np.argsort(distances)
+				correct_indices = argsorted_distances[successfully_changed_flows_mask[argsorted_distances]]
+				lower_part = correct_indices[:int(math.ceil(len(distances)*min(1-ratio, THRESHOLD)))]
+				first_unsuccessful = None if successfully_changed_flows_mask.all() else argsorted_distances[np.argmax(~successfully_changed_flows_mask[argsorted_distances])]
+
+				distances_per_packet = [dist/len(flow) for dist, flow in zip(distances[lower_part], prev_flows[i][attack_index])]
+				distances_flows[attack_index] = float(np.mean(distances[lower_part]) if len(lower_part) else np.nan)
+				min_non_adv_distance[attack_index] = float(np.inf if first_unsuccessful is None else distances[first_unsuccessful])
+				max_distance_flows[attack_index] = float(distances[lower_part[-1]] if len(lower_part) else np.nan)
+				distances_packets[attack_index] = float(np.mean(distances_per_packet) if len(distances_per_packet) else np.nan)
+				max_distance_packets[attack_index] = float(distances_per_packet[-1] if len(distances_per_packet) else np.nan)
+				
+		next_filter = [index for index, item in enumerate(ratio_modified_by_attack_number) if item < THRESHOLD and (item==-np.inf or opt.skipArsDistanceCheck or min_non_adv_distance[index] >= max_distance_flows[index]) ]
 		print("i", i, "ratios", ratio_modified_by_attack_number)
-		if i+1==MAX or (ratio_modified_by_attack_number <= THRESHOLD).all() or (len(prev_ratios) > 1 and (prev_ratios[-2] <= prev_ratios[-1]).all()):
+		if i+1==MAX or len(next_filter) == len(orig_results) or (len(prev_ratios) > 1 and (prev_ratios[-2] <= prev_ratios[-1]).all()):
 			break
 		i += 1
 		# linear steps
@@ -1194,34 +1221,9 @@ def adv_until_less_than_half():
 		# issues. However, since the distance is not affected by the tradeoff,
 		# the iteration count has to be increased with a higher tradeoff.
 		lr = opt.lr/tradeoff
-		iterations = int(opt.iterationCount * tradeoff) # TODO: change default iterationCount
+		iterations = int(opt.iterationCount * tradeoff)
 
 	reverse_mapping = {v: k for k, v in mapping.items()}
-	distances_packets = [None]*len(orig_results)
-	max_distance_packets = [None]*len(orig_results)
-	distances_flows = [None]*len(orig_results)
-	max_distance_flows = [None]*len(orig_results)
-	final_ratios = [None]*len(orig_results)
-	for i in range(len(prev_results)):
-		print(f"Looking at {i}th run")
-		for attack_index, ratio in enumerate(prev_ratios[i]):
-			if ratio > -float("inf"):
-				print(f"Looking at attack {attack_index} with a ratio of {ratio}")
-				final_ratios[attack_index] = ratio
-
-				successfully_changed_flows_mask = (np.round(numpy_sigmoid(np.array([item[-1] for item in prev_results[i][attack_index]]))) == 0).flatten()
-				# TODO: l1 or l2 norm?
-				# guess it makes sense to use the same distance metric as in training
-				distances = np.array([np.linalg.norm((orig_flows[attack_index][flow_index]-flow).flatten(), ord=opt.order) for flow_index, flow in enumerate(prev_flows[i][attack_index])])
-				argsorted_distances = np.argsort(distances)
-				correct_indices = argsorted_distances[successfully_changed_flows_mask[argsorted_distances]]
-				lower_part = correct_indices[:int(math.ceil(len(distances)*min(1-ratio, THRESHOLD)))]
-
-				distances_per_packet = [dist/len(flow) for dist, flow in zip(distances[lower_part], prev_flows[i][attack_index])]
-				distances_flows[attack_index] = float(np.mean(distances[lower_part]) if len(lower_part)>0 else np.nan)
-				max_distance_flows[attack_index] = float(distances[lower_part[-1]] if len(lower_part)>0 else np.nan)
-				distances_packets[attack_index] = float(np.mean(distances_per_packet) if len(distances_per_packet)>0 else np.nan)
-				max_distance_packets[attack_index] = float(distances_per_packet[-1] if len(distances_per_packet)>0 else np.nan)
 
 	for attack_index in range(len(distances_packets)):
 		if len(orig_results[attack_index]) <= 0:
@@ -1231,10 +1233,10 @@ def adv_until_less_than_half():
 			"ratio", final_ratios[attack_index],
 			"flow_accuracy", np.mean(np.round(numpy_sigmoid(np.array([item[-1] for item in orig_results[attack_index]])))),
 			"packet_accuracy", np.mean(np.round(numpy_sigmoid(np.array([sublist for l in orig_results[attack_index] for sublist in l])))),
-			"flow_distance", distances_flows[attack_index] if final_ratios[attack_index] <= THRESHOLD else 0,
-			"packet_distance", distances_packets[attack_index] if final_ratios[attack_index] <= THRESHOLD else 0,
-			"max_flow_distance", max_distance_flows[attack_index] if final_ratios[attack_index] <= THRESHOLD else 0,
-			"max_packet_distance", max_distance_packets[attack_index] if final_ratios[attack_index] <= THRESHOLD else 0
+			"flow_distance", distances_flows[attack_index] if ratio < THRESHOLD else np.inf,
+			"packet_distance", distances_packets[attack_index] if ratio < THRESHOLD else np.inf,
+			"max_flow_distance", max_distance_flows[attack_index] if ratio < THRESHOLD else np.inf,
+			"max_packet_distance", max_distance_packets[attack_index] if ratio < THRESHOLD else np.inf
 		)
 
 def eval_nn(data):
@@ -1575,6 +1577,7 @@ if __name__=="__main__":
 	parser.add_argument('--hidden_size', type=int, default=512, help='number of neurons per layer')
 	parser.add_argument('--n_layers', type=int, default=3, help='number of LSTM layers')
 	parser.add_argument('--adjustFeatImpDistribution', action='store_true', help='adjust randomization feature importance distributions to a practically relevant shape')
+	parser.add_argument('--skipArsDistanceCheck', action='store_true', help='stop ARS computation as soon as 50% theshold is reached')
 
 	# parser.add_argument('--nSamples', type=int, default=1, help='number of items to sample for the feature importance metric')
 
