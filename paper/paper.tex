@@ -351,10 +351,24 @@ However, when using a large $c$ in \autoref{eq:carliniWagner}, to avoid overly l
 
 \section{Adversarial Robustness Metric}
 
-As \autoref{fig:adv_per_family} shows, for most attack types, most samples can be modified by an adversary to be classified as benign by using \gls{cw}. High accuracy for a particular attack category does not imply that adversarial attacks are  likely to fail for these attacks. Thus we argue that beside the classical metrics such as accuracy, false positives etc., a new metric is needed, which quantifies how easily an \gls{ids} classifier can be fooled.
-Such a metric should be easy to compute, easy to interpret and robust with respect to outliers. We consider an adversary successful if they manage more than 50\% of all samples to be misclassified. In this case, the \gls{ars} is the average of the distances of the adversarial samples to the original samples for the 50\% of all samples which have the smallest distances. If the adversary doesn't manage to manipulate more than 50\% then the \gls{ars} is $\infty$. Since \gls{cw} is able to find adversarial samples with minimum distance, it can be used for finding the \gls{ars} efficiently. 
+As \autoref{fig:adv_per_family} shows, for most attack types, most samples can be modified by an adversary to be classified as benign by using \gls{cw}. High accuracy for a particular attack category does not imply that adversarial attacks are  likely to fail for these attacks. Thus we argue that beside the classical metrics such as accuracy, false positives etc., a metric is needed, which quantifies how easily an \gls{ids} classifier can be fooled.
 
-Since \gls{cw} becomes slow for large $c$, the \gls{ars} can be efficiently found as follows: Use \gls{cw} with a small tradeoff, trying to generate adversarial samples for an attack type. If, of a total of $N$ samples,
+Such a metric should be easy to compute and easy to interpret.
+While in general, adversarial robustness for \gls{ml} models is frequently quantified as the average or median of minimum distances of adversarial samples \cite{carlini_evaluating_2019}, we found no generally agreed-upon metric for \glspl{ids} in the literature. If we consider flows, for which no adversarial sample can be found, to have infinite distance, the median has the advantage of ignoring such unsuccessful samples and outliers. On the other hand, the median might depict expected distances badly if they have a very uneven distribution. 
+We propose the \gls{ars} as 
+\begin{equation}
+% \text{ARS} = \text{mean}(\{d \in \mathcal D \mid d < Q_{0.5}(\mathcal D)\}),
+\text{ARS} = \frac{1}{\lfloor N/2 \rfloor} \sum\nolimits_{d \in \{d \in \mathcal D \mid d < Q_{0.5}(\mathcal D)\}} d,
+\end{equation}
+denoting by $Q_{0.5}(\cdot)$ the median, by $N = | \mathcal D | \in \mathbb N$ the total number of samples and by $\mathcal D$ the set of distances of adversarial flows from original flows, assigning unsuccessful samples a distance of $\infty$. 
+The \gls{ars} is thus the average of distances smaller than the median distance.
+
+%Such a metric should be easy to compute, easy to interpret and robust with respect to outliers.
+We consider an adversary successful if they manage more than 50\% of all samples to be misclassified. In this case, the \gls{ars} is the average of the distances of the adversarial samples to the original samples for the 50\% of all samples which have the smallest distances. If the adversary doesn't manage to manipulate more than 50\% then the \gls{ars} is $\infty$.
+
+\gls{cw} is able to find adversarial samples with minimum distance, but becomes slow for large $c$. Hence, it can be used for finding the \gls{ars} efficiently as follows: 
+%Since \gls{cw} becomes slow for large $c$, the \gls{ars} can be efficiently found as follows:
+Use \gls{cw} with a small tradeoff, trying to generate adversarial samples for an attack type. If %, of a total of $N$ samples,
  more than $N/2$  are wrongly classified, and
  the smallest distance of non-adversarial samples is not smaller than the $\lceil\frac{N}{2}\rceil$th smallest distance of adversarial samples,
 stop and compute the \gls{ars}. Otherwise increase $c$ and repeat. If after a predefined number of iterations -- e.g. 100 -- still not more than half of the samples are adversarial, also break and set the \gls{ars} to $\infty$.
