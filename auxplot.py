@@ -152,7 +152,7 @@ def adv():
 	plt.figure(figsize=(5,2))
 	x_values = [ float(value) for value in group_names ]
 	lines = plt.plot(x_values, values[:,:2])
-	plt.xlabel('Tradeoff $c$')
+	plt.xlabel('Tradeoff $\kappa$')
 	plt.ylabel('Success ratio')
 	plt.gca().set_ylabel_legend(Line2D([0],[0], color='gray'), handlelength=1.4)
 	plt.twinx()
