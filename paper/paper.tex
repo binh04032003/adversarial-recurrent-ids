@@ -83,7 +83,6 @@ firstname.lastname@tuwien.ac.at}}
 \newacronym{ttl}{TTL}{Time-to-Live}
 \newacronym{dos}{DoS}{Denial-of-Service}
 \newacronym{iat}{IAT}{Interarrival time}
-\newacronym{tcp}{TCP}{Transmission control protocol}
 
 \begin{abstract}
 
@@ -125,9 +124,9 @@ When analyzing flows, not only the aforementioned features are available but als
 Various approaches have been proposed to extract features from flows and then perform anomaly detection with the extracted flows \cite{meghdouri_analysis_2018}.
 While these approaches frequently work well, it is problematic that the whole flow has to be received first and only afterwards anomaly detection is applied, revealing attack flows. Thus, we design a network \gls{ids} that operates on a per-packet basis and decides if a packet is anomalous based on features that are available even for traffic that is encrypted above the transport layer, like for example TLS or QUIC.
 At the same time, an \gls{rnn}-based \gls{ids} has the benefit of avoiding tedious feature engineering procedures, which derive statistical measures from the sequence of packet features, but providing any available information to the classifier.
-We show that our system has similar performance to other flow-based anomaly detection systems but can commonly detect anomalies \textit{before} the flow is over.
+We show that our system has similar performance to other flow-based anomaly detection systems but can detect anomalies \textit{before} the flow is over.
 
-However, for practical use, high detection accuracy is not enough. With the recent rise of interest in \gls{aml} techniques, also \gls{aml} for \glspl{ids} has been investigated. For example, \cite{bachl_walling_2019} investigates remedies for poisoning attacks on \glspl{ids}.
+However, for practical use, high detection accuracy is not enough. With the recent rise of interest in \gls{aml} techniques, also \gls{aml} for \glspl{ids} has been investigated. For example, \cite{bachl_walling_2019} investigates remedies for poisoning attacks on \glspl{ids} and \cite{hashemi_towards_2019} investigate adversarial robustness of common flow- and packet-based \gls{ids}.
 In this research, we investigate whether adversarial samples can be found for our \gls{rnn}-based model, i.e. minimally different attack flows which are classified as benign. This is not a trivially answerable question since adversarial samples have mostly been analyzed in the context of computer vision. Our scenario significantly deviates from computer vision because \begin{enumerate*}
 \item the number of features is significantly smaller and
 \item only certain features can be manipulated by an adversary. % (for example the destination port cannot be manipulated)
@@ -139,7 +138,7 @@ We propose the \acrfull{ars} as a new performance score, which captures the noti
 
 Due to the threat of adversarial attacks, a further crucial requirement for \gls{ml}-based \glspl{ids} is that the classifier's decisions are interpretable by humans. This recently stirred up increased interest in explainability methods. Also in this case, common methods are designed to work with images or tabular data, but not with sequences. Hence, we extend existing explainability methods such as \glspl{pdp} \cite{friedman_greedy_2001} for sequential data. %These show the varying characteristics of different attacks and they aid with visualizing potentially vulnerable features for adversaries.
 Astonishingly, feature importance methods reveal that
-features, manipulated for successful adversarial flows,
+features, which are manipulated for successful adversarial flows,
 %the that are manipulable features, that are left for modification by adversaries
 are not even particularly important for the \gls{rnn}'s classification outcome. %Especially the first packets of a flow are critical for determining the decision of a recurrent \gls{ids}.
 
@@ -147,7 +146,7 @@ are not even particularly important for the \gls{rnn}'s classification outcome. 
 
 Based on the insights gained by the feature importance and explainability methods, we propose two defence methods.
 %develop a simple method for defending against adversaries who can manipulate arbitrary packets by simply leaving out potentially manipulable information from the classification process.
-On the one hand, by simply leaving out manipulable features, we obtain a classifier which is slightly less accurate but is still useful to be deployed in a real scenario. Furthermore,
+First, by simply leaving out manipulable features, we obtain a classifier which is slightly less accurate but is still useful to be deployed in a real scenario. Second,
 by deploying an adversarial training procedure,
 %AH. compared to other research about adversarial training, I dont feel that out approach is so special
 %develop a custom adversarial training procedure which especially focuses on ease of use and low resource consumption and aims to keep the number of additionally introduced training hyperparameters low. With this novel strategy
@@ -229,7 +228,7 @@ Worms	&	0.01\%	\\
 \end{table}
 
 We implemented a three-layer LSTM-based classifier with 512 neurons at each layer. As the input features we use
-source port, destination port, protocol identifier, packet length, \gls{iat} to the previous packet in the flow, packet direction (if packet goes there or back) and all \gls{tcp} flags (0 if the flow is not \gls{tcp}).
+source port, destination port, protocol identifier, packet length, \gls{iat} to the previous packet in the flow, packet direction (if packet goes there or back) and all TCP flags (0 if the flow is not TCP).
 % \begin{itemize*}
 % \item source port
 % \item destination port
@@ -237,7 +236,7 @@ source port, destination port, protocol identifier, packet length, \gls{iat} to 
 % \item packet sizes
 % \item \glspl{iat} of packets
 % \item packet directions (if packet goes there or back)
-% \item all \gls{tcp} flags (0 if the flow is not \gls{tcp})
+% \item all TCP flags (0 if the flow is not TCP)
 % \end{itemize*}.
 We omitted \gls{ttl} values, as they are likely to lead to unwanted prediction behaviour \cite{bachl_walling_2019}.  Among the used features, source port, destination port and protocol identifier are constant over the whole flow while the others vary.
 During flow extraction we used the usual 5-tuple flow key, which distinguishes flows based on the protocol they use and their source and destination port and IP address.
@@ -269,13 +268,12 @@ Youden	&	97.2\%	&	99.0\%	&	87.3\%	&	71.9\%	\\
 \label{sec:adv}
 We now investigate whether known \gls{aml} methods can be used for generating adversarial flows for our \gls{rnn}. \cite{hashemi_towards_2019} previously studied the behavior of several Network \glspl{ids} under adversarial attacks but unlike us did not investigate \glspl{rnn}.
 
-A network packet contains significantly less features than, e.g., an image and, furthermore, most features such as \gls{tcp} flags cannot be easily manipulated, as their manipulation might violate the protocol specifications and thus cause communication to fail. We identify the packet length and the \gls{iat} as features which are most likely to be exploited and thus choose them to be modified by the adversary. But even these features cannot be manipulated freely. Beside the non-negativity constraint,  there are also more problem-specific constraints:
+A network packet contains significantly less features than, e.g., an image and, furthermore, most features such as TCP flags cannot be easily manipulated, as their manipulation might violate the protocol specifications and thus cause communication to fail. We identify the packet length and the \gls{iat} as features which are most likely to be exploited and thus choose them to be modified by the adversary. But even these features cannot be manipulated due to problem-specific constraints:
 \begin{itemize}[topsep=0pt,wide,labelwidth=!,labelindent=0pt]
-\item Only packets can be manipulated which are transmitted by the attacker.
-Except for botnet and backdoor traffic, which is entirely controlled by an attacker, thus only packets travelling in one direction can be manipulated.
+\item Only packets can be manipulated which are transmitted by the attacker, except for botnet and backdoor traffic, which is entirely controlled by an attacker and thus only packets travelling in one direction can be manipulated.
  %This means the attacker can only control one direction (except for botnets where both sides are attackers).
-\item Packets must not be smaller than initially, as otherwise less information could be transmitted or packets might be rendered syntactically invalid.
-\item \glspl{iat} must not decrease, as otherwise the physical speed of data transmission can be violated in some cases. An in-depth analysis of cases where the reduction of \glspl{iat} might be possible, would come with substantial effort, so we generally disallowed \gls{iat} reductions.
+\item Packets must not be smaller than initially, as otherwise less information could be transmitted.
+\item \glspl{iat} must not decrease, as otherwise the physical speed of data transmission can be violated in some cases. An in-depth analysis of cases in which reduction of \glspl{iat} is legitimate is complex, so we generally disallowed \gls{iat} reductions.
 \end{itemize}
 
 Several \gls{aml} methods have been proposed in the recent literature, achieving different speed-quality tradeoffs:
@@ -304,13 +302,13 @@ Since its functioning is somewhat similar to \gls{cw}, we expected the generated
 
 \subsection{Fast Gradient Sign Method}
 Finally, we also tested the \gls{fgsm} % which was initially proposed in
- \cite{goodfellow_explaining_2015}, which perhaps is the most frequently used method for generating adversarial samples. FGSM can be considered a single pass of \gls{pgd} on the loss function with an equality constraint on the $L_\infty$ distance, i.e. the adversarial sample is found as
+ \cite{goodfellow_explaining_2015}, which is the first method for generating adversarial samples. FGSM can be considered a single pass of \gls{pgd} on the loss function with an equality constraint on the $L_\infty$ distance, i.e. the adversarial sample is found as
 \begin{equation}
 \tilde X = X + \epsilon \, \text{sgn}( \nabla_X L(X)),
 \end{equation}
 where $L(X)$ denotes the network's loss function and $\epsilon$ denotes the achieved $L_\infty$ distance.
 
-\begin{figure}[t]
+\begin{figure}[h]
 \includegraphics[width=\columnwidth]{../plots/adv_comparison/adv_comparison_17.pdf}
 \caption{Attack success ratios for both datasets and per attack family for CIC-IDS-2017. Depicted are flow detection accuracies for adversarial flows and for unmodified attack flows.}
 \label{fig:adv_per_family}
@@ -342,7 +340,7 @@ However, when using a large $\kappa$ in \autoref{eq:carliniWagner}, to avoid ove
 % This conclusion might be misleading, however, as due to the objective function \eqref{eq:carliniWagner} the distance cannot become larger anymore for one sample as soon as an adversarial sample has been found. %, when performing optimization as depicted by the objective function .
 % Hence, the depicted distance increase presumably is due to samples for which no adversarial sample could be found for lower $\kappa$ values.
 
-\begin{figure}[b]
+\begin{figure}[h]
 \includegraphics[width=\columnwidth]{../plots/adv_comparison/tradeoff.pdf}
 % \includegraphics[width=0.49\textwidth]{adv_plots/cwl1.pdf}
 % \includegraphics[width=0.49\textwidth]{adv_plots/cwl2.pdf}
@@ -396,22 +394,22 @@ We identify several difficulties which occur when trying to explain decisions ma
 \begin{itemize}[topsep=0pt,wide,labelwidth=!,labelindent=0pt]
 \item
 \textbf{Feature quantity.}
-The number of features that is fed into an \gls{rnn} is found as the product of packet features with the total length of the flow. For long flows, the total number of inputs can therefore grow to a substantial size.
+The number of features fed into an \gls{rnn} is number of packet features times the length of the flow. For long flows, the total number of inputs can become very large.
 
 \item
 \textbf{Variable sequence lengths.}
-The length of different flows might differ tremendously. Hence, features at one particular time step might be important for the network's outcome for one flow, but not even exist for other flows. Furthermore, the question arises how the distance between flows of different length can be computed.
+The length of different flows might differ tremendously. Hence, features at one particular time step might be important for the network's outcome for one flow, but not even exist for other flows. 
 
 \item
 \textbf{Lack of a distance measure.}
 However, even if we restricted the analysis to flows of a constant length, a flow is different from the plain concatenation of its packet features.
-If we, for example, consider a classification problem as in this document, we expect that after a certain amount of time steps the classifier is able to perform the classification with a certain confidence. Arguably, features at the beginning of a flow are thus more important for the classifier. Giving feature differences at the end of a flow the same weight as differences at its beginning, therefore seems incorrect.
+For example, in a sentence, which is sequence of words, parts can be rearranged, giving a different sequence with possibly the exact same meaning. 
 
 \item
 \textbf{Multiple prediction outputs.}
-Often an \gls{rnn} produces an output at each time step. When  applying explainability methods, the question arises which output to consider for the method. The natural choice is to base the methods on the prediction output which occurs at the same time step as the feature under investigation. Not only does this approach require a substantially lower amount of computational resources compared to predictions occurring at a later time step, but we also expect the immediately occurring prediction outcome to exhibit a stronger dependence of the investigated feature, compared to a prediction outcome occurring many time steps later.
+Often an \gls{rnn} produces an output at each time step. When  applying explainability methods, the question arises which output to consider for the method. The natural choice is to base the methods on the prediction output which occurs at the same time step as the feature under investigation: This approach requires is less complex compared to considering also features of all earlier time steps. Also, we expect the current prediction outcome to more dependent on the current feature, compared to a feature from 100 steps ago. 
 However, due to the complex decision processes of deep neural networks,
-this does not always hold true and a feature might influence a decision many time steps later.
+this is not always true and a feature might influence a decision many time steps later. 
 \end{itemize}
 
 Many explainability methods proposed recently are local and thus provide explanations for a particular data sample \cite{shapley_value_1953,lundberg_unified_2017,dhurandhar_model_2018,ribeiro_why_2016}. However, for the particular problem of network traffic, due to the high number of flows and the characteristics of data, analyzing individual samples is of low interest. Explainability methods presented in this paper therefore aim to understand a model by analyzing which features are important, at which time step they are important and which feature values lead to classification as attack.
@@ -479,15 +477,15 @@ When investigating an \gls{ml} classifier, it is natural to ask which inputs hav
 
 A large amount of research has been spent on finding \emph{feature importance} metrics, which allow the selection  of high-importance features, providing a reasonably good classification performance while resulting in a more light-weight classifier.
 
-On the other hand, both adversarial machine learning and explainable machine learning bring up the question to what extent individual features are able to change the prediction outcome. While being seemingly similar at first sight, traditional feature importance can yield markedly wrong results for this case.  To distinguish, we propose the term \emph{feature sensitivity} for such metrics.
-To analyze features for our network, we use the following approaches.
+On the other hand, both adversarial machine learning and explainable machine learning bring up the question to what extent individual features are able to change the prediction outcome. While appearing similar, traditional feature importance can yield markedly wrong results for this case.  To distinguish, we propose the term \emph{feature sensitivity} for such metrics.
+To analyze features, we use the following approaches:
 
 \subsubsection{Neural Network Weights}
-In previous works~\cite{olden_accurate_2004}, a simple method for determining feature importance in neural networks, has been summing up neural network weights leading from a certain input to the prediction outcome. The weights method can be considered for both feature importance and feature sensitivity, however, clearly, especially in the case of complex network architectures, this method is likely to provide wrong results. Hence, we provide results for the weights method mainly for comparison. Note that an LSTM cell alone has four weights leading from one input to an output.
+In previous works~\cite{olden_accurate_2004}, a simple method for determining feature importance in neural networks has been summing up neural network weights leading from a certain input to the prediction outcome. The weights method can be considered for both feature importance and feature sensitivity, however, clearly, especially in the case of complex network architectures, this method is likely to provide wrong results. Hence, we provide results for the weights method mainly for comparison. Note that an LSTM cell alone has four weights leading from one input to an output.
 
 \subsubsection{Input Perturbation}
 
- In general, the most commonly deployed feature importance techniques, used by practitioners for \glspl{rnn} \cite{stackexchange_cross_validated_neural_2019} and \gls{dl} \cite{molnar_interpretable_2019,stackexchange_cross_validated_feature_2016,olden_accurate_2004}, are based on adding noise to a particular feature and evaluating the drop in accuracy that occurs. We argue that it is hard to determine the ``correct'' intensity of noise to add. %, we slightly vary the proposed approach: We do not add noise drawn from a probability distribution but instead
+The most commonly deployed feature importance techniques, used by practitioners for \glspl{rnn} \cite{stackexchange_cross_validated_neural_2019} and \gls{dl} \cite{molnar_interpretable_2019,stackexchange_cross_validated_feature_2016,olden_accurate_2004}, are based on adding noise to a particular feature and evaluating the drop in accuracy that occurs. We argue that it is hard to determine the ``correct'' intensity of noise to add. %, we slightly vary the proposed approach: We do not add noise drawn from a probability distribution but instead
  Hence, we sample the value for a feature from the distribution of all values of this feature in the dataset. This makes the method non-parametric since the noise distribution  does not need to be chosen. We ensured that features which stay constant for a flow, i.e. source port, destination port and protocol, also stay constant throughout the flow when randomizing the feature.
 
 
@@ -509,7 +507,7 @@ A model trained with feature dropout typically yields slightly lower accuracy th
 Another method that uses dropout for feature importance is \cite{chang_dropout_2017}, applying a technique called \textit{Variational Dropout} to learn the optimal dropout rate for each feature. It tries to leave out as many features as possible and at the same time keep accuracy high. Thus important features are going to be left out less often and one can then extract the dropout probabilities for each feature and assess their significance based on them.
 %Feature dropout can also be used as a building block for computing the accuracy of datapoints with missing features that is necessary to compute Shapley values \cite{shapley_value_1953} or KernelSHAP \cite{lundberg_unified_2017}.
 
-As it can also happen that several features are left out for a sample, our method can also be used to analyze the effect of multiple features missing and can thus show possibly correlated features or -- more general -- features that contain common information, relevant for the classification task:
+For feature dropout, it can also happen that several features are left out for a sample and so our method can also be used to analyze the effect of multiple features missing and can thus show possibly correlated features or -- more general -- features that contain common information, relevant for the classification task:
 %Feature dropout also allows us to find correlated features or -- more general -- features that contain common information:
 \begin{equation}
 \text{score} = \frac{\text{acc}_{\text{base}}-\text{acc}_{\text{-both\_features}}}{\left(\text{acc}_{\text{base}}-\text{acc}_{\text{-feature\_1}}\right) + \left(\text{acc}_{\text{base}}-\text{acc}_{\text{-feature\_2}}\right)}
@@ -518,9 +516,9 @@ With $\text{acc}_{\text{base}}$ we denote the accuracy of the classifier with al
 
 %AH. As it can become <1, I would say it this way
 %If the score is one,  both features contain no joint information.
-For example, the score between RST and the protocol identifier is 8.5; the highest of all pairs of features. While this may be unintuitive at the first glance, it likely stems from the fact that if the protocol identifier (\gls{tcp} or UDP) is missing, then 
-%if RST is 1 at some point of a flow, it has to be \gls{tcp}.
-RST being 1 at some point indicates that the flow is \gls{tcp}.
+For example, the score between RST and the protocol identifier is 8.5; the highest of all pairs of features. While this may be unintuitive at the first glance, it likely stems from the fact that if the protocol identifier (TCP or UDP) is missing, then 
+%if RST is 1 at some point of a flow, it has to be TCP.
+RST being 1 at some point indicates that the flow is TCP.
 
 Feature dropout might constitute a building block for methods based on Shapley values \cite{shapley_value_1953} like KernelSHAP \cite{lundberg_unified_2017}. 
 %Due to space limitations, we leave this for future work.
@@ -555,7 +553,7 @@ with $f_X(x), f_Y(y)$ and $f_{X,Y}(x,y)$ denoting the distribution of $X,Y$ and 
 \label{fig:feat_imp}
 \end{figure*}
 \autoref{fig:feat_imp} shows the results, which match to a large extent with domain-specific expectations for classifying network flows.
-In particular, rarely used \gls{tcp} flags like NS or URG are unimportant for the classifier. On the other hand, destination port and protocol are essential for characterizing flows by hinting at the type of traffic. \gls{iat} and packet length are important for estimating the amount of transferred information and several flags hint at certain attacks like \gls{dos} attacks.
+In particular, rarely used TCP flags like NS or URG are unimportant for the classifier. On the other hand, destination port and protocol are essential for characterizing flows by hinting at the type of traffic. \gls{iat} and packet length are important for estimating the amount of transferred information and several flags hint at certain attacks like \gls{dos} attacks.
 
 The weights method is able to reveal features with a very low importance to a certain degree, but disagrees with the other methods to a large extent. Less anticipated, however, also input perturbation does not exhibit a considerable correlation with feature dropout. Considering its functioning, feature dropout is the most reliable method for evaluating importance for removing features. It is remarkable that none of the other methods is able to depict the distinct peak of importance for the destination port.
 
@@ -567,7 +565,7 @@ Metrics for UNSW-NB15 differ substantially from CIC-IDS-2017. However, due to th
 
 \subsection{Explainability Plots}
 Knowing which features to investigate, it is important to analyze which feature values lead to classification as attack.
-In literature, the use of Partial Dependency Plots (\gls{pdp}) has been proposed~\cite{friedman_greedy_2001}. To inspect attack types in detail, in this research we use a \textit{conditional} form of the \gls{pdp}. If $\boldsymbol X \in \mathbb R ^n$ denotes a random vector drawn from feature space, $f(\boldsymbol X) \in [0,1]$ the neural network's prediction and $\kappa$ the attack class, we define the conditional \gls{pdp} for feature $i$  as
+In literature, the use of Partial Dependency Plots (\gls{pdp}) has been proposed~\cite{friedman_greedy_2001}. To inspect attack types in detail, in this research we use a \textit{conditional} form of the \gls{pdp}. If $\boldsymbol X \in \mathbb R ^n$ denotes a random vector drawn from feature space, $f(\boldsymbol X) \in [0,1]$ the neural network's prediction and $c$ the attack class, we define the conditional \gls{pdp} for feature $i$  as
 % \begin{equation} \label{eq:pdp}
 % \text{\gls{pdp}}_i(y) = \mathbb E_{\boldsymbol X}\left(f(X_1,\ldots,X_{i-1},y,X_{i+1},\ldots X_n)\right)
 % \end{equation}
@@ -613,9 +611,9 @@ Denoting as $X=\{\boldsymbol X^1, \ldots, \boldsymbol X^m\}$ the series of packe
 \text{se}&\text{qPDP}_{c,i}(t,w)= \\ &\mathbb E_{X | C} \Big(f \left(h_{t-1}( X), X_1^t,\ldots,X_{i-1}^t,w,X_{i+1}^t,\ldots X_n^t \right) | c\Big). \nonumber
 \end{align}
 
-\autoref{fig:pred_plots2} shows an example together with the mean values for both unmodified samples and adversarial samples. Also in this figure we notice that mainly the first few packets are able to influence the prediction outcome and modifying features at a later time step does not change its confidence any longer. In many cases, the adversarial sample generation indeed moves packet features to areas where the network is less likely to be classified as attacks, confirming the effectiveness of \glspl{pdp}. In other cases, however, we did not observe an agreement between \gls{pdp} and adversarial modifications, hinting at dependencies which cannot be presented by \glspl{pdp}.
+\autoref{fig:pred_plots2} shows an example together with the mean values for both unmodified samples and adversarial samples. Also in this figure we notice that mainly the first few packets are able to influence the prediction outcome and modifying features at a later time step does not change its confidence any longer. In many cases, the adversarial sample generation indeed moves packet features to areas where the network is less likely to be classified as attacks, confirming the effectiveness of \glspl{pdp}. In other cases, however, we did not observe an agreement between \gls{pdp} and adversarial modifications, hinting at dependencies which cannot be presented by \glspl{pdp}. Since the \gls{iat} is undefined for the first packet, we always set it to 0. Still, interestingly, the plot shows, that the classifier considers packets with a higher IAT to be more likely to be attacks than those with a smaller one. 
 
-\begin{figure}[b]
+\begin{figure}[h]
 %\includegraphics[width=0.48\textwidth]{{"../plots/plot2_adv/flows_pred_plots2_outcomes_flows_adv_1.0_notBidirectional_outcomes_0_3.pickle_0_3.pickle_0_Botnet-ARES"}.pdf}
 \includegraphics[width=\columnwidth]{{"../plots/plot2_adv/flows_pred_plots2_outcomes_flows_adv_1.0_notBidirectional_outcomes_0_3.pickle_0_3.pickle_7_DoS - DDoS-DoS slowloris"}.pdf}
 %\includegraphics[width=0.48\textwidth]{{"../plots/plot2_adv/flows_pred_plots2_outcomes_flows_adv_1.0_notBidirectional_outcomes_0_3.pickle_0_3.pickle_11_PortScan-PortScan - Firewall off"}.pdf}
@@ -630,7 +628,7 @@ The shaded region shows the change in confidence that occurs when the feature is
 % AH. I guess this can only be properly formulated with a formula
 %Next, we want to investigate if our classifier just memorized its inputs. The most interesting packet features that can be used to visualize this in our use case are the \gls{iat} between packets in a flows and the packet length. To depict how the model comes to a decision, we determined the total minimum and maximum for these features that ever occur for all flows. For a given flow $X$ we then varied feature values at each time step between minimum and maximum and plot how the confidence changes when the feature varies (\autoref{fig:pred_plots2}) depict the averaged predictions for different attack families.
 
-Furthermore, it seems clear that the classifier did not just memorize the inputs but actually learned appropriate space representations, as there is always a smooth decrease of confidence when modifying feature values. When memorizing, we would  instead expect a sharp decline of confidence. 
+%Furthermore, it seems clear that the classifier did not just memorize the inputs but actually learned appropriate space representations, as there is always a smooth decrease of confidence when modifying feature values. When memorizing, we would  instead expect a sharp decline of confidence. 
 % to occur.
 %Another interesting observation is that after the first couple of packets the classifier is certain about its decision and changing features doesn't change its confidence any longer. This allows the conclusion that if an attacker is able to change the first few packets, she could change the decision of the classifier. This is consistent with our observations in \autoref{sec:adv}. %We will further investigate this question in \autoref{sec:adv}.
 
