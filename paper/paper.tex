@@ -116,25 +116,26 @@ Since traditional evaluation metrics such as accuracy are not sufficient for qua
 
 \section{Introduction}
 
-There is a significant body of scientific work focusing on the detection of unwanted behavior in networks. In the past, a viable way of performing intrusion detection was to inspect the content of packets themselves and detect if a packet delivers potentially harmful content. More recently, with the rise of omnipresent encryption, available features have changed. Since payload is no longer available, the focus now lies on features that are always available to network monitoring equipment such as port numbers, protocol flags or packet sizes.
+There is a significant body of scientific work focusing on the detection of unwanted behavior in networks. In the past, a viable way of performing intrusion detection was to inspect the content of packets themselves and detect if a packet delivers potentially harmful content. More recently, with the rise of omnipresent encryption, %available features have changed. Since payload is no longer available,
+the focus now lies on features that are always available to network monitoring equipment like port numbers, protocol flags or packet sizes when encrypting above the transport layer.
 
-Network communication is usually grouped into \textit{flows}, which are commonly defined as a sequence of packets sharing certain properties, between two applications potentially being located at different physical locations.
+Network communication is usually grouped into \textit{flows}, which are commonly defined as a sequence of packets sharing certain properties. %, between two applications potentially being located at different physical locations.
 When analyzing flows, not only the aforementioned features are available but also features related to the timing of the individual packets. % as well as their size. %AH: don't see why pkt size is not available without flows
 %For example, a specific attack might require the attacker to send three small packets and the victim to reply with two large packets followed by a small one to the attacker.
 Various approaches have been proposed to extract features from flows and then perform anomaly detection with the extracted flows \cite{meghdouri_analysis_2018}.
-While these approaches frequently work well, it is problematic that the whole flow has to be received first and only afterwards an anomaly can be detected. Thus, we design a network \gls{ids} that operates on a per-packet basis and decides if a packet is anomalous based on features that are available even for traffic that is encrypted above the transport layer, like for example TLS or QUIC.
-At the same time, an \gls{rnn}-based \gls{ids} has the benefit of avoiding tedious feature selection procedures while providing any available information to the classifier.
+While these approaches frequently work well, it is problematic that the whole flow has to be received first and only afterwards anomaly detection is applied, revealing attack flows. Thus, we design a network \gls{ids} that operates on a per-packet basis and decides if a packet is anomalous based on features that are available even for traffic that is encrypted above the transport layer, like for example TLS or QUIC.
+At the same time, an \gls{rnn}-based \gls{ids} has the benefit of avoiding tedious feature engineering procedures, which derive statistical measures from the sequence of packet features, but providing any available information to the classifier.
 We show that our system has similar performance to other flow-based anomaly detection systems but can commonly detect anomalies \textit{before} the flow is over.
 
-However, for practical use, high accuracy is not enough. With the recent rise of interest in \gls{aml} techniques, also \gls{aml} for \glspl{ids} has been investigated. For example, \cite{bachl_walling_2019} investigates remedies for poisoning attacks on \glspl{ids}.
-In this research, we investigate whether adversarial samples can be found for our \gls{rnn}-based model, i.e. minimally different attack flows which are classified as benign. This is not a trivially answerable question since adversarial samples have mostly been analyzed in the context of computer vision. Our scenario significantly deviates from this in several ways because \begin{enumerate*}
+However, for practical use, high detection accuracy is not enough. With the recent rise of interest in \gls{aml} techniques, also \gls{aml} for \glspl{ids} has been investigated. For example, \cite{bachl_walling_2019} investigates remedies for poisoning attacks on \glspl{ids}.
+In this research, we investigate whether adversarial samples can be found for our \gls{rnn}-based model, i.e. minimally different attack flows which are classified as benign. This is not a trivially answerable question since adversarial samples have mostly been analyzed in the context of computer vision. Our scenario significantly deviates from computer vision because \begin{enumerate*}
 \item the number of features is significantly smaller and
 \item only certain features can be manipulated by an adversary. % (for example the destination port cannot be manipulated)
 \end{enumerate*}
 
 Surprisingly, we can confirm that adversarial samples can be found even when considering these tight constraints. % mentioned before.
-Thus, we argue that traditional methods like, e.g., accuracy are not sufficient for evaluating security-sensitive \gls{ml} systems.
-We propose the \acrfull{ars} as a new performance score, which precisely captures the notion of how easily an adversary can generate adversarial samples.
+Thus, we argue that traditional performance metrics like, e.g., accuracy are not sufficient for evaluating security-sensitive \gls{ml} systems.
+We propose the \acrfull{ars} as a new performance score, which captures the notion of how easily an adversary can generate adversarial samples.
 
 Due to the threat of adversarial attacks, a further crucial requirement for \gls{ml}-based \glspl{ids} is that the classifier's decisions are interpretable by humans. This recently stirred up increased interest in explainability methods. Also in this case, common methods are designed to work with images or tabular data, but not with sequences. Hence, we extend existing explainability methods such as \glspl{pdp} \cite{friedman_greedy_2001} for sequential data. %These show the varying characteristics of different attacks and they aid with visualizing potentially vulnerable features for adversaries.
 Astonishingly, feature importance methods reveal that
@@ -239,11 +240,11 @@ source port, destination port, protocol identifier, packet length, \gls{iat} to 
 % \item all \gls{tcp} flags (0 if the flow is not \gls{tcp})
 % \end{itemize*}.
 We omitted \gls{ttl} values, as they are likely to lead to unwanted prediction behaviour \cite{bachl_walling_2019}.  Among the used features, source port, destination port and protocol identifier are constant over the whole flow while the others vary.
-During flow extraction we used a usual 5-tuple flow key, which distinguishes flows based on the protocol they use and their source and destination port and IP address.
+During flow extraction we used the usual 5-tuple flow key, which distinguishes flows based on the protocol they use and their source and destination port and IP address.
 We use Z-score normalization and a train/test split of 2:1.
 
 For evaluation, we use the \textit{CIC-IDS-2017} \cite{sharafaldin_toward_2018} and \textit{UNSW-NB15} \cite{moustafa_unsw-nb15:_2015} datasets which each include more than 2 million flows of network data, containing both benign traffic and a large number of different attacks. Attacks contained in the datasets are shown in \autoref{tab:occurrence}.
-\autoref{tab:performance_results} shows that our classifiers achieve an accuracy that is similar to previous work based on these datasets~\cite{meghdouri_analysis_2018,bachl_walling_2019}. However, unlike these classifiers, our recurrent classifier has the advantage of being able to detect attacks already before they are over.
+\autoref{tab:performance_results} shows that our \gls{rnn}-based classifiers achieve an accuracy that is similar to previous work based on these datasets~\cite{meghdouri_analysis_2018,bachl_walling_2019}. However, unlike these classifiers, our recurrent classifier has the advantage of being able to detect attacks already before the attack flows are over.
 
 \begin{table}
 % Evaluated using
@@ -268,17 +269,17 @@ Youden	&	97.2\%	&	99.0\%	&	87.3\%	&	71.9\%	\\
 \label{sec:adv}
 We now investigate whether known \gls{aml} methods can be used for generating adversarial flows for our \gls{rnn}. \cite{hashemi_towards_2019} previously studied the behavior of several Network \glspl{ids} under adversarial attacks but unlike us did not investigate \glspl{rnn}.
 
-A network packet contains significantly less features than, e.g., an image and, furthermore, most features such as \gls{tcp} flags cannot be easily manipulated, as their manipulation might violate the protocol specifications and thus cause communication to fail. We identify the packet length and the \gls{iat} as features which are most likely to be exploited and thus choose them to be modified by adversary. But even these features cannot be manipulated freely. Beside the non-negativity constraint,  there are also more problem-specific constraints:
+A network packet contains significantly less features than, e.g., an image and, furthermore, most features such as \gls{tcp} flags cannot be easily manipulated, as their manipulation might violate the protocol specifications and thus cause communication to fail. We identify the packet length and the \gls{iat} as features which are most likely to be exploited and thus choose them to be modified by the adversary. But even these features cannot be manipulated freely. Beside the non-negativity constraint,  there are also more problem-specific constraints:
 \begin{itemize}[topsep=0pt,wide,labelwidth=!,labelindent=0pt]
 \item Only packets can be manipulated which are transmitted by the attacker.
 Except for botnet and backdoor traffic, which is entirely controlled by an attacker, thus only packets travelling in one direction can be manipulated.
  %This means the attacker can only control one direction (except for botnets where both sides are attackers).
 \item Packets must not be smaller than initially, as otherwise less information could be transmitted or packets might be rendered syntactically invalid.
-\item \glspl{iat} must not decrease, as otherwise the physical speed of data transmission can be violated in some cases. An in-depth analysis of when the reduction of \glspl{iat} is possible, would come with substantial effort, so we generally disallowed it.
+\item \glspl{iat} must not decrease, as otherwise the physical speed of data transmission can be violated in some cases. An in-depth analysis of cases where the reduction of \glspl{iat} might be possible, would come with substantial effort, so we generally disallowed \gls{iat} reductions.
 \end{itemize}
 
 Several \gls{aml} methods have been proposed in the recent literature, achieving different speed-quality tradeoffs:
-\cite{szegedy_intriguing_2014} shows that it is possible to create adversarial samples for an image, which look similar to the original image but are classified wrongly. \cite{goodfellow_explaining_2015} develops the \gls{fgsm}, which makes easy generation of adversarial samples possible. \cite{papernot_crafting_2016} explores the use of \gls{aml} for \glspl{rnn}, but lacks import \gls{aml} methods, which we consider in this paper.
+\cite{szegedy_intriguing_2014} shows that it is possible to create adversarial samples for an image, which look similar to the original image but are classified wrongly. \cite{goodfellow_explaining_2015} develops the \gls{fgsm}, which makes easy generation of adversarial samples possible. \cite{papernot_crafting_2016} explores the use of \gls{aml} for \glspl{rnn}, but lacks important \gls{aml} methods, which we consider in this paper.
 
 % Max: But FGSM is high-speed... So I removed this paragraph altogether
 %As finding adversarial flows is particularly difficult in our case, % for the reasons we discussed above,
@@ -287,9 +288,9 @@ Several \gls{aml} methods have been proposed in the recent literature, achieving
 \subsection{Carlini-Wagner}
 We implemented the \gls{cw} \cite{carlini_towards_2017}, performing gradient descent on the optimization objective
 \begin{equation} \label{eq:carliniWagner}
-d(X,\tilde X) + c  \max(Z(\tilde X), \delta).
+d(X,\tilde X) + \kappa  \max(Z(\tilde X), \delta).
 \end{equation}
-Here, $d(\cdot)$ is a distance metric and $c \in \mathbb R^+$ is a parameter governing the tradeoff achieved between attack success and distance from the original flow. Furthermore, $Z(\cdot)$ denotes the neural network's logit output, $X$ denotes the original flow and $\tilde X$ the adversarial flow under optimization.
+Here, $d(\cdot)$ is a distance metric and $\kappa \in \mathbb R^+$ is a parameter governing the tradeoff achieved between attack success and distance from the original flow. Furthermore, $Z(\cdot)$ denotes the neural network's logit output, $X$ denotes the original flow and $\tilde X$ the adversarial flow under optimization.
 
 $\delta \in \mathbb R$ is a parameter that determines how far an adversary wants to exceed the decision boundary.
 In the original publication $\delta=0$, meaning that the network's decision for adversarial samples is just between attack and benign traffic. In the present context, we need to make sure that the classifier's prediction would actually be benign, even though a certain level of noise will be added to \glspl{iat} due to the network between attacker and victim. Hence, we introduced $\delta=-0.2$, corresponding to a prediction confidence of 55\% for the sample to be benign.
@@ -299,13 +300,13 @@ We used $L_1$ distance as distance metric, as we consider it to represent practi
 \subsection{$L_\infty$-bounded Projected Gradient Descent}
 \cite{madry_towards_2018} uses a method for generating adversarial samples which deploys \gls{pgd}  to maximize the network's loss function while constraining the achieved $L_\infty$ distance from the original samples. Hence, an important difference to \gls{cw} is that for this method the network's loss instead of its logit output is considered.
 We consider this method an interesting combination of \gls{cw} and \gls{fgsm}.
-Since its functioning is somewhat similar to \gls{cw}, we expected the generated adversarial samples to be of similar quality.
+Since its functioning is somewhat similar to \gls{cw}, we expected the generated adversarial samples to be similarly close the the original samples.
 
 \subsection{Fast Gradient Sign Method}
 Finally, we also tested the \gls{fgsm} % which was initially proposed in
  \cite{goodfellow_explaining_2015}, which perhaps is the most frequently used method for generating adversarial samples. FGSM can be considered a single pass of \gls{pgd} on the loss function with an equality constraint on the $L_\infty$ distance, i.e. the adversarial sample is found as
 \begin{equation}
-\tilde X = X + \epsilon \text{sgn}( \nabla_X L(X)),
+\tilde X = X + \epsilon \, \text{sgn}( \nabla_X L(X)),
 \end{equation}
 where $L(X)$ denotes the network's loss function and $\epsilon$ denotes the achieved $L_\infty$ distance.
 
@@ -328,24 +329,24 @@ Interestingly, any increase of the $L_\infty$ bound for \gls{pgd} did not yield 
 \gls{cw} thus generally achieved superior results to $L_\infty$-bounded \gls{pgd}
 and we can confirm the recommendation by \cite{carlini_towards_2017} to perform gradient descent on the logit output instead of the loss for good results.
 
-\autoref{fig:adv_cw} depicts the success ratio and average distance for \gls{cw} for different tradeoffs $c$.
+\autoref{fig:adv_cw} depicts the success ratio and average distance for \gls{cw} for different tradeoffs $\kappa$.
 %\autoref{fig:adv_cw} depicts the ratio of attack flows which were successfully misclassified as benign with respect to the final packet along with the resulting distance from the original sample.
-Evidently, the larger $c$, the better the attack works, but also distances from original flows become higher. With acceptable distances, we were able to generate adversarial samples for about 80\% of attack samples.
+Evidently, the larger $\kappa$, the better the attack works, but also distances from original flows become higher. With acceptable distances, we were able to generate adversarial samples for about 80\% of attack samples.
 
 %Note, however, that f
-For successful adversarial samples, the second term in \autoref{eq:carliniWagner} becomes constant and, hence, is no longer relevant for optimization. Hence, $c$ is irrelevant for the achieved distance, but governs if for one sample an adversarial sample is found.
-However, when using a large $c$ in \autoref{eq:carliniWagner}, to avoid overly large steps that impede convergence, it is necessary to reduce the gradient descent learning rate. Since the distance term is not affected by $c$, it is furthermore necessary to scale the iteration count inversely with the learning rate. \gls{cw} with a large $c$ therefore needs more time than with a small $c$.
+For successful adversarial samples, the second term in \autoref{eq:carliniWagner} becomes constant and, hence, is no longer relevant for optimization. Hence, $\kappa$ is irrelevant for the achieved distance, but governs if for one sample an adversarial sample is found.
+However, when using a large $\kappa$ in \autoref{eq:carliniWagner}, to avoid overly large steps that impede convergence, it is necessary to reduce the gradient descent learning rate. Since the distance term is not affected by $\kappa$, it is furthermore necessary to scale the iteration count inversely with the learning rate. \gls{cw} with a large $\kappa$ therefore needs more time than with a small $\kappa$.
 
 
 % The figure suggests that a tradeoff value between 0.5 and 1 would be ideal to find adversarial samples with a low enough distance from real samples.
 % This conclusion might be misleading, however, as due to the objective function \eqref{eq:carliniWagner} the distance cannot become larger anymore for one sample as soon as an adversarial sample has been found. %, when performing optimization as depicted by the objective function .
-% Hence, the depicted distance increase presumably is due to samples for which no adversarial sample could be found for lower $c$ values.
+% Hence, the depicted distance increase presumably is due to samples for which no adversarial sample could be found for lower $\kappa$ values.
 
 \begin{figure}[b]
 \includegraphics[width=\columnwidth]{../plots/adv_comparison/tradeoff.pdf}
 % \includegraphics[width=0.49\textwidth]{adv_plots/cwl1.pdf}
 % \includegraphics[width=0.49\textwidth]{adv_plots/cwl2.pdf}
-\caption{Performance of \gls{cw} with different $c$ values.}
+\caption{Performance of \gls{cw} with different $\kappa$ values.}
 \label{fig:adv_cw}
 \end{figure}
 
@@ -366,14 +367,16 @@ The \gls{ars} is thus the average of distances smaller than the median distance.
 %Such a metric should be easy to compute, easy to interpret and robust with respect to outliers.
 We consider an adversary successful if they manage more than 50\% of all samples to be misclassified. In this case, the \gls{ars} is the average of the distances of the adversarial samples to the original samples for the 50\% of all samples which have the smallest distances. If the adversary doesn't manage to manipulate more than 50\% then the \gls{ars} is $\infty$.
 
-\gls{cw} is able to find adversarial samples with minimum distance, but becomes slow for large $c$. Hence, it can be used for finding the \gls{ars} efficiently as follows: 
-%Since \gls{cw} becomes slow for large $c$, the \gls{ars} can be efficiently found as follows:
+\gls{cw} is able to find adversarial samples with minimum distance, but becomes slow for large $\kappa$. Hence, it can be used for finding the \gls{ars} efficiently as follows: 
+%Since \gls{cw} becomes slow for large $\kappa$, the \gls{ars} can be efficiently found as follows:
 Use \gls{cw} with a small tradeoff, trying to generate adversarial samples for an attack type. If %, of a total of $N$ samples,
  more than $N/2$  are wrongly classified, and
  the smallest distance of non-adversarial samples is not smaller than the $\lceil\frac{N}{2}\rceil$th smallest distance of adversarial samples,
-stop and compute the \gls{ars}. Otherwise increase $c$ and repeat. If after a predefined number of iterations -- e.g. 100 -- still not more than half of the samples are adversarial, also break and set the \gls{ars} to $\infty$.
+stop and compute the \gls{ars}. Otherwise increase $\kappa$ and repeat. If after a predefined number of iterations -- e.g. 100 -- still not more than half of the samples are adversarial, also break and set the \gls{ars} to $\infty$.
 
-The larger the \gls{ars} is the better since then an adversary needs to modify the samples more to make them adversarial. If not more than half of the samples could be made adversarial, our metric is $\infty$ since then apparently it is not possible for an adversary to reliably conduct adversarial attacks on the majority of samples. Then the ratio of samples that could be made adversarial ($<$50\%) can be a useful metric to determine the exact extent of the adversarial threat. Setting the threshold for the \gls{ars} to 50\% is arbitrary, but
+The larger the \gls{ars} is, the more robust is the model, as then an adversary needs to modify the samples more to make them adversarial. If not more than half of the samples could be made adversarial, our metric is $\infty$ since then apparently it is not possible for an adversary to reliably conduct adversarial attacks on the majority of samples. In this case, the ratio of samples that could be made adversarial can be a useful metric to determine the exact extent of the adversarial threat.
+
+Setting the threshold for the \gls{ars} to 50\% is arbitrary, but
  % reasonable as this way the \gls{ars} approximates the median of the distances of all samples and, additionally, marks the distance where an adversarial attack is more likely to be successful than unsuccessful.
  reasonable as outliers with very large distances are ignored and if an attacker can make the majority of samples adversarial, we think that its attack is ``successful''.
 %we think that it is reasonable since if an attacker can make the majority of samples adversarial, we think that its attack is ``successful''.
@@ -397,7 +400,7 @@ The number of features that is fed into an \gls{rnn} is found as the product of 
 
 \item
 \textbf{Variable sequence lengths.}
-The length of different flows might differ tremendously. Hence, features which are important for the network's outcome for one flow might not even exist for other flows. Furthermore, the question arises how the distance between flows of different length can be computed.
+The length of different flows might differ tremendously. Hence, features at one particular time step might be important for the network's outcome for one flow, but not even exist for other flows. Furthermore, the question arises how the distance between flows of different length can be computed.
 
 \item
 \textbf{Lack of a distance measure.}
@@ -564,7 +567,7 @@ Metrics for UNSW-NB15 differ substantially from CIC-IDS-2017. However, due to th
 
 \subsection{Explainability Plots}
 Knowing which features to investigate, it is important to analyze which feature values lead to classification as attack.
-In literature, the use of Partial Dependency Plots (\gls{pdp}) has been proposed~\cite{friedman_greedy_2001}. To inspect attack types in detail, in this research we use a \textit{conditional} form of the \gls{pdp}. If $\boldsymbol X \in \mathbb R ^n$ denotes a random vector drawn from feature space, $f(\boldsymbol X) \in [0,1]$ the neural network's prediction and $c$ the attack class, we define the conditional \gls{pdp} for feature $i$  as
+In literature, the use of Partial Dependency Plots (\gls{pdp}) has been proposed~\cite{friedman_greedy_2001}. To inspect attack types in detail, in this research we use a \textit{conditional} form of the \gls{pdp}. If $\boldsymbol X \in \mathbb R ^n$ denotes a random vector drawn from feature space, $f(\boldsymbol X) \in [0,1]$ the neural network's prediction and $\kappa$ the attack class, we define the conditional \gls{pdp} for feature $i$  as
 % \begin{equation} \label{eq:pdp}
 % \text{\gls{pdp}}_i(y) = \mathbb E_{\boldsymbol X}\left(f(X_1,\ldots,X_{i-1},y,X_{i+1},\ldots X_n)\right)
 % \end{equation}
@@ -577,7 +580,10 @@ empirically approximating the conditional distribution by the observed subset th
 
 By using a classical \gls{pdp} we would be likely to lose information due to the averaging over very different types of traffic. However, for network traffic in particular, investigating each sample individually is not possible. Hence, the conditional \gls{pdp} provides the ideal compromise for our application.
 
-Due to the use of a 5-tuple flow key, port numbers and the protocol identifier are constant for all packets in one flow, which allows us to use \glspl{pdp}, which have been proposed for non-recurrent classification methods.
+Due to the use of a 5-tuple flow key, port numbers and the protocol identifier are constant for all packets in one flow.
+Hence, we can consider the \gls{rnn} a regular classifier and reuse 
+%which allows us to use
+\glspl{pdp}, which have been proposed for non-recurrent classification methods, by plotting the \gls{rnn}'s flow prediction outcome over one of these  features.
 The results (omitted for brevity) show that for some attack classes the port numbers play an important role. When looking at the class of benign traffic %(non-attack traffic)
 it becomes apparent that traffic destined to a high destination port is generally indicative of an attack. We argue that this is because most services that regular users use have low port numbers.
 
@@ -595,11 +601,11 @@ Intuitively, features at the beginning of a flow should be the most important wh
 For the majority of attack types, confidence increases in the first few steps and then stays almost constant at 1.}
 \label{fig:confidence}
 \end{figure}
-To evaluate this hypothesis, we plot the classifier's prediction confidence for each time step. % for each attack class.
+To evaluate this hypothesis, \autoref{fig:confidence} depicts the classifier's prediction confidence for each time step, along with the number of samples having at least this length, which were used for evaluating the figure. % for each attack class.
 %averaging over all flows. %AH. there's no averaging happening
 % and also show the first and third quartiles.
-\autoref{fig:confidence} shows that %this hypothesis is correct for most attack classes.
-while at the first couple of packets the confidence is not very high, towards the end of the flow it reaches values close to 1 and stays there. Hence, not only is the classifier able to make a reasonable classification after just a few packets, the figure also suggests that indeed later packets have a neglectable influence on the prediction.
+%\autoref{fig:confidence} shows that %this hypothesis is correct for most attack classes.
+While at the first couple of packets the confidence is not very high, towards the end of the flow it reaches values close to 1 and stays there. Hence, not only is the classifier able to make a reasonable classification after just a few packets, the figure also suggests that indeed later packets have a neglectable influence on the prediction.
 
 For investigating in more detail how features influence the prediction outcome, we extend \glspl{pdp} to the sequential setting.
 Denoting as $X=\{\boldsymbol X^1, \ldots, \boldsymbol X^m\}$ the series of packet features $\boldsymbol X^t \in \mathbb R^n$ and $h_t(X)$ the network's hidden state after time step $t$, we define the sequential \gls{pdp} as
