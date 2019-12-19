@@ -358,7 +358,7 @@ While in general, adversarial robustness for \gls{ml} models is frequently quant
 We propose the \gls{ars} as 
 \begin{equation}
 % \text{ARS} = \text{mean}(\{d \in \mathcal D \mid d < Q_{0.5}(\mathcal D)\}),
-\text{ARS} = \frac{1}{\lfloor N/2 \rfloor} \sum\nolimits_{d \in \{d \in \mathcal D \mid d < Q_{0.5}(\mathcal D)\}} d,
+\text{ARS} = \frac{1}{\lceil N/2 \rceil} \sum\nolimits_{d \in \{d \in \mathcal D \mid d \leq Q_{0.5}(\mathcal D)\}} d,
 \end{equation}
 denoting by $Q_{0.5}(\cdot)$ the median, by $N = | \mathcal D | \in \mathbb N$ the total number of samples and by $\mathcal D$ the set of distances of adversarial flows from original flows, assigning unsuccessful samples a distance of $\infty$. 
 The \gls{ars} is thus the average of distances smaller than the median distance.
