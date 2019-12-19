@@ -355,13 +355,20 @@ As \autoref{fig:adv_per_family} shows, for most attack types, most samples can b
 
 Such a metric should be easy to compute and easy to interpret.
 While in general adversarial robustness for \gls{ml} models is frequently quantified as the average or median of minimum distances of adversarial samples \cite{carlini_evaluating_2019}, we found no generally agreed-upon metric for \glspl{ids} in the literature. If we consider flows, for which no adversarial sample can be found, to have infinite distance, the median has the advantage of ignoring such unsuccessful samples and outliers. On the other hand, the median might depict expected distances badly if they have a very uneven distribution. 
-We propose the \gls{ars} as 
-\begin{equation}
+% We propose the \gls{ars} as 
+% \begin{equation}
 % \text{ARS} = \text{mean}(\{d \in \mathcal D \mid d < Q_{0.5}(\mathcal D)\}),
-\text{ARS} = \frac{1}{\lceil N/2 \rceil} \sum\nolimits_{d \in \{d \in \mathcal D \mid d \leq Q_{0.5}(\mathcal D)\}} d,
+% \text{ARS} = \frac{1}{\lceil N/2 \rceil} \sum\nolimits_{d \in \{d \in \mathcal D \mid d \leq Q_{0.5}(\mathcal D)\}} d,
+% \end{equation}
+% denoting by $Q_{0.5}(\cdot)$ the median, by $N = | \mathcal D | \in \mathbb N$ the total number of samples and by $\mathcal D$ the set of distances of adversarial flows from original flows, assigning unsuccessful samples a distance of $\infty$. 
+
+We thus propose the \gls{ars} as follows. Let $\mathcal D$ denote the set of distances of adversarial flows from original flows, assigning unsuccessful samples a distance of $\infty$, $N = | \mathcal D | \in \mathbb N$ the total number of samples and $Q_{0.5}(\cdot)$ the median function.
+We define the \gls{ars} as 
+\begin{equation}
+\text{ARS} = \frac{1}{\lceil N/2 \rceil} \sum\nolimits_{d \in \tilde {\mathcal D}} d,
 \end{equation}
-denoting by $Q_{0.5}(\cdot)$ the median, by $N = | \mathcal D | \in \mathbb N$ the total number of samples and by $\mathcal D$ the set of distances of adversarial flows from original flows, assigning unsuccessful samples a distance of $\infty$. 
-The \gls{ars} is thus the average of distances smaller than or equal to the median distance.
+with $\tilde {\mathcal D} \subset \mathcal D$ denoting the set of cardinality $|\tilde {\mathcal D}| =\lceil N/2 \rceil$, so that for all $d \in  \tilde {\mathcal D}, d \le Q_{0.5}(\mathcal D)$.
+The \gls{ars} is thus approximately the average of distances smaller than or equal to the median distance.
 
 %Such a metric should be easy to compute, easy to interpret and robust with respect to outliers.
 We consider an adversary successful if they cause at least 50\% of all samples to be misclassified. In this case, the \gls{ars} is the average of the distances of the adversarial samples to the original samples for the 50\% of all samples which have the smallest distances. If the adversary doesn't manage to manipulate enough samples, the \gls{ars} is $\infty$.
@@ -532,6 +539,12 @@ Feature dropout might constitute a building block for methods based on Shapley v
 Input perturbation and feature dropout mainly address feature importance.
 For example, assuming that the test dataset is representative for production use, for feature importance it is reasonable to equate the distribution for perturbing a feature with the feature distribution itself. However, when evaluating feature sensitivity, e.g. for analyzing potential for adversarial samples, the attacker is not limited by this distribution and frequently is able to choose arbitrary values in the feature space.
 
+\begin{figure*}
+\includegraphics[width=.49\textwidth]{../plots/importance/feat_imp_flow_2017.pdf}\hspace{.02\textwidth}
+\includegraphics[width=.49\textwidth]{../plots/importance/feat_imp_flow_2015.pdf}
+\caption{Feature importance metrics for the flow prediction for CIC-IDS-2017 (left side) and UNSW-NB15 (right side).}
+\label{fig:feat_imp}
+\end{figure*}
 Furthermore, let $f(A,x)$  denote the joint probability
 %\todo{Max: Ist joint probability nicht immer wenn man mehrere Ereignisse hat? Ich hätte hier probability density function geschrieben...}
 %AH. changed notation and wording
@@ -547,12 +560,6 @@ I_{X,Y} = \mathbb E \left\{ \log\left(\frac{f_{X,Y}(x,y)}{f_X(x)f_Y(y)}\right) \
 with $f_X(x), f_Y(y)$ and $f_{X,Y}(x,y)$ denoting the distribution of $X,Y$ and their joint distribution, respectively. To obtain feature sensitivity, we compute mutual information between an input variable and the prediction output for one flow at one particular time step, averaging over the result for the test set.
 
 \subsubsection{Comparison}
-\begin{figure*}
-\includegraphics[width=.49\textwidth]{../plots/importance/feat_imp_flow_2017.pdf}\hspace{.02\textwidth}
-\includegraphics[width=.49\textwidth]{../plots/importance/feat_imp_flow_2015.pdf}
-\caption{Feature importance metrics for the flow prediction for CIC-IDS-2017 (left side) and UNSW-NB15 (right side).}
-\label{fig:feat_imp}
-\end{figure*}
 \autoref{fig:feat_imp} shows the results, which match to a large extent with domain-specific expectations for classifying network flows.
 In particular, rarely used TCP flags like NS or URG are unimportant for the classifier. On the other hand, destination port and protocol are essential for characterizing flows by hinting at the type of traffic. \gls{iat} and packet length are important for estimating the amount of transferred information and several flags hint at certain attacks like \gls{dos} attacks.
 
@@ -570,7 +577,6 @@ In literature, the use of Partial Dependency Plots (\gls{pdp}) has been proposed
 % \begin{equation} \label{eq:pdp}
 % \text{\gls{pdp}}_i(y) = \mathbb E_{\boldsymbol X}\left(f(X_1,\ldots,X_{i-1},y,X_{i+1},\ldots X_n)\right)
 % \end{equation}
-
 % To inspect attack types in detail, in this research we experiment with a modified definition of the \gls{pdp}  (with C being the attack classes):
 \begin{equation} \label{eq:pdp_conditional}
 \text{\gls{pdp}}_{c,i}(w) = \mathbb E_{\boldsymbol X | C} \Big(f \left( X_1,\ldots,X_{i-1},w,X_{i+1},\ldots X_n \right) | c\Big),
