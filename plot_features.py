@@ -13,7 +13,10 @@ import json
 import pickle
 from matplotlib.lines import Line2D
 from matplotlib.patches import Rectangle
-from learn import numpy_sigmoid
+#  from learn import numpy_sigmoid
+
+def numpy_sigmoid(x):
+	return 1/(1+np.exp(-x))
 
 plt.rcParams['font.family'] = 'serif'
 plt.rcParams['savefig.format'] = 'pdf'
@@ -99,7 +102,7 @@ for attack_type, (results_by_attack_number_item, flows_by_attack_number_item, re
 	# plt.figure(figsize=(5,4))
 	plt.title(reverse_mapping[attack_type])
 
-	fig, ax1 = plt.subplots(figsize=(5,2.4))
+	fig, ax1 = plt.subplots(figsize=(5,2))
 	ax2 = ax1.twinx()
 
 	all_legends = []
@@ -115,7 +118,7 @@ for attack_type, (results_by_attack_number_item, flows_by_attack_number_item, re
 		ret2 = ax.fill_between(range(max_length), actual_flow_first_quartiles[:,feature_index]*stds[feature_index]+means[feature_index], actual_flow_third_quartiles[:,feature_index]*stds[feature_index]+means[feature_index], alpha=0.5, edgecolor=colors[feature_index_from_zero], facecolor=colors[feature_index_from_zero], label=legend+" 1st and 3rd quartile")
 
 		ylim1,ylim2 = ax.get_ylim()
-		ax.set_ylim((ylim1,ylim2+(ylim2-ylim1)*0.25)) # move plots away from legend
+		ax.set_ylim((ylim1,ylim2+(ylim2-ylim1)*0.3)) # move plots away from legend
 
 		# print("ret", ret)
 		# print("ret2", ret2)

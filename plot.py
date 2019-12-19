@@ -99,7 +99,7 @@ for attack_type, seqs in enumerate(results_by_attack_number):
 	# print("values_by_length", [item.shape for item in values_by_length])
 	lens = [item.shape[0] for item in values_by_length]
 
-	fig, ax1 = plt.subplots(figsize=(5,2.4))
+	fig, ax1 = plt.subplots(figsize=(5,2))
 	# print("lens", lens)
 	x_values = list(range(min(len(lens), MAX_X)))
 	ret = ax1.bar(x_values, lens[:MAX_X], width=1, color="gray", alpha=0.2, label="number of samples")
@@ -109,7 +109,7 @@ for attack_type, seqs in enumerate(results_by_attack_number):
 	ax2 = ax1.twinx()
 
 	ax2.set_ylabel('Confidence')
-	ax1.set_ylabel("Number of samples")
+	ax1.set_ylabel("Sample number")
 
 	ax1.yaxis.tick_right()
 	ax1.yaxis.set_label_position("right")
@@ -139,7 +139,7 @@ for attack_type, seqs in enumerate(results_by_attack_number):
 	#  plt.ylim((min(first_quartiles), max(third_quartiles)))
 	
 	ax2.set_ylabel_legend(all_legends[0])
-	ax1.set_ylabel_legend(Rectangle((0,0), 1, 1, fc='gray', alpha=0.2), handlelength=1)
+	ax1.set_ylabel_legend(Rectangle((0,0), 1, 1, fc='gray', alpha=0.2), handlelength=0.7, handletextpad=0.4)
 
 	if SHOW_TITLE:
 		plt.title(reverse_mapping[attack_type])

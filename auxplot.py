@@ -33,7 +33,7 @@ values = np.array(values, dtype=float)
 
 def importance():
 	global values
-	plt.figure(figsize=(5,3))
+	plt.figure(figsize=(5,2.6))
 	values[values < 0] = 0
 	values /= np.sum(values,axis=0)
 
@@ -61,7 +61,8 @@ def importance():
 
 def adv_results():
 	global values
-	plt.figure(figsize=(5,3))
+	plt.rcParams['legend.handlelength'] = 1.5
+	plt.figure(figsize=(5,2.7))
 	values = np.reshape(values, (-1,values.shape[1]//2,2))
 
 	order = (2+np.argsort(np.mean(values[2:,:,1], axis=1))).tolist()
@@ -71,7 +72,7 @@ def adv_results():
 	x = np.arange(len(group_names), dtype=float)
 	x[:2] -= .5
 	for i in range(values.shape[1]):
-		plt.bar(x +width*i, values[order,i,1], width, color='gray', alpha=.5, **({'label': 'Original'} if i==0 else {}))
+		plt.bar(x +width*i, values[order,i,1], width, color='gray', alpha=.5, **({'label': 'Unmodified'} if i==0 else {}))
 	for i in range(values.shape[1]):
 		plt.bar(x +width*i, values[order,i,0], width, color=colors[i], label=feature_names[i*2].rstrip(' adv'))
 	plt.legend(loc='lower center', bbox_to_anchor=(0.5,1), ncol=4)
