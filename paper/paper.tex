@@ -355,30 +355,30 @@ However, when using a large $\kappa$ in \autoref{eq:carliniWagner}, to avoid ove
 As \autoref{fig:adv_per_family} shows, for most attack types, most samples can be modified by an adversary to be classified as benign by using \gls{cw}. High accuracy for a particular attack category does not imply that adversarial attacks are  likely to fail for these attacks. Thus we argue that beside the classical metrics such as accuracy, false positives etc., a metric is needed, which quantifies how easily an \gls{ids} classifier can be fooled.
 
 Such a metric should be easy to compute and easy to interpret.
-While in general, adversarial robustness for \gls{ml} models is frequently quantified as the average or median of minimum distances of adversarial samples \cite{carlini_evaluating_2019}, we found no generally agreed-upon metric for \glspl{ids} in the literature. If we consider flows, for which no adversarial sample can be found, to have infinite distance, the median has the advantage of ignoring such unsuccessful samples and outliers. On the other hand, the median might depict expected distances badly if they have a very uneven distribution. 
+While in general adversarial robustness for \gls{ml} models is frequently quantified as the average or median of minimum distances of adversarial samples \cite{carlini_evaluating_2019}, we found no generally agreed-upon metric for \glspl{ids} in the literature. If we consider flows, for which no adversarial sample can be found, to have infinite distance, the median has the advantage of ignoring such unsuccessful samples and outliers. On the other hand, the median might depict expected distances badly if they have a very uneven distribution. 
 We propose the \gls{ars} as 
 \begin{equation}
 % \text{ARS} = \text{mean}(\{d \in \mathcal D \mid d < Q_{0.5}(\mathcal D)\}),
 \text{ARS} = \frac{1}{\lceil N/2 \rceil} \sum\nolimits_{d \in \{d \in \mathcal D \mid d \leq Q_{0.5}(\mathcal D)\}} d,
 \end{equation}
 denoting by $Q_{0.5}(\cdot)$ the median, by $N = | \mathcal D | \in \mathbb N$ the total number of samples and by $\mathcal D$ the set of distances of adversarial flows from original flows, assigning unsuccessful samples a distance of $\infty$. 
-The \gls{ars} is thus the average of distances smaller than the median distance.
+The \gls{ars} is thus the average of distances smaller than or equal to the median distance.
 
 %Such a metric should be easy to compute, easy to interpret and robust with respect to outliers.
-We consider an adversary successful if they manage more than 50\% of all samples to be misclassified. In this case, the \gls{ars} is the average of the distances of the adversarial samples to the original samples for the 50\% of all samples which have the smallest distances. If the adversary doesn't manage to manipulate more than 50\% then the \gls{ars} is $\infty$.
+We consider an adversary successful if they cause at least 50\% of all samples to be misclassified. In this case, the \gls{ars} is the average of the distances of the adversarial samples to the original samples for the 50\% of all samples which have the smallest distances. If the adversary doesn't manage to manipulate enough samples, the \gls{ars} is $\infty$.
 
 \gls{cw} is able to find adversarial samples with minimum distance, but becomes slow for large $\kappa$. Hence, it can be used for finding the \gls{ars} efficiently as follows: 
 %Since \gls{cw} becomes slow for large $\kappa$, the \gls{ars} can be efficiently found as follows:
 Use \gls{cw} with a small tradeoff, trying to generate adversarial samples for an attack type. If %, of a total of $N$ samples,
- more than $N/2$  are wrongly classified, and
+ at least $N/2$  are wrongly classified, and
  the smallest distance of non-adversarial samples is not smaller than the $\lceil\frac{N}{2}\rceil$th smallest distance of adversarial samples,
 stop and compute the \gls{ars}. Otherwise increase $\kappa$ and repeat. If after a predefined number of iterations -- e.g. 100 -- still not more than half of the samples are adversarial, also break and set the \gls{ars} to $\infty$.
 
-The larger the \gls{ars} is, the more robust is the model, as then an adversary needs to modify the samples more to make them adversarial. If not more than half of the samples could be made adversarial, our metric is $\infty$ since then apparently it is not possible for an adversary to reliably conduct adversarial attacks on the majority of samples. In this case, the ratio of samples that could be made adversarial can be a useful metric to determine the exact extent of the adversarial threat.
+The larger the \gls{ars} is, the more robust the model is, as then an adversary needs to modify the samples more to make them adversarial. If not more than half of the samples could be made adversarial, our metric is $\infty$ since then apparently it is not possible for an adversary to reliably conduct adversarial attacks on the majority of samples. In this case, the ratio of samples that could be made adversarial can be a useful metric to determine the exact extent of the adversarial threat.
 
 Setting the threshold for the \gls{ars} to 50\% is arbitrary, but
  % reasonable as this way the \gls{ars} approximates the median of the distances of all samples and, additionally, marks the distance where an adversarial attack is more likely to be successful than unsuccessful.
- reasonable as outliers with very large distances are ignored and if an attacker can make the majority of samples adversarial, we think that its attack is ``successful''.
+ reasonable as outliers with very large distances are ignored and because if an attacker can make the majority of samples adversarial, we argue that its attack is ``successful''.
 %we think that it is reasonable since if an attacker can make the majority of samples adversarial, we think that its attack is ``successful''.
 
 \begin{figure}[h]
@@ -387,7 +387,7 @@ Setting the threshold for the \gls{ars} to 50\% is arbitrary, but
 \label{fig:recall_ars}
 \end{figure}
 
-\autoref{fig:recall_ars} shows that certain attack types, like ``DoS SlowHTTPTest'', are easy to classify for an IDS but still are also surprisingly easy for an attacker to perform adversarial modifications to make them look benign.
+\autoref{fig:recall_ars} shows that certain attack types, like ``DoS SlowHTTPTest'', are easy to classify for an IDS but still are also surprisingly vulnerable to adversarial modifications by an attacker to make them look benign.
 
 \section{Explaining Recurrent Neural Networks}
 From a naive perspective, one might be tempted to reuse explainability methods for \glspl{rnn} by considering a flow the sum of its packet features.
