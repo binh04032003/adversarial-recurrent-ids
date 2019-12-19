@@ -33,7 +33,7 @@ values = np.array(values, dtype=float)
 
 def importance():
 	global values
-	plt.figure(figsize=(5,4))
+	plt.figure(figsize=(5,3))
 	values[values < 0] = 0
 	values /= np.sum(values,axis=0)
 
