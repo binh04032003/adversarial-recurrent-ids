@@ -3,11 +3,10 @@
 	title = {Network {Traffic} {Anomaly} {Detection} {Using} {Recurrent} {Neural} {Networks}},
 	abstract = {We show that a recurrent neural network is able to learn a model to represent sequences of communications between computers on a network and can be used to identify outlier network traffic. Defending computer networks is a challenging problem and is typically addressed by manually identifying known malicious actor behavior and then specifying rules to recognize such behavior in network communications. However, these rule-based approaches often generalize poorly and identify only those patterns that are already known to researchers. An alternative approach that does not rely on known malicious behavior patterns can potentially also detect previously unseen patterns. We tokenize and compress netflow into sequences of "words" that form "sentences" representative of a conversation between computers. These sentences are then used to generate a model that learns the semantic and syntactic grammar of the newly generated language. We use Long-Short-Term Memory (LSTM) cell Recurrent Neural Networks (RNN) to capture the complex relationships and nuances of this language. The language model is then used predict the communications between two IPs and the prediction error is used as a measurement of how typical or atyptical the observed communication are. By learning a model that is specific to each network, yet generalized to typical computer-to-computer traffic within and outside the network, a language model is able to identify sequences of network activity that are outliers with respect to the model. We demonstrate positive unsupervised attack identification performance (AUC 0.84) on the ISCX IDS dataset which contains seven days of network activity with normal traffic and four distinct attack patterns.},
 	urldate = {2019-07-30},
-	journal = {arXiv:1803.10769 [cs]},
+	journal = {arXiv:1803.10769},
 	author = {Radford, Benjamin J. and Apolonio, Leonardo M. and Trias, Antonio J. and Simpson, Jim A.},
 	month = mar,
 	year = {2018},
-	note = {arXiv: 1803.10769},
 	keywords = {Computer Science - Computers and Society, Computer Science - Human-Computer Interaction, Computer Science - Machine Learning},
 	annote = {Comment: Prepared for the 2017 National Symposium on Sensor and Data Fusion},
 	annote = {Comment: Prepared for the 2017 National Symposium on Sensor and Data Fusion}
@@ -34,12 +33,11 @@
 	shorttitle = {Fine-{Pruning}},
 	abstract = {Deep neural networks (DNNs) provide excellent performance across a wide range of classification tasks, but their training requires high computational resources and is often outsourced to third parties. Recent work has shown that outsourced training introduces the risk that a malicious trainer will return a backdoored DNN that behaves normally on most inputs but causes targeted misclassifications or degrades the accuracy of the network when a trigger known only to the attacker is present. In this paper, we provide the first effective defenses against backdoor attacks on DNNs. We implement three backdoor attacks from prior work and use them to investigate two promising defenses, pruning and fine-tuning. We show that neither, by itself, is sufficient to defend against sophisticated attackers. We then evaluate fine-pruning, a combination of pruning and fine-tuning, and show that it successfully weakens or even eliminates the backdoors, i.e., in some cases reducing the attack success rate to 0\% with only a 0.4\% drop in accuracy for clean (non-triggering) inputs. Our work provides the first step toward defenses against backdoor attacks in deep neural networks.},
 	urldate = {2019-08-20},
-	journal = {arXiv:1805.12185 [cs]},
+	journal = {arXiv:1805.12185},
 	author = {Liu, Kang and Dolan-Gavitt, Brendan and Garg, Siddharth},
 	month = may,
 	year = {2018},
-	note = {arXiv: 1805.12185},
-	keywords = {Computer Science - Machine Learning, Computer Science - Cryptography and Security}
+	keywords = {Computer Science - Cryptography and Security, Computer Science - Machine Learning}
 }
 
 @article{gu_badnets:_2017,
@@ -47,12 +45,11 @@
 	shorttitle = {{BadNets}},
 	abstract = {Deep learning-based techniques have achieved state-of-the-art performance on a wide variety of recognition and classification tasks. However, these networks are typically computationally expensive to train, requiring weeks of computation on many GPUs; as a result, many users outsource the training procedure to the cloud or rely on pre-trained models that are then fine-tuned for a specific task. In this paper we show that outsourced training introduces new security risks: an adversary can create a maliciously trained network (a backdoored neural network, or a {\textbackslash}emph\{BadNet\}) that has state-of-the-art performance on the user's training and validation samples, but behaves badly on specific attacker-chosen inputs. We first explore the properties of BadNets in a toy example, by creating a backdoored handwritten digit classifier. Next, we demonstrate backdoors in a more realistic scenario by creating a U.S. street sign classifier that identifies stop signs as speed limits when a special sticker is added to the stop sign; we then show in addition that the backdoor in our US street sign detector can persist even if the network is later retrained for another task and cause a drop in accuracy of \{25\}{\textbackslash}\% on average when the backdoor trigger is present. These results demonstrate that backdoors in neural networks are both powerful and---because the behavior of neural networks is difficult to explicate---stealthy. This work provides motivation for further research into techniques for verifying and inspecting neural networks, just as we have developed tools for verifying and debugging software.},
 	urldate = {2019-08-20},
-	journal = {arXiv:1708.06733 [cs]},
+	journal = {arXiv:1708.06733},
 	author = {Gu, Tianyu and Dolan-Gavitt, Brendan and Garg, Siddharth},
 	month = aug,
 	year = {2017},
-	note = {arXiv: 1708.06733},
-	keywords = {Computer Science - Machine Learning, Computer Science - Cryptography and Security}
+	keywords = {Computer Science - Cryptography and Security, Computer Science - Machine Learning}
 }
 
 @article{wang_neural_2019,
@@ -92,7 +89,7 @@
 	author = {Moustafa, Nour and Slay, Jill},
 	month = nov,
 	year = {2015},
-	keywords = {Benchmark testing, computer network security, Data models, Feature extraction, IP networks, low footprint attacks, network intrusion detection systems, network traffic, NIDS, pcap files, Servers, telecommunication traffic, Telecommunication traffic, testbed, Training, UNSW-NB15 data set, UNSW-NB15 network data set},
+	keywords = {telecommunication traffic, Feature extraction, computer network security, IP networks, Servers, Benchmark testing, Data models, low footprint attacks, network intrusion detection systems, network traffic, NIDS, pcap files, Telecommunication traffic, testbed, Training, UNSW-NB15 data set, UNSW-NB15 network data set},
 	pages = {1--6}
 }
 
@@ -129,7 +126,7 @@
 	journal = {ICISS},
 	author = {Gharib, Amirhossein and Sharafaldin, Iman and Lashkari, Arash Habibi and Ghorbani, Ali A.},
 	year = {2016},
-	keywords = {Benchmark (computing), Blocking (computing), Coefficient, computer network, Dental Intrusion, Internet, Intrusion detection system, Sensor, Silo (dataset)},
+	keywords = {Internet, Benchmark (computing), Blocking (computing), Coefficient, computer network, Dental Intrusion, Intrusion detection system, Sensor, Silo (dataset)},
 	pages = {1--6}
 }
 
@@ -142,8 +139,7 @@
 	publisher = {CN Group, Institute of Telecommunications, TU Wien},
 	author = {Vormayr, Gernot},
 	month = aug,
-	year = {2019},
-	note = {Commit 0816e6}
+	year = {2019}
 }
 
 @article{esposito_comparative_1997,
@@ -236,11 +232,10 @@
 	title = {Visualizing the {Effects} of {Predictor} {Variables} in {Black} {Box} {Supervised} {Learning} {Models}},
 	abstract = {When fitting black box supervised learning models (e.g., complex trees, neural networks, boosted trees, random forests, nearest neighbors, local kernel-weighted methods, etc.), visualizing the main effects of the individual predictor variables and their low-order interaction effects is often important, and partial dependence (PD) plots are the most popular approach for accomplishing this. However, PD plots involve a serious pitfall if the predictor variables are far from independent, which is quite common with large observational data sets. Namely, PD plots require extrapolation of the response at predictor values that are far outside the multivariate envelope of the training data, which can render the PD plots unreliable. Although marginal plots (M plots) do not require such extrapolation, they produce substantially biased and misleading results when the predictors are dependent, analogous to the omitted variable bias in regression. We present a new visualization approach that we term accumulated local effects (ALE) plots, which inherits the desirable characteristics of PD and M plots, without inheriting their preceding shortcomings. Like M plots, ALE plots do not require extrapolation; and like PD plots, they are not biased by the omitted variable phenomenon. Moreover, ALE plots are far less computationally expensive than PD plots.},
 	urldate = {2019-09-13},
-	journal = {arXiv:1612.08468 [stat]},
+	journal = {arXiv:1612.08468},
 	author = {Apley, Daniel W. and Zhu, Jingyu},
 	month = dec,
 	year = {2016},
-	note = {arXiv: 1612.08468},
 	keywords = {Statistics - Methodology},
 	annote = {Comment: The R package ALEPlot is available on CRAN. The new version contains refined definitions of ALE effects, a new illustrative example, theorems and proofs of asymptotic properties of ALE effects and estimators, and extra implementation details}
 }
@@ -260,8 +255,7 @@ They have applications in image and video recognition, recommender systems, imag
 	journal = {Wikipedia},
 	author = {{Wikipedia}},
 	month = oct,
-	year = {2019},
-	note = {Page Version ID: 921208341}
+	year = {2019}
 }
 
 @inproceedings{erlacher_how_2018,
@@ -278,7 +272,6 @@ They have applications in image and video recognition, recommender systems, imag
 	publisher = {ACM},
 	author = {Erlacher, Felix and Dressler, Falko},
 	year = {2018},
-	note = {event-place: Budapest, Hungary},
 	pages = {46--51}
 }
 
@@ -312,8 +305,7 @@ They have applications in image and video recognition, recommender systems, imag
 	author = {Yang, Kaichen and Liu, Jianqing and Zhang, Chi and Fang, Yuguang},
 	month = oct,
 	year = {2018},
-	note = {ISSN: 2155-7586, 2155-7578},
-	keywords = {deep learning, Feature extraction, computer network security, intrusion detection, Intrusion detection, network intrusion detection systems, neural nets, Neural networks, Neurons, adversarial example, black-box model, database management systems, Deep learning, deep neural network, DNN classifier, internal information, NSL-KDD database, Perturbation methods, security, security application},
+	keywords = {adversarial example, black-box model, computer network security, database management systems, deep learning, Deep learning, deep neural network, DNN classifier, Feature extraction, internal information, intrusion detection, Intrusion detection, network intrusion detection systems, neural nets, Neural networks, Neurons, NSL-KDD database, Perturbation methods, security, security application},
 	pages = {559--564}
 }
 
@@ -376,7 +368,7 @@ They have applications in image and video recognition, recommender systems, imag
 	title = {Crafting {Adversarial} {Input} {Sequences} for {Recurrent} {Neural} {Networks}},
 	abstract = {Machine learning models are frequently used to solve complex security problems, as well as to make decisions in sensitive situations like guiding autonomous vehicles or predicting financial market behaviors. Previous efforts have shown that numerous machine learning models were vulnerable to adversarial manipulations of their inputs taking the form of adversarial samples. Such inputs are crafted by adding carefully selected perturbations to legitimate inputs so as to force the machine learning model to misbehave, for instance by outputting a wrong class if the machine learning task of interest is classification. In fact, to the best of our knowledge, all previous work on adversarial samples crafting for neural network considered models used to solve classification tasks, most frequently in computer vision applications. In this paper, we contribute to the field of adversarial machine learning by investigating adversarial input sequences for recurrent neural networks processing sequential data. We show that the classes of algorithms introduced previously to craft adversarial samples misclassified by feed-forward neural networks can be adapted to recurrent neural networks. In a experiment, we show that adversaries can craft adversarial sequences misleading both categorical and sequential recurrent neural networks.},
 	urldate = {2019-10-23},
-	journal = {arXiv:1604.08275 [cs]},
+	journal = {arXiv:1604.08275},
 	author = {Papernot, Nicolas and McDaniel, Patrick and Swami, Ananthram and Harang, Richard},
 	month = apr,
 	year = {2016},
@@ -407,7 +399,7 @@ They have applications in image and video recognition, recommender systems, imag
 @inproceedings{goodfellow_explaining_2015,
 	title = {Explaining and {Harnessing} {Adversarial} {Examples}},
 	url = {http://arxiv.org/abs/1412.6572},
-	booktitle = {Int. {Conf.} on {Learning} {Representations}},
+	booktitle = {{ICLR}},
 	author = {Goodfellow, Ian and Shlens, Jonathon and Szegedy, Christian},
 	year = {2015}
 }
@@ -415,7 +407,7 @@ They have applications in image and video recognition, recommender systems, imag
 @inproceedings{szegedy_intriguing_2014,
 	title = {Intriguing properties of neural networks},
 	url = {http://arxiv.org/abs/1312.6199},
-	booktitle = {Int. {Conf.} on {Learning} {Representations}},
+	booktitle = {International {Conference} on {Learning} {Representations}},
 	author = {Szegedy, Christian and Zaremba, Wojciech and Sutskever, Ilya and Bruna, Joan and Erhan, Dumitru and Goodfellow, Ian and Fergus, Rob},
 	year = {2014}
 }
@@ -423,7 +415,8 @@ They have applications in image and video recognition, recommender systems, imag
 @inproceedings{carlini_towards_2017,
 	title = {Towards {Evaluating} the {Robustness} of {Neural} {Networks}},
 	abstract = {Neural networks provide state-of-the-art results for most machine learning tasks. Unfortunately, neural networks are vulnerable to adversarial examples: given an input x and any target classification t, it is possible to find a new input x' that is similar to x but classified as t. This makes it difficult to apply neural networks in security-critical areas. Defensive distillation is a recently proposed approach that can take an arbitrary neural network, and increase its robustness, reducing the success rate of current attacks' ability to find adversarial examples from 95\% to 0.5\%. In this paper, we demonstrate that defensive distillation does not significantly increase the robustness of neural networks by introducing three new attack algorithms that are successful on both distilled and undistilled neural networks with 100\% probability. Our attacks are tailored to three distance metrics used previously in the literature, and when compared to previous adversarial example generation algorithms, our attacks are often much more effective (and never worse). Furthermore, we propose using high-confidence adversarial examples in a simple transferability test we show can also be used to break defensive distillation. We hope our attacks will be used as a benchmark in future defense attempts to create neural networks that resist adversarial examples.},
-	booktitle = {2017 {IEEE} {Symposium} on {Security} and {Privacy} ({SP})},
+	booktitle = {S\&{P}},
+	publisher = {IEEE},
 	author = {Carlini, Nicholas and Wagner, David},
 	month = may,
 	year = {2017},
@@ -484,16 +477,19 @@ They have applications in image and video recognition, recommender systems, imag
 	urldate = {2019-11-15},
 	journal = {Cross Validated},
 	author = {{StackExchange Cross Validated}},
-	year = {2019}
+	year = {2019},
+	note = {ht
+tps://stats.stackexchange.com/questions/191855/variable-importance-in-rnn-or-lstm}
 }
 
 @misc{stackexchange_cross_validated_feature_2016,
 	title = {Feature selection using deep learning?},
-	url = {https://stats.stackexchange.com/questions/250381/feature-selection-using-deep-learning?r=SearchResults&s=1|93.8915},
+	url = {https://stats.stackexchange.com/questions/250381/feature-selection-using-deep-learning},
 	urldate = {2019-11-15},
 	journal = {Cross Validated},
 	author = {{StackExchange Cross Validated}},
-	year = {2016}
+	year = {2016},
+	note = {https://stats.stackexchange.com/questions/250381/feature-selection-using-deep-learning}
 }
 
 @article{srivastava_dropout:_2014,
@@ -509,7 +505,7 @@ They have applications in image and video recognition, recommender systems, imag
 }
 
 @inproceedings{bachl_walling_2019,
-	series = {Big-{DAMA} '19},
+	address = {Orlando, FL, USA},
 	title = {Walling {Up} {Backdoors} in {Intrusion} {Detection} {Systems}},
 	abstract = {Interest in poisoning attacks and backdoors recently resurfaced for Deep Learning (DL) applications. Several successful defense mechanisms have been recently proposed for Convolutional Neural Networks (CNNs), for example in the context of autonomous driving. We show that visualization approaches can aid in identifying a backdoor independent of the used classifier. Surprisingly, we find that common defense mechanisms fail utterly to remove backdoors in DL for Intrusion Detection Systems (IDSs). Finally, we devise pruning-based approaches to remove backdoors for Decision Trees (DTs) and Random Forests (RFs) and demonstrate their effectiveness for two different network security datasets.},
 	urldate = {2019-12-07},
@@ -548,7 +544,7 @@ They have applications in image and video recognition, recommender systems, imag
 
 @article{chang_dropout_2017,
 	title = {Dropout feature ranking for deep learning models},
-	journal = {arXiv preprint arXiv:1712.08645},
+	journal = {arXiv:1712.08645},
 	author = {Chang, Chun-Hao and Rampasek, Ladislav and Goldenberg, Anna},
 	year = {2017}
 }
@@ -558,6 +554,7 @@ They have applications in image and video recognition, recommender systems, imag
 	url = {http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions.pdf},
 	urldate = {2019-12-09},
 	booktitle = {Advances in {Neural} {Information} {Processing} {Systems} 30},
+	publisher = {Curran Associates, Inc.},
 	author = {Lundberg, Scott M and Lee, Su-In},
 	year = {2017},
 	pages = {4765--4774},
@@ -566,7 +563,6 @@ They have applications in image and video recognition, recommender systems, imag
 
 @inproceedings{ribeiro_why_2016,
 	address = {San Francisco, California, USA},
-	series = {{KDD} '16},
 	title = {"{Why} {Should} {I} {Trust} {You}?": {Explaining} the {Predictions} of {Any} {Classifier}},
 	isbn = {978-1-4503-4232-2},
 	shorttitle = {"{Why} {Should} {I} {Trust} {You}?},
@@ -574,7 +570,7 @@ They have applications in image and video recognition, recommender systems, imag
 	doi = {10.1145/2939672.2939778},
 	abstract = {Despite widespread adoption, machine learning models remain mostly black boxes. Understanding the reasons behind predictions is, however, quite important in assessing trust, which is fundamental if one plans to take action based on a prediction, or when choosing whether to deploy a new model. Such understanding also provides insights into the model, which can be used to transform an untrustworthy model or prediction into a trustworthy one. In this work, we propose LIME, a novel explanation technique that explains the predictions of any classifier in an interpretable and faithful manner, by learning an interpretable model locally varound the prediction. We also propose a method to explain models by presenting representative individual predictions and their explanations in a non-redundant way, framing the task as a submodular optimization problem. We demonstrate the flexibility of these methods by explaining different models for text (e.g. random forests) and image classification (e.g. neural networks). We show the utility of explanations via novel experiments, both simulated and with human subjects, on various scenarios that require trust: deciding if one should trust a prediction, choosing between models, improving an untrustworthy classifier, and identifying why a classifier should not be trusted.},
 	urldate = {2019-12-10},
-	booktitle = {Proc. of the 22Nd {ACM} {SIGKDD} {Int.} {Conf.} on {Knowledge} {Discovery} and {Data} {Mining}},
+	booktitle = {{KDD}},
 	publisher = {ACM},
 	author = {Ribeiro, Marco Tulio and Singh, Sameer and Guestrin, Carlos},
 	year = {2016},
@@ -600,7 +596,6 @@ They have applications in image and video recognition, recommender systems, imag
 	pages = {307--317}
 }
 
-
 @inproceedings{hashemi_towards_2019,
 	address = {Orlando, FL, USA},
 	title = {Towards {Evaluation} of {NIDSs} in {Adversarial} {Setting}},
@@ -611,7 +606,7 @@ They have applications in image and video recognition, recommender systems, imag
 	language = {en},
 	urldate = {2019-12-16},
 	booktitle = {Big-{DAMA} '19},
-	publisher = {ACM Press},
+	publisher = {ACM},
 	author = {Hashemi, Mohammad J. and Cusack, Greg and Keller, Eric},
 	year = {2019},
 	pages = {14--21},
@@ -636,7 +631,7 @@ They have applications in image and video recognition, recommender systems, imag
 	url = {http://arxiv.org/abs/1902.06705},
 	abstract = {Correctly evaluating defenses against adversarial examples has proven to be extremely difficult. Despite the significant amount of recent work attempting to design defenses that withstand adaptive attacks, few have succeeded; most papers that propose defenses are quickly shown to be incorrect. We believe a large contributing factor is the difficulty of performing security evaluations. In this paper, we discuss the methodological foundations, review commonly accepted best practices, and suggest new methods for evaluating defenses to adversarial examples. We hope that both researchers developing defenses as well as readers and reviewers who wish to understand the completeness of an evaluation consider our advice in order to avoid common pitfalls.},
 	urldate = {2019-12-16},
-	journal = {arXiv:1902.06705 [cs, stat]},
+	journal = {arXiv:1902.06705},
 	author = {Carlini, Nicholas and Athalye, Anish and Papernot, Nicolas and Brendel, Wieland and Rauber, Jonas and Tsipras, Dimitris and Goodfellow, Ian and Madry, Aleksander and Kurakin, Alexey},
 	month = feb,
 	year = {2019},
