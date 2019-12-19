@@ -118,7 +118,7 @@ Since traditional evaluation metrics such as accuracy are not sufficient for qua
 There is a significant body of scientific work focusing on the detection of unwanted behavior in networks. In the past, a viable way of performing intrusion detection was to inspect the content of packets themselves and detect if a packet delivers potentially harmful content. More recently, with the rise of omnipresent encryption, %available features have changed. Since payload is no longer available,
 the focus now lies on features that are always available to network monitoring equipment like port numbers, protocol flags or packet sizes when encrypting above the transport layer.
 
-Network communication is usually grouped into \textit{flows}, which are commonly defined as a sequence of packets sharing certain properties. %, between two applications potentially being located at different physical locations.
+Network communication is usually aggregated into \textit{flows}, which are commonly defined as a sequence of packets sharing certain properties. %, between two applications potentially being located at different physical locations.
 When analyzing flows, not only the aforementioned features are available but also features related to the timing of the individual packets. % as well as their size. %AH: don't see why pkt size is not available without flows
 %For example, a specific attack might require the attacker to send three small packets and the victim to reply with two large packets followed by a small one to the attacker.
 Various approaches have been proposed to extract features from flows and then perform anomaly detection with the extracted flows \cite{meghdouri_analysis_2018}.
@@ -150,7 +150,7 @@ First, by simply leaving out manipulable features, we obtain a classifier which 
 by deploying an adversarial training procedure,
 %AH. compared to other research about adversarial training, I dont feel that out approach is so special
 %develop a custom adversarial training procedure which especially focuses on ease of use and low resource consumption and aims to keep the number of additionally introduced training hyperparameters low. With this novel strategy
-we can reduce the attack surface and harden the resulting \gls{ids} while retaining similar classification performance. % like for the original \gls{ml} model.
+we can reduce the attack surface and harden the resulting \gls{ids} while retaining all features and similar classification performance. % like for the original \gls{ml} model.
 
 We make all the source code, data and figures freely available to enable reproducibility and encourage experimentation at \url{https://github.com/CN-TU/adversarial-recurrent-ids}.
 
@@ -288,12 +288,12 @@ We implemented the \gls{cw} \cite{carlini_towards_2017}, performing gradient des
 \begin{equation} \label{eq:carliniWagner}
 d(X,\tilde X) + \kappa  \max(Z(\tilde X), \delta).
 \end{equation}
-Here, $d(\cdot)$ is a distance metric and $\kappa \in \mathbb R^+$ is a parameter governing the tradeoff achieved between attack success and distance from the original flow. Furthermore, $Z(\cdot)$ denotes the neural network's logit output, $X$ denotes the original flow and $\tilde X$ the adversarial flow under optimization.
+Here, $d(\cdot)$ is a distance metric and $\kappa \in \mathbb R^+$ is a parameter governing the tradeoff achieved between attack success and distance from the original flow. Furthermore, $Z(\cdot)$ denotes the neural network's logit output, $X$ denotes the original flow and $\tilde X$ the adversarial flow optimized by \gls{cw}.
 
 $\delta \in \mathbb R$ is a parameter that determines how far an adversary wants to exceed the decision boundary.
-In the original publication $\delta=0$, meaning that the network's decision for adversarial samples is just between attack and benign traffic. In the present context, we need to make sure that the classifier's prediction would actually be benign, even though a certain level of noise will be added to \glspl{iat} due to the network between attacker and victim. Hence, we introduced $\delta=-0.2$, corresponding to a prediction confidence of 55\% for the sample to be benign.
+In the original publication $\delta=0$, meaning that the network's decision for adversarial samples is just between attack and benign traffic. In the present context, we need to make sure that the classifier's prediction would actually be benign, even though a certain level of noise will be added to \glspl{iat} due to the network between attacker and victim. Hence, we introduced $\delta=-0.2$, corresponding to a prediction confidence of 55\% for the sample to be benign after the sigmoid activation function.
 
-We used $L_1$ distance as distance metric, as we consider it to represent practically relevant differences of network flows best. We used \gls{pgd} for meeting the real-world constraints discussed above.
+We used $L_1$ as distance metric, as we consider $L_1$ distance to represent practically relevant differences of network flows best. We used \gls{pgd} for meeting the real-world constraints discussed above.
 
 \subsection{$L_\infty$-bounded Projected Gradient Descent}
 \cite{madry_towards_2018} uses a method for generating adversarial samples which deploys \gls{pgd}  to maximize the network's loss function while constraining the achieved $L_\infty$ distance from the original samples. Hence, an important difference to \gls{cw} is that for this method the network's loss instead of its logit output is considered.
@@ -319,7 +319,8 @@ where $L(X)$ denotes the network's loss function and $\epsilon$ denotes the achi
 \autoref{fig:adv_per_family} depicts the performance for the investigated algorithms for both datasets and for each attack family in CIC-IDS-2017.
 We used \gls{cw} with a tradeoff of 1 and, to provide a fair comparison, for \gls{fgsm} and \gls{pgd} we used an average $L_\infty$ distance as observed for \gls{cw}.
 
-As expected, \gls{cw} delivers the best performance and FGSM, while being the fastest of all investigated algorithms, delivers the worst performance.
+%As expected,
+\gls{cw} delivers the best performance and FGSM, while being the fastest of all investigated algorithms, delivers the worst performance.
 %\autoref{fig:adv_per_family} depicts how successful the attack is for individual attack families.
 The figure shows significant differences for detecting different attack families in the first place. Also for generating adversarial flows some attack families are more susceptible than others. However, the results match to a high degree with our expectations. For example, SQL injection attacks apparently are closer to benign traffic than \gls{dos} attacks and, hence, finding adversarial samples should be easier.
 
@@ -385,7 +386,7 @@ Setting the threshold for the \gls{ars} to 50\% is arbitrary, but
 \label{fig:recall_ars}
 \end{figure}
 
-\autoref{fig:recall_ars} shows that certain attack types, like ``DoS SlowHTTPTest'', are easy to classify for an IDS but still are also surprisingly vulnerable to adversarial modifications by an attacker to make them look benign.
+\autoref{fig:recall_ars} shows that certain attack types, like ``DoS SlowHTTPTest'', are easy to classify for an IDS but still are also surprisingly vulnerable to adversarial modifications by an attacker aiming to make them look benign.
 
 \section{Explaining Recurrent Neural Networks}
 From a naive perspective, one might be tempted to reuse explainability methods for \glspl{rnn} by considering a flow the sum of its packet features.
@@ -394,7 +395,7 @@ We identify several difficulties which occur when trying to explain decisions ma
 \begin{itemize}[topsep=0pt,wide,labelwidth=!,labelindent=0pt]
 \item
 \textbf{Feature quantity.}
-The number of features fed into an \gls{rnn} is number of packet features times the length of the flow. For long flows, the total number of inputs can become very large.
+The number of features fed into an \gls{rnn} is the number of packet features times the length of the flow. For long flows, the total number of inputs can become very large.
 
 \item
 \textbf{Variable sequence lengths.}
