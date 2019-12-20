@@ -141,6 +141,9 @@ for attack_type, seqs in enumerate(results_by_attack_number):
 	ax2.set_ylabel_legend(all_legends[0])
 	ax1.set_ylabel_legend(Rectangle((0,0), 1, 1, fc='gray', alpha=0.2), handlelength=0.7, handletextpad=0.4)
 
+	ticks = plt.xticks()
+	plt.xticks([ tick for tick in ticks[0][1:-1] if tick.is_integer() ])
+	
 	if SHOW_TITLE:
 		plt.title(reverse_mapping[attack_type])
 	# plt.legend(all_legends)
