@@ -486,7 +486,7 @@ When investigating an \gls{ml} classifier, it is natural to ask which inputs hav
 
 A large amount of research has been spent on finding \emph{feature importance} metrics, which allow the selection  of high-importance features, providing a reasonably good classification performance while resulting in a more light-weight classifier.
 
-On the other hand, both adversarial machine learning and explainable machine learning bring up the question to what extent individual features are able to change the prediction outcome. While appearing similar, traditional feature importance can yield markedly wrong results for this case.  To distinguish, we propose the term \emph{feature sensitivity} for such metrics.
+Conversely, both adversarial machine learning and explainable machine learning bring up the question to what extent individual features are able to change the prediction outcome. While appearing similar, traditional feature importance can yield markedly wrong results for this case.  To distinguish, we propose the term \emph{feature sensitivity} for such metrics.
 To analyze features, we use the following approaches:
 
 \subsubsection{Neural Network Weights}
@@ -513,7 +513,7 @@ The results in \autoref{fig:feat_imp} show that, unlike input perturbation, feat
 
 A model trained with feature dropout typically yields slightly lower accuracy than a regularly trained model, even if no features are left out (flow accuracy of 99.43\% vs.99.65\%). We thus recommend training two models: One regular one and one with feature dropout to use for the feature importance.
 
-Another method that uses dropout for feature importance is \cite{chang_dropout_2017}, applying a technique called \textit{Variational Dropout} to learn the optimal dropout rate for each feature. It tries to leave out as many features as possible and at the same time keep accuracy high. Thus important features are going to be left out less often and one can then extract the dropout probabilities for each feature and assess their significance based on them.
+Another method that uses dropout for feature importance is \cite{chang_dropout_2017}, applying a technique called \textit{Variational Dropout} to learn the optimal dropout rate for each feature. It tries to leave out as many features as possible and at the same time keep accuracy high. Thus important features are going to be left out less often and one can then extract the dropout probabilities for each feature and assess their significance based on them. While this method looks seemingly related to feature dropout, it is significantly more complex and does not aim to show the accuracy drop that occurs when omitting a feature but instead returns a unique feature importance value between 0 and 1. 
 %Feature dropout can also be used as a building block for computing the accuracy of datapoints with missing features that is necessary to compute Shapley values \cite{shapley_value_1953} or KernelSHAP \cite{lundberg_unified_2017}.
 
 For feature dropout, it can also happen that several features are left out for a sample and so our method can also be used to analyze the effect of multiple features missing and can thus show possibly correlated features or -- more general -- features that contain common information, relevant for the classification task:
@@ -564,7 +564,7 @@ with $f_X(x), f_Y(y)$ and $f_{X,Y}(x,y)$ denoting the distribution of $X,Y$ and 
 \autoref{fig:feat_imp} shows the results, which match to a large extent with domain-specific expectations for classifying network flows.
 In particular, rarely used TCP flags like NS or URG are unimportant for the classifier. On the other hand, destination port and protocol are essential for characterizing flows by hinting at the type of traffic. \gls{iat} and packet length are important for estimating the amount of transferred information and several flags hint at certain attacks like \gls{dos} attacks.
 
-The weights method is able to reveal features with a very low importance to a certain degree, but disagrees with the other methods to a large extent. Less anticipated, however, also input perturbation does not exhibit a considerable correlation with feature dropout. Considering its functioning, feature dropout is the most reliable method for evaluating importance for removing features. It is remarkable that none of the other methods is able to depict the distinct peak of importance for the destination port.
+The weights method is able to reveal features with a very low importance to a certain degree, but disagrees with the other methods to a large extent. Less anticipated, however, also input perturbation does not exhibit a considerable correlation with feature dropout. Considering its functioning of completely removing individual features, feature dropout is the most reliable method for evaluating importance for removing features. It is remarkable that none of the other methods is able to depict the distinct peak of importance for the destination port.
 
 It is not surprising that mutual information disagrees with feature dropout, since both their aim and their functioning are substantially different. For example, mutual information shows that the protocol field can have a substantial impact on the classification even though an identical accuracy can be achieved when omitting it.
 
