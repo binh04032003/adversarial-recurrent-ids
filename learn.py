@@ -200,6 +200,8 @@ def train():
 	fold = opt.fold
 	lstm_module.train()
 
+	if opt.rl:
+
 	train_indices, _ = get_nth_split(dataset, n_fold, fold)
 	train_data = torch.utils.data.Subset(dataset, train_indices)
 	if opt.advTraining:
@@ -221,20 +223,12 @@ def train():
 			writer.add_scalar('adv_avdistance', av_distance, i)
 
 		for input_data, labels, flow_categories in train_loader:
-			# print("iterating")
-			# samples += len(input_data)
 			optimizer.zero_grad()
 			batch_size = input_data.sorted_indices.shape[0]
 			assert batch_size <= opt.batchSize, "batch_size: {}, opt.batchSize: {}".format(batch_size, opt.batchSize)
 			lstm_module.init_hidden(batch_size)
 
-			# actual_input = torch.FloatTensor(input_tensor[:,:,:-1]).to(device)
-
-			# print("input_data.data.shape", input_data.data.shape)
 			output, seq_lens = lstm_module(input_data)
-
-			# torch.set_printoptions(profile="full")
-			# print("output", output.detach().squeeze().transpose(1,0))
 
 			samples += output.shape[1]
 
@@ -244,8 +238,6 @@ def train():
 
 			mask = (index_tensor <= selection_tensor).byte().to(device)
 			mask_exact = (index_tensor == selection_tensor).byte().to(device)
-			# torch.set_printoptions(profile="full")
-			# print("mask", mask.squeeze())
 			labels, _ = torch.nn.utils.rnn.pad_packed_sequence(labels)
 			flow_categories, _ = torch.nn.utils.rnn.pad_packed_sequence(flow_categories)
 
@@ -254,9 +246,6 @@ def train():
 
 			optimizer.step()
 
-			# print("masked_output_shape", torch.round(output.detach()[mask]).shape, "masked_labels_shape", labels[mask].shape)
-			# print("exact_masked_output_shape", torch.round(output.detach()[mask_exact]).shape, "exact_masked_labels_shape", labels[mask_exact].shape)
-			# print("output.shape", output.shape, "labels.shape", labels.shape)
 			assert output.shape == labels.shape
 			writer.add_scalar("loss", loss.item(), samples)
 			sigmoided_output = torch.sigmoid(output.detach())
@@ -264,11 +253,6 @@ def train():
 			writer.add_scalar("accuracy", accuracy, samples)
 			end_accuracy = torch.mean((torch.round(sigmoided_output[mask_exact]) == labels[mask_exact]).float())
 			writer.add_scalar("end_accuracy", end_accuracy, samples)
-
-			# confidence_for_correct_one = torch.mean(torch.gather(torch.sigmoid(output.detach()[mask]), 2, labels[mask]))
-			# writer.add_scalar("confidence", confidence_for_correct_one, i*opt.batchSize)
-			# end_confidence_for_correct_one = torch.mean(torch.gather(torch.sigmoid(output.detach()[-1,:,:]), 1, labels[-1,:].unsqueeze(1)))
-			# writer.add_scalar("end_confidence", end_confidence_for_correct_one, i*opt.batchSize)
 
 			not_attack_mask = labels == 0
 			confidences = sigmoided_output.detach().clone()
@@ -1183,7 +1167,7 @@ def adv_until_less_than_half():
 		prev_results.append(modified_results_by_attack)
 		prev_flows.append(modified_flows_by_attack)
 		prev_ratios.append(ratio_modified_by_attack_number)
-		
+
 		for attack_index, ratio in enumerate(prev_ratios[i]):
 			if ratio > -float("inf"):
 				print(f"Looking at attack {attack_index} with a ratio of {ratio}")
@@ -1203,7 +1187,7 @@ def adv_until_less_than_half():
 				max_distance_flows[attack_index] = float(distances[lower_part[-1]] if len(lower_part) else np.nan)
 				distances_packets[attack_index] = float(np.mean(distances_per_packet) if len(distances_per_packet) else np.nan)
 				max_distance_packets[attack_index] = float(distances_per_packet[-1] if len(distances_per_packet) else np.nan)
-				
+
 		next_filter = [index for index, item in enumerate(ratio_modified_by_attack_number) if item < THRESHOLD and (item==-np.inf or opt.skipArsDistanceCheck or min_non_adv_distance[index] >= max_distance_flows[index]) ]
 		print("i", i, "ratios", ratio_modified_by_attack_number)
 		if i+1==MAX or len(next_filter) == len(orig_results) or (len(prev_ratios) > 1 and (prev_ratios[-2] <= prev_ratios[-1]).all()):
@@ -1556,6 +1540,7 @@ if __name__=="__main__":
 	parser.add_argument('--nFold', type=int, default=3, help='total number of folds')
 	parser.add_argument('--batchSize', type=int, default=128, help='input batch size')
 	parser.add_argument('--net', default='', help="path to net (to continue training)")
+	parser.add_argument('--net_rl', default='', help="path to net (to continue training) for RL")
 	parser.add_argument('--function', default='train', help='the function that is going to be called')
 	parser.add_argument('--manualSeed', default=0, type=int, help='manual seed')
 	parser.add_argument('--maxLength', type=int, default=100, help='max length')
@@ -1578,6 +1563,8 @@ if __name__=="__main__":
 	parser.add_argument('--n_layers', type=int, default=3, help='number of LSTM layers')
 	parser.add_argument('--adjustFeatImpDistribution', action='store_true', help='adjust randomization feature importance distributions to a practically relevant shape')
 	parser.add_argument('--skipArsDistanceCheck', action='store_true', help='stop ARS computation as soon as 50% theshold is reached')
+	parser.add_argument('--rl', required=True, help='do RL')
+	parser.add_argument('--lookaheadSteps', type=int, default=8, help='number of steps to look into the future for RL')
 
 	# parser.add_argument('--nSamples', type=int, default=1, help='number of items to sample for the feature importance metric')
 
@@ -1635,5 +1622,12 @@ if __name__=="__main__":
 	if opt.net != '':
 		print("Loading", opt.net)
 		lstm_module.load_state_dict(torch.load(opt.net, map_location=device))
+
+	if opt.rl:
+		lstm_module_rl = OurLSTMModule(x[0].shape[-1], opt.lookaheadSteps, opt.hidden_size, opt.n_layers, batchSize, device).to(device)
+
+		if opt.net_rl != '':
+			print("Loading", opt.net_rl)
+			lstm_module_rl.load_state_dict(torch.load(opt.net_rl, map_location=device))
 
 	globals()[opt.function]()
