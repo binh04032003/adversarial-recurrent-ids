@@ -109,7 +109,7 @@ for attack_type, seqs in enumerate(results_by_attack_number):
 	ax2 = ax1.twinx()
 
 	ax2.set_ylabel('Confidence')
-	ax1.set_ylabel("Sample number")
+	ax1.set_ylabel("Flow number")
 
 	ax1.yaxis.tick_right()
 	ax1.yaxis.set_label_position("right")
