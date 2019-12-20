@@ -341,7 +341,7 @@ However, when using a large $\kappa$ in \autoref{eq:carliniWagner}, to avoid ove
 % This conclusion might be misleading, however, as due to the objective function \eqref{eq:carliniWagner} the distance cannot become larger anymore for one sample as soon as an adversarial sample has been found. %, when performing optimization as depicted by the objective function .
 % Hence, the depicted distance increase presumably is due to samples for which no adversarial sample could be found for lower $\kappa$ values.
 
-\begin{figure}[h]
+\begin{figure}[t]
 \includegraphics[width=\columnwidth]{../plots/adv_comparison/tradeoff.pdf}
 % \includegraphics[width=0.49\textwidth]{adv_plots/cwl1.pdf}
 % \includegraphics[width=0.49\textwidth]{adv_plots/cwl2.pdf}
@@ -662,7 +662,7 @@ Other attack families similarly show characteristic patterns.
 
 \section{Defences}
 We now investigate two approaches to increase robustness of the \glspl{rnn} against adversarial attacks.
-\subsection{Reducing features}
+\subsection{Reducing Features}
 The most obvious defence, which is only possible because of the nature of the dataset, is to simply omitting features an attacker can manipulate. We try two different approaches:
 \begin{itemize}[topsep=0pt,wide,labelwidth=!,labelindent=0pt]
 \item Leaving out all manipulable features: packet size and \gls{iat}
@@ -671,7 +671,7 @@ The most obvious defence, which is only possible because of the nature of the da
 
 Both approaches lead to complete resistance to adversarial samples (as we left out all manipulable features), except for botnets, which can still operate when only leaving out manipulable features in one direction. The results show that -- surprisingly -- there is only a small difference in classification performance when only computing the accuracy for the last packet of each flow (flow accuracy): Flow accuracy stays over 99.93\%. However, packet accuracy is only 98\% when leaving out the features in one direction and 96.7\% when leaving them out in both directions. Thus, apparently the \gls{iat} and packet size are especially important for determining whether a flow is malicious in the first packets of a flow.
 
-\subsection{Adversarial training}
+\subsection{Adversarial Training}
 As alternative to omitting manipulable features, we attempted to make the classifier more robust against adversarial samples by augmenting the training set by adversarial flows generated using  \gls{cw}, labeled as additional attacks.
 For this purpose, we added one adversarial sample per attack sample to the training set. Since \gls{cw} is deterministic, this is the maximum number of adversarial samples possible. With this augmented training set we then alternated retraining of the neural network and optimization of the adversarial samples. % using gradient descent.
 
