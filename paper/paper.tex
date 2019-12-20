@@ -154,7 +154,7 @@ we can reduce the attack surface and harden the resulting \gls{ids} while retain
 
 We make all the source code, data and figures freely available to enable reproducibility and encourage experimentation at \url{https://github.com/CN-TU/adversarial-recurrent-ids}.
 
-\section{An \gls{rnn}-based classifier}
+\section{An \gls{rnn}-based Classifier}
 
 % \begin{table}[b]
 % \caption{occurrence frequency of attack types.} \label{tab:occurrence}
@@ -243,7 +243,7 @@ During flow extraction we used the usual 5-tuple flow key, which distinguishes f
 We use Z-score normalization and a train/test split of 2:1.
 
 For evaluation, we use the \textit{CIC-IDS-2017} \cite{sharafaldin_toward_2018} and \textit{UNSW-NB15} \cite{moustafa_unsw-nb15:_2015} datasets which each include more than 2 million flows of network data, containing both benign traffic and a large number of different attacks. Attacks contained in the datasets are shown in \autoref{tab:occurrence}.
-\autoref{tab:performance_results} shows that our \gls{rnn}-based classifiers achieve an accuracy that is similar to previous work based on these datasets~\cite{meghdouri_analysis_2018,bachl_walling_2019}. However, unlike these classifiers, our recurrent classifier has the advantage of being able to detect attacks already before the attack flows are over.
+\autoref{tab:performance_results} shows that our \gls{rnn}-based classifiers achieve an accuracy that is similar to previous work based on these datasets~\cite{meghdouri_analysis_2018,bachl_walling_2019}. However, unlike these classifiers, our recurrent classifier has the advantage of being able to detect attacks already before the attack flows terminate.
 
 \begin{table}
 % Evaluated using
@@ -264,7 +264,7 @@ Youden	&	97.2\%	&	99.0\%	&	87.3\%	&	71.9\%	\\
 \end{tabular}
 \end{table}
 
-\section{Adversarial attacks}
+\section{Adversarial Attacks}
 \label{sec:adv}
 We now investigate whether known \gls{aml} methods can be used for generating adversarial flows for our \gls{rnn}. \cite{hashemi_towards_2019} previously studied the behavior of several Network \glspl{ids} under adversarial attacks but unlike us did not investigate \glspl{rnn}.
 
