@@ -396,7 +396,8 @@ Setting the threshold for the \gls{ars} to 50\% is arbitrary, but
 \autoref{fig:recall_ars} shows that certain attack types, like ``DoS SlowHTTPTest'', are easy to classify for an IDS but still are also surprisingly vulnerable to adversarial modifications by an attacker aiming to make them look benign.
 
 \section{Explaining Recurrent Neural Networks}
-From a naive perspective, one might be tempted to reuse explainability methods for \glspl{rnn} by considering a flow the sum of its packet features.
+Having verified the effectiveness of \gls{aml}  for our \glspl{rnn}, we now  investigate how the classifiers come to a decision.
+From a naive perspective, one might be tempted to reuse existing explainability methods for \glspl{rnn} by considering a flow the sum of its packet features.
 We identify several difficulties which occur when trying to explain decisions made by \glspl{rnn}.
 
 \begin{itemize}[topsep=0pt,wide,labelwidth=!,labelindent=0pt]
@@ -657,7 +658,7 @@ Other attack families similarly show characteristic patterns.
 %We want to determine how the pattern of packet sizes and \glspl{iat} is significant for the classification. \autoref{fig:plot_features} clearly shows that some attack types have very characteristic patterns of packet sizes and \glspl{iat}.
 
 \section{Defences}
-We now propose two approaches to increase robustness of the \gls{rnn} against adversarial attacks.
+We now investigate two approaches to increase robustness of the \glspl{rnn} against adversarial attacks.
 \subsection{Reducing features}
 The most obvious defence, which is only possible because of the nature of the dataset, is to simply omitting features an attacker can manipulate. We try two different approaches:
 \begin{itemize}[topsep=0pt,wide,labelwidth=!,labelindent=0pt]
