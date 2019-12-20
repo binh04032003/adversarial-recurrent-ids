@@ -131,7 +131,7 @@ for attack_type, (results_by_attack_number_item, flows_by_attack_number_item, re
 	leg.legendHandles[0].set_color('gray')
 	leg.legendHandles[1].set_color('gray')
 
-	ax1.set_xlabel('Sequence index')
+	ax1.set_xlabel('Time step $t$')
 	#  plt.title(reverse_mapping[attack_type])
 	plt.tight_layout()
 
