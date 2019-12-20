@@ -144,7 +144,7 @@ are not even particularly important for the \gls{rnn}'s classification outcome. 
 
 %Since common explainability methods are designed to work with images or tabular data but not sequences, we extend existing explainability methods such as \glspl{pdp} \cite{friedman_greedy_2001} for sequential data. These show the varying characteristics of different attacks and they aid with visualizing potentially vulnerable features for adversaries.
 
-Based on the insights gained by the feature importance and explainability methods, we propose two defence methods.
+Based on the insights gained by the feature importance and explainability methods, we propose two defense methods.
 %develop a simple method for defending against adversaries who can manipulate arbitrary packets by simply leaving out potentially manipulable information from the classification process.
 First, by simply leaving out manipulable features, we obtain a classifier which is slightly less accurate but is still useful to be deployed in a real scenario. Second,
 by deploying an adversarial training procedure,
@@ -238,7 +238,7 @@ source port, destination port, protocol identifier, packet length, \gls{iat} to 
 % \item packet directions (if packet goes there or back)
 % \item all TCP flags (0 if the flow is not TCP)
 % \end{itemize*}.
-We omitted \gls{ttl} values, as they are likely to lead to unwanted prediction behaviour \cite{bachl_walling_2019}.  Among the used features, source port, destination port and protocol identifier are constant over the whole flow while the others vary.
+We omitted \gls{ttl} values, as they are likely to lead to unwanted prediction behavior \cite{bachl_walling_2019}.  Among the used features, source port, destination port and protocol identifier are constant over the whole flow while the others vary.
 During flow extraction we used the usual 5-tuple flow key, which distinguishes flows based on the protocol they use and their source and destination port and IP address.
 We use Z-score normalization and a train/test split of 2:1.
 
@@ -298,7 +298,7 @@ We used $L_1$ as distance metric, as we consider $L_1$ distance to represent pra
 \subsection{$L_\infty$-bounded Projected Gradient Descent}
 \cite{madry_towards_2018} uses a method for generating adversarial samples which deploys \gls{pgd}  to maximize the network's loss function while constraining the achieved $L_\infty$ distance from the original samples. Hence, an important difference to \gls{cw} is that for this method the network's loss instead of its logit output is considered.
 We consider this method an interesting combination of \gls{cw} and \gls{fgsm}.
-Since its functioning is somewhat similar to \gls{cw}, we expected the generated adversarial samples to be similarly close the the original samples.
+Since its functioning is somewhat similar to \gls{cw}, we expected the generated adversarial samples to be similarly close to the original samples.
 
 \subsection{Fast Gradient Sign Method}
 Finally, we also tested the \gls{fgsm} % which was initially proposed in
@@ -666,10 +666,10 @@ attack types indeed have a characteristic pattern in which they send packets by 
 Other attack families similarly show characteristic patterns.
 %We want to determine how the pattern of packet sizes and \glspl{iat} is significant for the classification. \autoref{fig:plot_features} clearly shows that some attack types have very characteristic patterns of packet sizes and \glspl{iat}.
 
-\section{Defences}
+\section{Defenses}
 We now investigate two approaches to increase robustness of the \glspl{rnn} against adversarial attacks.
 \subsection{Reducing Features}
-The most obvious defence, which is only possible because of the nature of the dataset, is to simply omitting features an attacker can manipulate. We try two different approaches:
+The most obvious defense, which is only possible because of the nature of the dataset, is to simply omitting features an attacker can manipulate. We try two different approaches:
 \begin{itemize}[topsep=0pt,wide,labelwidth=!,labelindent=0pt]
 \item Leaving out all manipulable features: packet size and \gls{iat}
 \item Leaving out manipulable features only when the attacker can manipulate them, i.e. only in the direction from the attacker to the victim. This, however, does not prevent adversarial samples for botnets, for which both sides are malicious.
