@@ -310,13 +310,13 @@ where $L(X)$ denotes the network's loss function and $\epsilon$ denotes the achi
 
 \begin{figure}[h]
 \includegraphics[width=\columnwidth]{../plots/adv_comparison/adv_comparison_17.pdf}
-\caption{Attack success ratios for both datasets and per attack family for CIC-IDS-2017. Depicted are flow detection accuracies for adversarial flows and for unmodified attack flows.}
+\caption{Attack success ratios for both datasets and per attack type for CIC-IDS-2017. Depicted are flow detection accuracies for adversarial flows and for unmodified attack flows.}
 \label{fig:adv_per_family}
 \end{figure}
 
 
 \subsection{Evaluation}
-\autoref{fig:adv_per_family} depicts the performance for the investigated algorithms for both datasets and for each attack family in CIC-IDS-2017.
+\autoref{fig:adv_per_family} depicts the performance for the investigated algorithms for both datasets and for each attack type in CIC-IDS-2017.
 We used \gls{cw} with a tradeoff of 1 and, to provide a fair comparison, for \gls{fgsm} and \gls{pgd} we used an average $L_\infty$ distance as observed for \gls{cw}.
 
 %As expected,
@@ -371,7 +371,7 @@ with $\tilde {\mathcal D} \subset \mathcal D$ denoting the set of cardinality $|
 The \gls{ars} is thus approximately the average of distances smaller than or equal to the median distance.
 
 %Such a metric should be easy to compute, easy to interpret and robust with respect to outliers.
-We consider an adversary successful if they cause at least 50\% of all samples to be misclassified. In this case, the \gls{ars} is the average of the distances of the adversarial samples to the original samples for the 50\% of all samples which have the smallest distances. If the adversary doesn't manage to manipulate enough samples, the \gls{ars} is $\infty$.
+We consider an adversary successful if he can cause at least 50\% of all samples to be misclassified. In this case, the \gls{ars} is the average of the distances of the adversarial samples to the original samples for the 50\% of all samples which have the smallest distances. If the adversary doesn't manage to manipulate enough samples, the \gls{ars} is $\infty$.
 
 \gls{cw} is able to find adversarial samples with minimum distance, but becomes slow for large $\kappa$. Hence, it can be used for finding the \gls{ars} efficiently as follows: 
 %Since \gls{cw} becomes slow for large $\kappa$, the \gls{ars} can be efficiently found as follows:
@@ -511,7 +511,7 @@ called \textit{feature dropout}: When training a model, for each sample, we leav
 An important implementation detail is that for each feature we add another input which is 1 if the feature is suppressed and 0 otherwise. This is necessary for the neural network to be able to distinguish between a feature missing and a feature genuinely being zero. The overall outcome is a classifier being able to deal with missing features.
 The results in \autoref{fig:feat_imp} show that, unlike input perturbation, feature dropout  does not vastly overestimate features' importance. With feature dropout, it becomes apparent that only very few features  actually contain unique information, affecting accuracy when left out: the destination port and the source port.
 
-A model trained with feature dropout typically yields slightly lower accuracy than a regularly trained model, even if no features are left out (flow accuracy of 99.43\% vs.99.65\%). We thus recommend training two models: One regular one and one with feature dropout to use for the feature importance.
+A model trained with feature dropout typically yields slightly lower accuracy than a regularly trained model, even if no features are left out (flow accuracy of 99.43\% vs. 99.65\%). We thus recommend training two models: One regular one and one with feature dropout to use for the feature importance.
 
 Another method that uses dropout for feature importance is \cite{chang_dropout_2017}, applying a technique called \textit{Variational Dropout} to learn the optimal dropout rate for each feature. It tries to leave out as many features as possible and at the same time keep accuracy high. Thus important features are going to be left out less often and one can then extract the dropout probabilities for each feature and assess their significance based on them.
 %Feature dropout can also be used as a building block for computing the accuracy of datapoints with missing features that is necessary to compute Shapley values \cite{shapley_value_1953} or KernelSHAP \cite{lundberg_unified_2017}.
@@ -574,7 +574,7 @@ Metrics for UNSW-NB15 differ substantially from CIC-IDS-2017. However, due to th
 
 \subsection{Explainability Plots}
 Knowing which features to investigate, it is important to analyze which feature values lead to classification as attack.
-In literature, the use of Partial Dependency Plots (\gls{pdp}) has been proposed~\cite{friedman_greedy_2001}. To inspect attack types in detail, in this research we use a \textit{conditional} form of the \gls{pdp}. If $\boldsymbol X \in \mathbb R ^n$ denotes a random vector drawn from feature space, $f(\boldsymbol X) \in [0,1]$ the neural network's prediction and $c$ the attack class, we define the conditional \gls{pdp} for feature $i$  as
+In literature, the use of Partial Dependency Plots (\gls{pdp}) has been proposed~\cite{friedman_greedy_2001}. To inspect attack types in detail, in this research we use a \textit{conditional} form of the \gls{pdp}. If $\boldsymbol X \in \mathbb R ^n$ denotes a random vector drawn from feature space, $f(\boldsymbol X) \in [0,1]$ the neural network's prediction and $c$ the attack type, we define the conditional \gls{pdp} for feature $i$  as
 % \begin{equation} \label{eq:pdp}
 % \text{\gls{pdp}}_i(y) = \mathbb E_{\boldsymbol X}\left(f(X_1,\ldots,X_{i-1},y,X_{i+1},\ldots X_n)\right)
 % \end{equation}
@@ -582,7 +582,7 @@ In literature, the use of Partial Dependency Plots (\gls{pdp}) has been proposed
 \begin{equation} \label{eq:pdp_conditional}
 \text{\gls{pdp}}_{c,i}(w) = \mathbb E_{\boldsymbol X | C} \Big(f \left( X_1,\ldots,X_{i-1},w,X_{i+1},\ldots X_n \right) | c\Big),
 \end{equation}
-empirically approximating the conditional distribution by the observed subset that belongs to a certain class.
+empirically approximating the conditional distribution by the observed subset that belongs to a certain attack type.
 
 By using a classical \gls{pdp} we would be likely to lose information due to the averaging over very different types of traffic. However, for network traffic in particular, investigating each sample individually is not possible. Hence, the conditional \gls{pdp} provides the ideal compromise for our application.
 
@@ -590,7 +590,7 @@ Due to the use of a 5-tuple flow key, port numbers and the protocol identifier a
 Hence, we can consider the \gls{rnn} a regular classifier and reuse 
 %which allows us to use
 \glspl{pdp}, which have been proposed for non-recurrent classification methods, by plotting the \gls{rnn}'s flow prediction outcome over one of these  features.
-The results (omitted for brevity) show that for some attack classes the port numbers play an important role. When looking at the class of benign traffic %(non-attack traffic)
+The results (omitted for brevity) show that for some attack types the port numbers play an important role. When looking at the \gls{pdp} for benign traffic samples, %(non-attack traffic)
 it becomes apparent that traffic destined to a high destination port is generally indicative of an attack. We argue that this is because most services that regular users use have low port numbers.
 
 \subsection{Plots for Sequences}
