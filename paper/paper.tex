@@ -390,7 +390,7 @@ Setting the threshold for the \gls{ars} to 50\% is arbitrary, but
 
 \begin{figure}[h]
 \includegraphics[width=\columnwidth]{../plots/ars_original.pdf}
-\caption{Recall for unmodified flows and \gls{ars} for each attack type in CIC-IDS-2017. For ``PortScan, Firewall'' recall never falls under 66\%: The adversary does not succeed and the \gls{ars} is $\infty$.}
+\caption{Recall for unmodified flows and \gls{ars} for attacks in CIC-IDS-2017. For ``PortScan, Firewall'' recall never falls below 66\%: The attack does not succeed and the \gls{ars} is $\infty$.}
 \label{fig:recall_ars}
 \end{figure}
 
@@ -417,7 +417,7 @@ For example, in a sentence, which is sequence of words, parts can be rearranged,
 
 \item
 \textbf{Multiple prediction outputs.}
-Often an \gls{rnn} produces an output at each time step. When  applying explainability methods, the question arises which output to consider for the method. The natural choice is to base the methods on the prediction output which occurs at the same time step as the feature under investigation: This approach requires is less complex compared to considering also features of all earlier time steps. Also, we expect the current prediction outcome to more dependent on the current feature, compared to a feature from 100 steps ago. 
+Often an \gls{rnn} produces an output at each time step. When  applying explainability methods, the question arises which output to consider for the method. The natural choice is to base the methods on the prediction output which occurs at the same time step as the feature under investigation: This approach is less complex compared to considering also features of all earlier time steps. Also, we expect the current prediction outcome to more dependent on the current feature, compared to a feature from many steps ago. 
 However, due to the complex decision processes of deep neural networks,
 this is not always true and a feature might influence a decision many time steps later. 
 \end{itemize}
