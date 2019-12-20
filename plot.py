@@ -144,7 +144,7 @@ for attack_type, seqs in enumerate(results_by_attack_number):
 	if SHOW_TITLE:
 		plt.title(reverse_mapping[attack_type])
 	# plt.legend(all_legends)
-	ax1.set_xlabel('Sequence index')
+	ax1.set_xlabel('Time step $t$')
 	plt.xlim((-0.5,max(x_values)+0.5))
 	plt.tight_layout()
 	# plt.xticks(range(medians.shape[0]))

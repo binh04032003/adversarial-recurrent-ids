@@ -161,7 +161,7 @@ for attack_type, (results_by_attack_number_item, flows_by_attack_number_item, re
 		print("feature_index", feature_index)
 		plt.subplot("{}{}{}".format(len(FEATURE_NAMES), 1, feature_index_from_zero+1))
 		if feature_index_from_zero == len(FEATURE_NAMES)-1:
-			plt.xlabel('Sequence index')
+			plt.xlabel('Time step $t$')
 		plt.ylabel(feature_name)
 
 		legend = "{}, {}".format(ORDERING[0], feature_name)
