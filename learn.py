@@ -332,12 +332,16 @@ def train_rl():
 				outputs.append(current_slice_output)
 
 				current_slice_action_probs = lstm_module_rl_actor(current_collated_slice)
+				assert len(current_slice_action_probs.shape) == 2
+				current_slice_action_dists = torch.distributions.categorical.Categorical(logits=current_slice_action_probs)
+
 				outputs_rl_actor.append(current_slice_action_probs)
-				seq_index = seq_index + np.argmax(outputs_rl_actor, axis=1)
+
+				seq_index = seq_index + outputs_rl_actor.sample(outputs_rl_actor)
 				chosen_indices.append(seq_index)
 				remaining_seq_lens = np.max(orig_seq_lens - seq_index, 0)
 
-				current_slice_values = lstm_module_rl_critic(current_collated_slice)
+				current_slice_values = torch.nn.functional.softplus(lstm_module_rl_critic(current_collated_slice))
 				outputs_rl_critic.append(current_slice_values)
 
 			rewards_classification = []
@@ -346,36 +350,38 @@ def train_rl():
 			already_found_packets_per_sample = np.array([0] * batch_size)
 			already_skipped_packets_per_sample = np.array([0]* batch_size)
 
-			for index, item in reversed(list(enumerate(chosen_indices))):
-				for batch_index, batch_item in enumerate(item):
-					if batch_item < orig_seq_lens[batch_index]:
-						already_found_packets_per_sample[batch_index] += 1
-						if already_skipped_packets_per_sample[batch_index] == 0:
-							already_skipped_packets_per_sample[batch_index] += orig_seq_lens[batch_index] - 1 - batch_item
+			for step_index in reversed(range(len(chosen_indices))):
+				for seq_index in range(len(chosen_indices[step_index])):
+					if chosen_indices[step_index][seq_index] < orig_seq_lens[seq_index]:
+						already_found_packets_per_sample[seq_index] += 1
+						if already_skipped_packets_per_sample[seq_index] == 0:
+							already_skipped_packets_per_sample[seq_index] += orig_seq_lens[seq_index] - 1 - chosen_indices[step_index][seq_index]
 						else:
-							already_skipped_packets_per_sample[batch_index] += chosen_indices[index+1][batch_index] - chosen_indices[index][batch_index]
+							already_skipped_packets_per_sample[seq_index] += chosen_indices[step_index+1][seq_index] - chosen_indices[step_index][seq_index]
 				rewards_sparsity.append(already_skipped_packets_per_sample/(already_skipped_packets_per_sample+already_found_packets_per_sample))
 
 			rewards_sparsity = reversed(rewards_sparsity)
 
 			current_outputs_sigmoided = torch.sigmoid(output.detach())
 			weighted_reward_backwards = np.array([-1] * batch_size)
-			for index, item in reversed(list(enumerate(chosen_indices))):
+			for step_index in reversed(range(len(chosen_indices))):
 				result = []
-				for batch_index, batch_item in enumerate(item):
-					if batch_item < orig_seq_lens[index]:
+				for seq_index in range(len(chosen_indices[step_index])):
+					if chosen_indices[step_index][seq_index] < orig_seq_lens[step_index]:
 
-						if weighted_reward_backwards[batch_index] == -1:
-							weighted_reward_backwards = np.abs(labels[batch_index][batch_item] - current_outputs_sigmoided[batch_item,batch_index])*(orig_seq_lens[index]-batch_item)
+						if weighted_reward_backwards[seq_index] == -1:
+							weighted_reward_backwards = np.abs(labels[seq_index][chosen_indices[step_index][seq_index]] - current_outputs_sigmoided[chosen_indices[step_index][seq_index],seq_index])*(orig_seq_lens[step_index]-chosen_indices[step_index][seq_index])
 						else:
-							weighted_reward_backwards[batch_index] = np.abs(labels[batch_index][batch_item] - current_outputs_sigmoided[batch_item,batch_index])*(chosen_indices[index+1][batch_index]-chosen_indices[index][batch_index])
-					result.append(weigted_reward_backwards[batch_index]/(orig_seq_lens[batch_index]-batch_item))
+							weighted_reward_backwards[seq_index] = np.abs(labels[seq_index][chosen_indices[step_index][seq_index]] - current_outputs_sigmoided[chosen_indices[step_index][seq_index],seq_index])*(chosen_indices[step_index+1][seq_index]-chosen_indices[step_index][seq_index])
+					result.append(weigted_reward_backwards[seq_index]/(orig_seq_lens[seq_index]-chosen_indices[step_index][seq_index]))
 
 				rewards_classification.append(result)
 
 			rewards_classification = reversed(rewards_classification)
 
 			optimizer.zero_grad()
+			optimizer_rl_actor.zero_grad()
+			optimizer_rl_value.zero_grad()
 			assert batch_size <= opt.batchSize, "batch_size: {}, opt.batchSize: {}".format(batch_size, opt.batchSize)
 
 			output, seq_lens = lstm_module(input_data)
