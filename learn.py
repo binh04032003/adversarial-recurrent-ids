@@ -221,20 +221,12 @@ def train():
 			writer.add_scalar('adv_avdistance', av_distance, i)
 
 		for input_data, labels, flow_categories in train_loader:
-			# print("iterating")
-			# samples += len(input_data)
 			optimizer.zero_grad()
 			batch_size = input_data.sorted_indices.shape[0]
 			assert batch_size <= opt.batchSize, "batch_size: {}, opt.batchSize: {}".format(batch_size, opt.batchSize)
 			lstm_module.init_hidden(batch_size)
 
-			# actual_input = torch.FloatTensor(input_tensor[:,:,:-1]).to(device)
-
-			# print("input_data.data.shape", input_data.data.shape)
 			output, seq_lens = lstm_module(input_data)
-
-			# torch.set_printoptions(profile="full")
-			# print("output", output.detach().squeeze().transpose(1,0))
 
 			samples += output.shape[1]
 
@@ -244,8 +236,6 @@ def train():
 
 			mask = (index_tensor <= selection_tensor).byte().to(device)
 			mask_exact = (index_tensor == selection_tensor).byte().to(device)
-			# torch.set_printoptions(profile="full")
-			# print("mask", mask.squeeze())
 			labels, _ = torch.nn.utils.rnn.pad_packed_sequence(labels)
 			flow_categories, _ = torch.nn.utils.rnn.pad_packed_sequence(flow_categories)
 
@@ -254,9 +244,6 @@ def train():
 
 			optimizer.step()
 
-			# print("masked_output_shape", torch.round(output.detach()[mask]).shape, "masked_labels_shape", labels[mask].shape)
-			# print("exact_masked_output_shape", torch.round(output.detach()[mask_exact]).shape, "exact_masked_labels_shape", labels[mask_exact].shape)
-			# print("output.shape", output.shape, "labels.shape", labels.shape)
 			assert output.shape == labels.shape
 			writer.add_scalar("loss", loss.item(), samples)
 			sigmoided_output = torch.sigmoid(output.detach())
@@ -264,11 +251,6 @@ def train():
 			writer.add_scalar("accuracy", accuracy, samples)
 			end_accuracy = torch.mean((torch.round(sigmoided_output[mask_exact]) == labels[mask_exact]).float())
 			writer.add_scalar("end_accuracy", end_accuracy, samples)
-
-			# confidence_for_correct_one = torch.mean(torch.gather(torch.sigmoid(output.detach()[mask]), 2, labels[mask]))
-			# writer.add_scalar("confidence", confidence_for_correct_one, i*opt.batchSize)
-			# end_confidence_for_correct_one = torch.mean(torch.gather(torch.sigmoid(output.detach()[-1,:,:]), 1, labels[-1,:].unsqueeze(1)))
-			# writer.add_scalar("end_confidence", end_confidence_for_correct_one, i*opt.batchSize)
 
 			not_attack_mask = labels == 0
 			confidences = sigmoided_output.detach().clone()
@@ -297,6 +279,143 @@ def train():
 				if opt.advTraining:
 					with open(adv_filename(), 'wb') as f:
 						pickle.dump(train_data.adv_flows, f)
+
+def train_rl():
+
+	n_fold = opt.nFold
+	fold = opt.fold
+	lstm_module.train()
+	lstm_module_rl_actor.train()
+	lstm_module_rl_critic.train()
+
+	train_indices, _ = get_nth_split(dataset, n_fold, fold)
+	train_data = torch.utils.data.Subset(dataset, train_indices)
+
+	train_loader = torch.utils.data.DataLoader(train_data, batch_size=opt.batchSize, shuffle=True)
+
+	optimizer = optim.SGD(lstm_module.parameters(), lr=opt.lr)
+	criterion = nn.BCEWithLogitsLoss(reduction="mean")
+
+	optimizer_rl_actor = optim.SGD(lstm_module_rl_actor.parameters(), lr=opt.lr)
+	optimizer_rl_critic = optim.SGD(lstm_module_rl_critic.parameters(), lr=opt.lr)
+
+	writer = SummaryWriter()
+
+	samples = 0
+	save_period = int(round(len(train_indices) * opt.modelSavePeriod))
+
+	for i in range(1, sys.maxsize):
+
+		for input_data, labels, flow_categories in train_loader:
+
+			orig_input_data = input_data
+			orig_seq_lens = np.array([len(item) for item in orig_input_data])
+			remaining_seq_lens = orig_seq_lens
+			# num_seqs = len(input_data)
+			batch_size = len(input_data)
+			seq_index = np.array([0] * num_seqs)
+			chosen_indices = [seq_index]
+
+			lstm_module.init_hidden(batch_size)
+			lstm_module_rl_actor.init_hidden(batch_size)
+			lstm_module_rl_critic.init_hidden(batch_size)
+
+			outputs = []
+			outputs_rl_actor = []
+			outputs_rl_critic = []
+
+			while remaining_seq_lens > 0.any():
+				current_slice = [item[index:index+1] for index, item in zip(seq_index, orig_input_data)]
+				current_collated_slice = collate_things(current_slice)
+
+				current_slice_output = lstm_module(current_collated_slice)
+				outputs.append(current_slice_output)
+
+				current_slice_action_probs = lstm_module_rl_actor(current_collated_slice)
+				outputs_rl_actor.append(current_slice_action_probs)
+				seq_index = seq_index + np.argmax(outputs_rl_actor, axis=1)
+				chosen_indices.append(seq_index)
+				remaining_seq_lens = np.max(orig_seq_lens - seq_index, 0)
+
+				current_slice_values = lstm_module_rl_critic(current_collated_slice)
+				outputs_rl_critic.append(current_slice_values)
+
+			rewards_classification = []
+			rewards_sparsity = []
+
+			already_found_packets_per_sample = np.array([0] * batch_size)
+			already_skipped_packets_per_sample = np.array([0]* batch_size)
+
+			for index, item in reversed(list(enumerate(chosen_indices))):
+				for batch_index, batch_item in enumerate(item):
+					if batch_item < orig_seq_lens[batch_index]:
+						already_found_packets_per_sample[batch_index] += 1
+						if already_skipped_packets_per_sample[batch_index] == 0:
+							already_skipped_packets_per_sample[batch_index] += orig_seq_lens[batch_index] - 1 - batch_item
+						else:
+							already_skipped_packets_per_sample[batch_index] += chosen_indices[index+1][batch_index] - chosen_indices[index][batch_index]
+				rewards_sparsity.append(already_skipped_packets_per_sample/(already_skipped_packets_per_sample+already_found_packets_per_sample))
+
+			rewards_sparsity = reversed(rewards_sparsity)
+
+			current_outputs_sigmoided = torch.sigmoid(output.detach())
+			weighted_reward_backwards = np.array([-1] * batch_size)
+			for index, item in reversed(list(enumerate(chosen_indices))):
+				result = []
+				for batch_index, batch_item in enumerate(item):
+					if batch_item < orig_seq_lens[index]:
+
+						if weighted_reward_backwards[batch_index] == -1:
+							weighted_reward_backwards = np.abs(labels[batch_index][batch_item] - current_outputs_sigmoided[batch_item,batch_index])*(orig_seq_lens[index]-batch_item)
+						else:
+							weighted_reward_backwards[batch_index] = np.abs(labels[batch_index][batch_item] - current_outputs_sigmoided[batch_item,batch_index])*(chosen_indices[index+1][batch_index]-chosen_indices[index][batch_index])
+					result.append(weigted_reward_backwards[batch_index]/(orig_seq_lens[batch_index]-batch_item))
+
+				rewards_classification.append(result)
+
+			rewards_classification = reversed(rewards_classification)
+
+			optimizer.zero_grad()
+			assert batch_size <= opt.batchSize, "batch_size: {}, opt.batchSize: {}".format(batch_size, opt.batchSize)
+
+			output, seq_lens = lstm_module(input_data)
+
+			samples += output.shape[1]
+
+			index_tensor = torch.arange(0, output.shape[0], dtype=torch.int64).unsqueeze(1).unsqueeze(2).repeat(1, output.shape[1], output.shape[2])
+
+			selection_tensor = seq_lens.unsqueeze(0).unsqueeze(2).repeat(index_tensor.shape[0], 1, index_tensor.shape[2])-1
+
+			mask = (index_tensor <= selection_tensor).byte().to(device)
+			mask_exact = (index_tensor == selection_tensor).byte().to(device)
+			labels, _ = torch.nn.utils.rnn.pad_packed_sequence(labels)
+			flow_categories, _ = torch.nn.utils.rnn.pad_packed_sequence(flow_categories)
+
+			loss = criterion(output[mask].view(-1), labels[mask].view(-1))
+			loss.backward()
+
+			optimizer.step()
+
+			assert output.shape == labels.shape
+			writer.add_scalar("loss", loss.item(), samples)
+			sigmoided_output = torch.sigmoid(output.detach())
+			accuracy = torch.mean((torch.round(sigmoided_output[mask]) == labels[mask]).float())
+			writer.add_scalar("accuracy", accuracy, samples)
+			end_accuracy = torch.mean((torch.round(sigmoided_output[mask_exact]) == labels[mask_exact]).float())
+			writer.add_scalar("end_accuracy", end_accuracy, samples)
+
+			not_attack_mask = labels == 0
+			confidences = sigmoided_output.detach().clone()
+			confidences[not_attack_mask] = 1 - confidences[not_attack_mask]
+			writer.add_scalar("confidence", torch.mean(confidences[mask]), samples)
+			writer.add_scalar("end_confidence", torch.mean(confidences[mask_exact]), samples)
+
+			if samples % save_period < output.shape[1]:
+				if len(train_indices) % save_period == 0:
+					filename = 'lstm_module_%d.pth' % i
+				else:
+					filename = 'lstm_module_%.3f.pth' % (samples / len(train_indices))
+				torch.save(lstm_module.state_dict(), '%s/%s' % (writer.log_dir, filename))
 
 @torch.no_grad()
 def test():
@@ -1183,7 +1302,7 @@ def adv_until_less_than_half():
 		prev_results.append(modified_results_by_attack)
 		prev_flows.append(modified_flows_by_attack)
 		prev_ratios.append(ratio_modified_by_attack_number)
-		
+
 		for attack_index, ratio in enumerate(prev_ratios[i]):
 			if ratio > -float("inf"):
 				print(f"Looking at attack {attack_index} with a ratio of {ratio}")
@@ -1203,7 +1322,7 @@ def adv_until_less_than_half():
 				max_distance_flows[attack_index] = float(distances[lower_part[-1]] if len(lower_part) else np.nan)
 				distances_packets[attack_index] = float(np.mean(distances_per_packet) if len(distances_per_packet) else np.nan)
 				max_distance_packets[attack_index] = float(distances_per_packet[-1] if len(distances_per_packet) else np.nan)
-				
+
 		next_filter = [index for index, item in enumerate(ratio_modified_by_attack_number) if item < THRESHOLD and (item==-np.inf or opt.skipArsDistanceCheck or min_non_adv_distance[index] >= max_distance_flows[index]) ]
 		print("i", i, "ratios", ratio_modified_by_attack_number)
 		if i+1==MAX or len(next_filter) == len(orig_results) or (len(prev_ratios) > 1 and (prev_ratios[-2] <= prev_ratios[-1]).all()):
@@ -1556,6 +1675,7 @@ if __name__=="__main__":
 	parser.add_argument('--nFold', type=int, default=3, help='total number of folds')
 	parser.add_argument('--batchSize', type=int, default=128, help='input batch size')
 	parser.add_argument('--net', default='', help="path to net (to continue training)")
+	parser.add_argument('--net_rl', default='', help="path to net (to continue training) for RL")
 	parser.add_argument('--function', default='train', help='the function that is going to be called')
 	parser.add_argument('--manualSeed', default=0, type=int, help='manual seed')
 	parser.add_argument('--maxLength', type=int, default=100, help='max length')
@@ -1578,6 +1698,8 @@ if __name__=="__main__":
 	parser.add_argument('--n_layers', type=int, default=3, help='number of LSTM layers')
 	parser.add_argument('--adjustFeatImpDistribution', action='store_true', help='adjust randomization feature importance distributions to a practically relevant shape')
 	parser.add_argument('--skipArsDistanceCheck', action='store_true', help='stop ARS computation as soon as 50% theshold is reached')
+	parser.add_argument('--rl', required=True, help='do RL')
+	parser.add_argument('--lookaheadSteps', type=int, default=8, help='number of steps to look into the future for RL')
 
 	# parser.add_argument('--nSamples', type=int, default=1, help='number of items to sample for the feature importance metric')
 
@@ -1635,5 +1757,13 @@ if __name__=="__main__":
 	if opt.net != '':
 		print("Loading", opt.net)
 		lstm_module.load_state_dict(torch.load(opt.net, map_location=device))
+
+	if "rl" in opt.function:
+		lstm_module_rl_actor = OurLSTMModule(x[0].shape[-1], opt.lookaheadSteps, opt.hidden_size, opt.n_layers, batchSize, device).to(device)
+		lstm_module_rl_critic = OurLSTMModule(x[0].shape[-1], 2, opt.hidden_size, opt.n_layers, batchSize, device).to(device)
+
+		if opt.net_rl != '':
+			print("Loading", opt.net_rl)
+			lstm_module_rl.load_state_dict(torch.load(opt.net_rl, map_location=device))
 
 	globals()[opt.function]()
