@@ -114,7 +114,7 @@ def get_nth_split(dataset, n_fold, index):
 # 	return input_tensor
 
 class OurLSTMModule(nn.Module):
-	def __init__(self, num_inputs, num_outputs, hidden_size, n_layers, batch_size, device, forgetting=False):
+	def __init__(self, num_inputs, num_outputs, hidden_size, n_layers, batch_size, device, forgetting=False, num_outputs_actor=None, num_outputs_critic=None):
 		super(OurLSTMModule, self).__init__()
 		# if opt.averageFeaturesToPruneDuringTraining!=-1:
 		# 	self.feature_dropout_probability = opt.averageFeaturesToPruneDuringTraining/num_inputs
@@ -127,6 +127,9 @@ class OurLSTMModule(nn.Module):
 		self.lstm = nn.LSTM(input_size=num_inputs if opt.averageFeaturesToPruneDuringTraining==-1 else num_inputs*2, hidden_size=hidden_size, num_layers=n_layers)
 		self.hidden = None
 		self.h2o = nn.Linear(hidden_size, num_outputs)
+		if opt.shareNet:
+			self.h2o_actor = nn.Linear(hidden_size, num_outputs_actor)
+			self.h2o_critic = nn.Linear(hidden_size, num_outputs_critic)
 		self.forgetting = forgetting
 
 	def init_hidden(self, batch_size):
@@ -148,7 +151,10 @@ class OurLSTMModule(nn.Module):
 		else:
 			seq_lens = None
 		# print("after critical step")
-		output = self.h2o(lstm_out)
+		if not opt.shareNet:
+			output = self.h2o(lstm_out)
+		else:
+			output = (self.h2o(lstm_out), self.h2o_actor(lstm_out), self.h2o_critic(lstm_out))
 		return output, seq_lens
 
 def get_one_hot_vector(class_indices, num_classes, batch_size):
@@ -291,20 +297,25 @@ def train_rl():
 	n_fold = opt.nFold
 	fold = opt.fold
 	lstm_module.train()
-	lstm_module_rl_actor.train()
-	lstm_module_rl_critic.train()
+	if not opt.shareNet:
+		lstm_module_rl_actor.train()
+		lstm_module_rl_critic.train()
 
 	train_indices, _ = get_nth_split(dataset, n_fold, fold)
 	train_data = torch.utils.data.Subset(dataset, train_indices)
 
 	train_loader = torch.utils.data.DataLoader(train_data, batch_size=opt.batchSize, shuffle=True, collate_fn=lambda x: x)
 
-	optimizer = optim.SGD(lstm_module.parameters(), lr=opt.lr)
+	if not opt.shareNet:
+		parameters_to_optimize = list(lstm_module.parameters()) + list(lstm_module_rl_actor.parameters()) + list(lstm_module_rl_critic.parameters())
+	else:
+		parameters_to_optimize = lstm_module.parameters()
+	optimizer = optim.SGD(parameters_to_optimize, lr=opt.lr)
 	criterion = nn.BCEWithLogitsLoss(reduction="mean")
 
-	optimizer_rl_actor = optim.SGD(lstm_module_rl_actor.parameters(), lr=opt.lr)
+	# optimizer_rl_actor = optim.SGD(lstm_module_rl_actor.parameters(), lr=opt.lr)
 
-	optimizer_rl_critic = optim.SGD(lstm_module_rl_critic.parameters(), lr=opt.lr)
+	# optimizer_rl_critic = optim.SGD(lstm_module_rl_critic.parameters(), lr=opt.lr)
 	criterion_rl_critic = nn.MSELoss(reduction="mean")
 
 	writer = SummaryWriter()
@@ -322,14 +333,15 @@ def train_rl():
 			batch_size = len(input_data)
 			samples += batch_size
 
-			assert batch_size <= opt.batchSize
+			# assert batch_size <= opt.batchSize
 
 			seq_index = torch.LongTensor([0] * batch_size).to(device)
 			chosen_indices = [seq_index]
 
 			lstm_module.init_hidden(batch_size)
-			lstm_module_rl_actor.init_hidden(batch_size)
-			lstm_module_rl_critic.init_hidden(batch_size)
+			if not opt.shareNet:
+				lstm_module_rl_actor.init_hidden(batch_size)
+				lstm_module_rl_critic.init_hidden(batch_size)
 
 			outputs = []
 			outputs_rl_actor = []
@@ -346,11 +358,18 @@ def train_rl():
 
 				# all_slices.append(current_collated_slice)
 
-				current_slice_output, _ = lstm_module(current_collated_slice)
+				if not opt.shareNet:
+					current_slice_output, _ = lstm_module(current_collated_slice)
+					current_slice_action_probs, _ = lstm_module_rl_actor(current_collated_slice)
+					current_slice_values = lstm_module_rl_critic(current_collated_slice)[0]
+				else:
+					(current_slice_output, current_slice_action_probs, current_slice_values), _ = lstm_module(current_collated_slice)
+
+				current_slice_values = torch.nn.functional.softplus(current_slice_values)
+
 				outputs.append(current_slice_output)
 
-				current_slice_action_probs, _ = lstm_module_rl_actor(current_collated_slice)
-				assert len(current_slice_action_probs.shape) == 3 and current_slice_action_probs.shape[2] == opt.lookaheadSteps
+				# assert len(current_slice_action_probs.shape) == 3 and current_slice_action_probs.shape[2] == opt.lookaheadSteps
 				current_slice_action_dists = torch.distributions.categorical.Categorical(logits=current_slice_action_probs)
 
 				outputs_rl_actor.append(current_slice_action_probs)
@@ -362,8 +381,7 @@ def train_rl():
 				assert len(orig_seq_lens) == len(seq_index)
 				remaining_seq_lens = torch.max(orig_seq_lens - seq_index, torch.zeros_like(orig_seq_lens))
 
-				current_slice_values = torch.nn.functional.softplus(lstm_module_rl_critic(current_collated_slice)[0])
-				assert len(current_slice_values.shape) == 3 and current_slice_values.shape[2] == 2
+				# assert len(current_slice_values.shape) == 3 and current_slice_values.shape[2] == 2
 				outputs_rl_critic.append(current_slice_values)
 				# print("Finished iteration")
 
@@ -407,11 +425,11 @@ def train_rl():
 
 			already_found_packets_per_sample = already_found_packets_per_sample.long()
 			already_skipped_packets_per_sample = already_skipped_packets_per_sample.long()
-			assert (already_found_packets_per_sample + already_skipped_packets_per_sample == orig_seq_lens).all()
+			# assert (already_found_packets_per_sample + already_skipped_packets_per_sample == orig_seq_lens).all()
 
 			optimizer.zero_grad()
-			optimizer_rl_actor.zero_grad()
-			optimizer_rl_critic.zero_grad()
+			# optimizer_rl_actor.zero_grad()
+			# optimizer_rl_critic.zero_grad()
 
 			outputs_catted = torch.cat(outputs)
 			index_tensor = torch.arange(0, outputs_catted.shape[0], dtype=torch.int64).unsqueeze(1).unsqueeze(2).repeat(1, outputs_catted.shape[1], outputs_catted.shape[2]).to(device)
@@ -448,12 +466,8 @@ def train_rl():
 			# assert (all_slices_catted[mask_exact.repeat(1,1,input_data[0].shape[-1])].view(-1) == effective_end_input_data).all()
 
 			effective_output = outputs_catted[mask].view(-1)
-			assert effective_output.shape == effective_labels.shape
+			# assert effective_output.shape == effective_labels.shape
 			loss = criterion(effective_output, effective_labels)
-			loss.backward()
-
-			optimizer.step()
-
 
 			outputs_catted_rl_critic = torch.cat(outputs_rl_critic)
 			mask_two = mask.repeat(1,1,2)
@@ -462,16 +476,15 @@ def train_rl():
 			rewards_sparsity_catted = torch.stack(rewards_sparsity).to(device)
 			rewards_classification_catted = torch.stack(rewards_classification).to(device)
 
-			assert rewards_sparsity_catted.shape == rewards_classification_catted.shape
+			# assert rewards_sparsity_catted.shape == rewards_classification_catted.shape
 			catted_rewards_altogether = torch.stack((rewards_sparsity_catted, rewards_classification_catted), dim=2)
 
 			effective_rewards_altogether = catted_rewards_altogether[mask_two].view(-1)
 
-			assert effective_output_rl_critic.shape == effective_rewards_altogether.shape
+			# assert effective_output_rl_critic.shape == effective_rewards_altogether.shape
 			loss_rl_critic = criterion_rl_critic(effective_output_rl_critic, effective_rewards_altogether)
-			loss_rl_critic.backward()
-
-			optimizer_rl_critic.step()
+			# loss_rl_critic.backward()
+			# optimizer_rl_critic.step()
 
 
 			outputs_catted_rl_actor = torch.cat(outputs_rl_actor)
@@ -485,16 +498,19 @@ def train_rl():
 
 			effective_rewards_sparsity = rewards_sparsity_catted.detach()[mask_first].view(-1)
 			effective_rewards_classification = rewards_classification_catted.detach()[mask_first].view(-1)
-			assert (effective_rewards_sparsity.shape == effective_rewards_classification.shape)
+			# assert (effective_rewards_sparsity.shape == effective_rewards_classification.shape)
 
 			output_rl_critic_added = opt.accuracySparsityTradeoff*outputs_catted_rl_critic.detach()[:,:,0] + outputs_catted_rl_critic.detach()[:,:,1]
 			effective_output_rl_critic_added = output_rl_critic_added[mask_first].view(-1)
-			assert (effective_output_rl_critic_added.shape == effective_rewards_sparsity.shape)
+			# assert (effective_output_rl_critic_added.shape == effective_rewards_sparsity.shape)
 			current_entropy = effective_rl_actor_dists.entropy()
 			loss_rl_actor = torch.mean(- effective_rl_actor_dists.log_prob(effective_output_rl_actor_decisions)*((opt.accuracySparsityTradeoff*effective_rewards_sparsity + effective_rewards_classification) - effective_output_rl_critic_added) - opt.entropyRegularizationMultiplier*current_entropy)
-			loss_rl_actor.backward()
+			# loss_rl_actor.backward()
+			# optimizer_rl_actor.step()
 
-			optimizer_rl_actor.step()
+			total_loss = loss + loss_rl_critic + loss_rl_actor
+			total_loss.backward()
+			optimizer.step()
 
 			writer.add_scalar("loss", loss.item(), samples)
 			writer.add_scalar("loss_critic", loss_rl_critic.item(), samples)
@@ -506,10 +522,10 @@ def train_rl():
 			writer.add_scalar("classification_estimated", torch.mean(outputs_catted_rl_critic[:,:,1:][mask]).item(), samples)
 
 
-			assert (outputs_sigmoided[mask].shape == effective_labels.shape)
+			# assert (outputs_sigmoided[mask].shape == effective_labels.shape)
 			accuracy = torch.mean((torch.round(outputs_sigmoided[mask]) == effective_labels).float())
 			writer.add_scalar("accuracy", accuracy, samples)
-			assert (outputs_sigmoided[mask_exact].shape == effective_end_labels.shape)
+			# assert (outputs_sigmoided[mask_exact].shape == effective_end_labels.shape)
 			end_accuracy = torch.mean((torch.round(outputs_sigmoided[mask_exact]) == effective_end_labels).float())
 			writer.add_scalar("end_accuracy", end_accuracy, samples)
 
@@ -1829,6 +1845,7 @@ if __name__=="__main__":
 	parser.add_argument('--accuracySparsityTradeoff', type=float, default=0.1, help='the reward for the actor is (average accuracy) + tradeoff*(sparsity)')
 	parser.add_argument('--entropyRegularizationMultiplier', type=float, default=0.01, help='entropy regularization for RL')
 	parser.add_argument('--continuous', action='store_true', help='whether the probability distribution of the actor should be continuous (log-normal)')
+	parser.add_argument('--shareNet', action='store_true', help='whether one net should be shared for RL')
 
 	# parser.add_argument('--nSamples', type=int, default=1, help='number of items to sample for the feature importance metric')
 
@@ -1883,14 +1900,24 @@ if __name__=="__main__":
 	dataset = OurDataset(x, y, categories)
 
 	batchSize = 1 if opt.function == 'pred_plots' else opt.batchSize # FIXME Max: Why? What's wrong?
-	lstm_module = OurLSTMModule(x[0].shape[-1], y[0].shape[-1], opt.hidden_size, opt.n_layers, batchSize, device).to(device)
+	lstm_module = OurLSTMModule(x[0].shape[-1], y[0].shape[-1], opt.hidden_size, opt.n_layers, batchSize, device, num_outputs_actor=opt.lookaheadSteps if not opt.continuous else 2, num_outputs_critic=2).to(device)
 
 	if opt.net != '':
 		print("Loading", opt.net)
-		lstm_module.load_state_dict(torch.load(opt.net, map_location=device))
+		if not opt.shareNet:
+			lstm_module.load_state_dict(torch.load(opt.net, map_location=device))
+		else:
+			model_dict = lstm_module.state_dict()
 
-	if "rl" in opt.function:
-		lstm_module_rl_actor = OurLSTMModule(x[0].shape[-1], opt.lookaheadSteps, opt.hidden_size, opt.n_layers, batchSize, device).to(device)
+			# 1. filter out unnecessary keys
+			pretrained_dict = {k: v for k, v in torch.load(opt.net, map_location=device).items() if k in model_dict}
+			# 2. overwrite entries in the existing state dict
+			model_dict.update(pretrained_dict)
+			# 3. load the new state dict
+			lstm_module.load_state_dict(model_dict)
+
+	if "rl" in opt.function and not opt.shareNet:
+		lstm_module_rl_actor = OurLSTMModule(x[0].shape[-1], opt.lookaheadSteps if not opt.continuous else 2, opt.hidden_size, opt.n_layers, batchSize, device).to(device)
 		lstm_module_rl_critic = OurLSTMModule(x[0].shape[-1], 2, opt.hidden_size, opt.n_layers, batchSize, device).to(device)
 
 		if opt.net_actor != '':
