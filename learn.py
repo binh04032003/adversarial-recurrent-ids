@@ -1824,7 +1824,7 @@ if __name__=="__main__":
 	parser.add_argument('--maxLength', type=int, default=100, help='max length')
 	parser.add_argument('--maxSize', type=int, default=sys.maxsize, help='limit of samples to consider')
 	parser.add_argument('--removeChangeable', action='store_true', help='when training remove all features that an attacker could manipulate easily without changing the attack itself')
-	parser.add_argument('--tradeoff', type=float, default=0.5, help='max length')
+	parser.add_argument('--tradeoff', type=float, default=0.5)
 	parser.add_argument('--penaltyTradeoff', type=float, default=0, help='Tradeoff to enforce constant flow duration')
 	parser.add_argument('--lr', type=float, default=10**(-2), help='learning rate')
 	parser.add_argument('--advTraining', action='store_true', help='Train with adversarial flows')
@@ -1846,6 +1846,7 @@ if __name__=="__main__":
 	parser.add_argument('--entropyRegularizationMultiplier', type=float, default=0.01, help='entropy regularization for RL')
 	parser.add_argument('--continuous', action='store_true', help='whether the probability distribution of the actor should be continuous (log-normal)')
 	parser.add_argument('--shareNet', action='store_true', help='whether one net should be shared for RL')
+	parser.add_argument('--device', type=str, default="", help='device to use (cpu, gpu etc.)')
 
 	# parser.add_argument('--nSamples', type=int, default=1, help='number of items to sample for the feature importance metric')
 
@@ -1896,6 +1897,8 @@ if __name__=="__main__":
 
 	cuda_available = torch.cuda.is_available()
 	device = torch.device("cuda:0" if cuda_available else "cpu")
+	if opt.device != "":
+		device = opt.device
 
 	dataset = OurDataset(x, y, categories)
 
@@ -1908,12 +1911,8 @@ if __name__=="__main__":
 			lstm_module.load_state_dict(torch.load(opt.net, map_location=device))
 		else:
 			model_dict = lstm_module.state_dict()
-
-			# 1. filter out unnecessary keys
 			pretrained_dict = {k: v for k, v in torch.load(opt.net, map_location=device).items() if k in model_dict}
-			# 2. overwrite entries in the existing state dict
 			model_dict.update(pretrained_dict)
-			# 3. load the new state dict
 			lstm_module.load_state_dict(model_dict)
 
 	if "rl" in opt.function and not opt.shareNet:
@@ -1922,10 +1921,22 @@ if __name__=="__main__":
 
 		if opt.net_actor != '':
 			print("Loading", opt.net_actor)
-			lstm_module_rl_actor.load_state_dict(torch.load(opt.net_actor, map_location=device))
+
+			model_dict = lstm_module_rl_actor.state_dict()
+			pretrained_dict = {k: v for k, v in torch.load(opt.net, map_location=device).items() if k in model_dict and model_dict[k].shape==v.shape}
+			model_dict.update(pretrained_dict)
+			lstm_module_rl_actor.load_state_dict(model_dict)
+
+			# lstm_module_rl_actor.load_state_dict(torch.load(opt.net_actor, map_location=device))
 
 		if opt.net_critic != '':
 			print("Loading", opt.net_critic)
-			lstm_module_rl_critic.load_state_dict(torch.load(opt.net_critic, map_location=device))
+
+			model_dict = lstm_module_rl_critic.state_dict()
+			pretrained_dict = {k: v for k, v in torch.load(opt.net, map_location=device).items() if k in model_dict and model_dict[k].shape==v.shape}
+			model_dict.update(pretrained_dict)
+			lstm_module_rl_critic.load_state_dict(model_dict)
+
+			# lstm_module_rl_critic.load_state_dict(torch.load(opt.net_critic, map_location=device))
 
 	globals()[opt.function]()
