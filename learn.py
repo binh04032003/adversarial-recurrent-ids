@@ -411,7 +411,6 @@ def train_rl():
 			leave_out_last = leave_out_last.long()
 			assert (leave_out_last <= 1).all()
 
-			# TODO: Fix this!!!
 			outputs_sigmoided = torch.sigmoid(torch.cat(outputs).detach())
 			weighted_reward_backwards = torch.FloatTensor([0] * batch_size)
 			for step_index in reversed(range(len(chosen_indices)-1)):
@@ -546,7 +545,7 @@ def train_rl():
 			writer.add_scalar("confidence", torch.mean(confidences), samples)
 			writer.add_scalar("end_confidence", torch.mean(end_confidences), samples)
 
-			chosen_packets = torch.sum(already_found_packets_per_sample-leave_out_last).float()/(torch.sum(already_found_packets_per_sample-leave_out_last)+torch.sum(already_skipped_packets_per_sample)).float()
+			chosen_packets = torch.sum(already_found_packets_per_sample).float()/(torch.sum(already_found_packets_per_sample)+torch.sum(already_skipped_packets_per_sample)).float()
 			# print("already_found_packets_per_sample", already_found_packets_per_sample, "already_skipped_packets_per_sample", already_skipped_packets_per_sample, "chosen_packets_ratio", chosen_packets)
 			writer.add_scalar("chosen_packets_ratio", chosen_packets, samples)
 
