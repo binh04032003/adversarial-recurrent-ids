@@ -310,7 +310,7 @@ def train_rl():
 		parameters_to_optimize = list(lstm_module.parameters()) + list(lstm_module_rl_actor.parameters()) + list(lstm_module_rl_critic.parameters())
 	else:
 		parameters_to_optimize = lstm_module.parameters()
-	optimizer = optim.SGD(parameters_to_optimize, lr=opt.lr)
+	optimizer = getattr(optim, opt.optimizer)(parameters_to_optimize, lr=opt.lr)
 	criterion = nn.BCEWithLogitsLoss(reduction="mean")
 
 	criterion_rl_critic = nn.MSELoss(reduction="mean")
@@ -318,6 +318,7 @@ def train_rl():
 	writer = SummaryWriter()
 
 	samples = 0
+	batches_processed = 0
 	save_period = int(round(len(train_indices) * opt.modelSavePeriod))
 
 	for i in range(1, sys.maxsize):
@@ -329,6 +330,7 @@ def train_rl():
 			remaining_seq_lens = orig_seq_lens
 			batch_size = len(input_data)
 			samples += batch_size
+			batches_processed += 1
 
 			# assert batch_size <= opt.batchSize
 
@@ -345,7 +347,7 @@ def train_rl():
 			outputs_rl_actor_decisions = []
 			outputs_rl_critic = []
 
-			all_slices = []
+			# all_slices = []
 
 			while (remaining_seq_lens > torch.zeros_like(remaining_seq_lens)).any():
 				current_slice = [item[index:index+1] for index, item in zip(seq_index, input_data)]
@@ -353,7 +355,7 @@ def train_rl():
 					item[:,-1] = chosen_indices[-2][index]-chosen_indices[-1][index] if len(chosen_indices) > 1 else 0
 				current_collated_slice = torch.nn.utils.rnn.pad_sequence(current_slice).to(device)
 
-				all_slices.append(current_collated_slice)
+				# all_slices.append(current_collated_slice)
 
 				if not opt.shareNet:
 					current_slice_output, _ = lstm_module(current_collated_slice)
@@ -375,7 +377,7 @@ def train_rl():
 
 				seq_index = seq_index + (decisions.view(-1)+1)
 				chosen_indices.append(seq_index)
-				assert len(orig_seq_lens) == len(seq_index)
+				# assert len(orig_seq_lens) == len(seq_index)
 				remaining_seq_lens = torch.max(orig_seq_lens - seq_index, torch.zeros_like(orig_seq_lens))
 
 				# assert len(current_slice_values.shape) == 3 and current_slice_values.shape[2] == 2
@@ -407,9 +409,9 @@ def train_rl():
 
 			already_found_packets_per_sample = already_found_packets_per_sample.long()
 			already_skipped_packets_per_sample = already_skipped_packets_per_sample.long()
-			assert (already_found_packets_per_sample + already_skipped_packets_per_sample == orig_seq_lens).all()
+			# assert (already_found_packets_per_sample + already_skipped_packets_per_sample == orig_seq_lens).all()
 			leave_out_last = leave_out_last.long()
-			assert (leave_out_last <= 1).all()
+			# assert (leave_out_last <= 1).all()
 
 			outputs_sigmoided = torch.sigmoid(torch.cat(outputs).detach())
 			weighted_reward_backwards = torch.FloatTensor([0] * batch_size)
@@ -419,11 +421,11 @@ def train_rl():
 					if chosen_indices[step_index][seq_index] < orig_seq_lens[seq_index]:
 						value_to_add = (1-torch.abs(labels[seq_index][chosen_indices[step_index][seq_index]] - outputs_sigmoided[step_index,seq_index])).item()
 						how_many_times = (torch.min(chosen_indices[step_index+1][seq_index] if step_index+1 < len(chosen_indices) else torch.tensor(float("inf")), orig_seq_lens[seq_index])-chosen_indices[step_index][seq_index]-1).item()
-						assert how_many_times >= 0
+						# assert how_many_times >= 0
 						weighted_reward_backwards[seq_index] += value_to_add*how_many_times
 
 					diff = orig_seq_lens[seq_index]-chosen_indices[step_index][seq_index]-1
-					assert not (chosen_indices[step_index][seq_index] < orig_seq_lens[seq_index]) or diff >= 0
+					# assert not (chosen_indices[step_index][seq_index] < orig_seq_lens[seq_index]) or diff >= 0
 					result.append(weighted_reward_backwards[seq_index]/diff)
 					if chosen_indices[step_index][seq_index] < orig_seq_lens[seq_index]:
 						weighted_reward_backwards[seq_index] += value_to_add
@@ -438,40 +440,41 @@ def train_rl():
 			outputs_catted = torch.cat(outputs)
 			index_tensor = torch.arange(0, outputs_catted.shape[0], dtype=torch.int64).unsqueeze(1).unsqueeze(2).repeat(1, outputs_catted.shape[1], outputs_catted.shape[2]).to(device)
 
-			selection_tensor = (already_found_packets_per_sample.unsqueeze(0).unsqueeze(2).repeat(index_tensor.shape[0], 1, index_tensor.shape[2])-1).to(device)
-			selection_tensor_rl = ((already_found_packets_per_sample-leave_out_last).unsqueeze(0).unsqueeze(2).repeat(index_tensor.shape[0], 1, index_tensor.shape[2])-1).to(device)
+			selection_tensor = ((already_found_packets_per_sample-1).unsqueeze(0).unsqueeze(2).repeat(index_tensor.shape[0], 1, index_tensor.shape[2])).to(device)
+			selection_tensor_rl = ((already_found_packets_per_sample-leave_out_last-1).unsqueeze(0).unsqueeze(2).repeat(index_tensor.shape[0], 1, index_tensor.shape[2])).to(device)
 
 			mask = (index_tensor <= selection_tensor).byte().to(device)
 			mask_exact = (index_tensor == selection_tensor).byte().to(device)
 
 			mask_rl = (index_tensor <= selection_tensor_rl).byte().to(device)
-			mask_exact_rl = (index_tensor == selection_tensor_rl).byte().to(device)
+			# mask_exact_rl = (index_tensor == selection_tensor_rl).byte().to(device)
 
-			# effective_labels = []
-			# effective_end_labels = []
-			# for seq_index in range(batch_size):
-			# 	for step_index in range(len(chosen_indices)-1):
-			# 		if step_index < already_found_packets_per_sample[seq_index]-1:
-			# 			effective_labels.append(labels[seq_index][chosen_indices[step_index][seq_index], :])
-			# 		elif step_index == already_found_packets_per_sample[seq_index]-1:
-			# 			thing = labels[seq_index][chosen_indices[step_index][seq_index], :]
-			# 			effective_labels.append(thing)
-			# 			effective_end_labels.append(thing)
-			# 		else:
-			# 			break
+			effective_labels = []
+			effective_end_labels = []
+			existing_seqs = list(range(batch_size))
+			for step_index in range(len(chosen_indices)):
+				for seq_index in list(existing_seqs):
+					if step_index < already_found_packets_per_sample[seq_index] - 1:
+						effective_labels.append(labels[seq_index][chosen_indices[step_index][seq_index], :])
+					elif step_index == already_found_packets_per_sample[seq_index] - 1:
+						thing = labels[seq_index][chosen_indices[step_index][seq_index], :]
+						effective_labels.append(thing)
+						effective_end_labels.append(thing)
+					else:
+						existing_seqs.remove(seq_index)
 
-			# effective_labels = torch.cat(effective_labels)
-			# effective_end_labels = torch.cat(effective_end_labels)
+			effective_labels = torch.cat(effective_labels).to(device)
+			effective_end_labels = torch.cat(effective_end_labels).to(device)
 
-			effective_labels = torch.cat([labels[seq_index][chosen_indices[step_index][seq_index], :] for step_index in range(len(chosen_indices)) for seq_index in range(batch_size) if step_index < already_found_packets_per_sample[seq_index]]).to(device)
-			effective_end_labels = torch.cat([labels[seq_index][chosen_indices[step_index][seq_index], :] for step_index in range(len(chosen_indices)) for seq_index in range(batch_size) if step_index == already_found_packets_per_sample[seq_index]-1]).to(device)
+			# effective_labels = torch.cat([labels[seq_index][chosen_indices[step_index][seq_index], :] for step_index in range(len(chosen_indices)) for seq_index in range(batch_size) if step_index < already_found_packets_per_sample[seq_index]]).to(device)
+			# effective_end_labels = torch.cat([labels[seq_index][chosen_indices[step_index][seq_index], :] for step_index in range(len(chosen_indices)) for seq_index in range(batch_size) if step_index == already_found_packets_per_sample[seq_index]-1]).to(device)
 
-			effective_input_data = torch.cat([input_data[seq_index][chosen_indices[step_index][seq_index], :] for step_index in range(len(chosen_indices)) for seq_index in range(batch_size) if step_index < already_found_packets_per_sample[seq_index]]).to(device)
-			effective_end_input_data = torch.cat([input_data[seq_index][chosen_indices[step_index][seq_index], :] for step_index in range(len(chosen_indices)) for seq_index in range(batch_size) if step_index == already_found_packets_per_sample[seq_index]-1]).to(device)
+			# effective_input_data = torch.cat([input_data[seq_index][chosen_indices[step_index][seq_index], :] for step_index in range(len(chosen_indices)) for seq_index in range(batch_size) if step_index < already_found_packets_per_sample[seq_index]]).to(device)
+			# effective_end_input_data = torch.cat([input_data[seq_index][chosen_indices[step_index][seq_index], :] for step_index in range(len(chosen_indices)) for seq_index in range(batch_size) if step_index == already_found_packets_per_sample[seq_index]-1]).to(device)
 
-			all_slices_catted = torch.cat(all_slices)
-			assert (all_slices_catted[mask.repeat(1,1,input_data[0].shape[-1])].view(-1) == effective_input_data).all()
-			assert (all_slices_catted[mask_exact.repeat(1,1,input_data[0].shape[-1])].view(-1) == effective_end_input_data).all()
+			# all_slices_catted = torch.cat(all_slices)
+			# assert (all_slices_catted[mask.repeat(1,1,input_data[0].shape[-1])].view(-1) == effective_input_data).all()
+			# assert (all_slices_catted[mask_exact.repeat(1,1,input_data[0].shape[-1])].view(-1) == effective_end_input_data).all()
 
 			effective_output = outputs_catted[mask].view(-1)
 			assert effective_output.shape == effective_labels.shape
@@ -485,12 +488,12 @@ def train_rl():
 			rewards_sparsity_catted = torch.stack(rewards_sparsity).to(device)
 			rewards_classification_catted = torch.stack(rewards_classification).to(device)
 
-			assert rewards_sparsity_catted.shape == rewards_classification_catted.shape
+			# assert rewards_sparsity_catted.shape == rewards_classification_catted.shape
 			catted_rewards_altogether = torch.stack((rewards_sparsity_catted, rewards_classification_catted), dim=2)
 
 			effective_rewards_altogether = catted_rewards_altogether[mask_rl_two].view(-1)
 
-			assert effective_output_rl_critic.shape == effective_rewards_altogether.shape
+			# assert effective_output_rl_critic.shape == effective_rewards_altogether.shape
 			loss_rl_critic = criterion_rl_critic(effective_output_rl_critic, effective_rewards_altogether)
 
 
@@ -505,11 +508,11 @@ def train_rl():
 
 			effective_rewards_sparsity = rewards_sparsity_catted.detach()[mask_rl_first].view(-1)
 			effective_rewards_classification = rewards_classification_catted.detach()[mask_rl_first].view(-1)
-			assert (effective_rewards_sparsity.shape == effective_rewards_classification.shape)
+			# assert (effective_rewards_sparsity.shape == effective_rewards_classification.shape)
 
 			output_rl_critic_added = opt.accuracySparsityTradeoff*outputs_catted_rl_critic.detach()[:,:,0] + outputs_catted_rl_critic.detach()[:,:,1]
 			effective_output_rl_critic_added = output_rl_critic_added[mask_rl_first].view(-1)
-			assert (effective_output_rl_critic_added.shape == effective_rewards_sparsity.shape)
+			# assert (effective_output_rl_critic_added.shape == effective_rewards_sparsity.shape)
 			current_entropy = effective_rl_actor_dists.entropy()
 			loss_rl_actor = torch.mean(- effective_rl_actor_dists.log_prob(effective_output_rl_actor_decisions)*((opt.accuracySparsityTradeoff*effective_rewards_sparsity + effective_rewards_classification) - effective_output_rl_critic_added) - opt.entropyRegularizationMultiplier*current_entropy)
 
@@ -518,38 +521,39 @@ def train_rl():
 			total_loss.backward()
 			optimizer.step()
 
-			writer.add_scalar("loss", loss.item(), samples)
-			writer.add_scalar("loss_critic", loss_rl_critic.item(), samples)
-			writer.add_scalar("loss_actor", loss_rl_actor.item(), samples)
+			if batches_processed % 100 == 0:
+				writer.add_scalar("loss", loss.item(), samples)
+				writer.add_scalar("loss_critic", loss_rl_critic.item(), samples)
+				writer.add_scalar("loss_actor", loss_rl_actor.item(), samples)
 
-			writer.add_scalar("sparsity_real", torch.mean(catted_rewards_altogether[:,:,0:1][mask_rl]).item(), samples)
-			writer.add_scalar("classification_real", torch.mean(catted_rewards_altogether[:,:,1:][mask_rl]).item(), samples)
-			writer.add_scalar("sparsity_estimated", torch.mean(outputs_catted_rl_critic[:,:,0:1][mask_rl]).item(), samples)
-			writer.add_scalar("classification_estimated", torch.mean(outputs_catted_rl_critic[:,:,1:][mask_rl]).item(), samples)
+				writer.add_scalar("sparsity_real", torch.mean(catted_rewards_altogether[:,:,0:1][mask_rl]).item(), samples)
+				writer.add_scalar("classification_real", torch.mean(catted_rewards_altogether[:,:,1:][mask_rl]).item(), samples)
+				writer.add_scalar("sparsity_estimated", torch.mean(outputs_catted_rl_critic[:,:,0:1][mask_rl]).item(), samples)
+				writer.add_scalar("classification_estimated", torch.mean(outputs_catted_rl_critic[:,:,1:][mask_rl]).item(), samples)
 
 
-			assert (outputs_sigmoided[mask].shape == effective_labels.shape)
-			accuracy = torch.mean((torch.round(outputs_sigmoided[mask]) == effective_labels).float())
-			writer.add_scalar("accuracy", accuracy, samples)
-			assert (outputs_sigmoided[mask_exact].shape == effective_end_labels.shape)
-			end_accuracy = torch.mean((torch.round(outputs_sigmoided[mask_exact]) == effective_end_labels).float())
-			writer.add_scalar("end_accuracy", end_accuracy, samples)
+				# assert (outputs_sigmoided[mask].shape == effective_labels.shape)
+				accuracy = torch.mean((torch.round(outputs_sigmoided[mask]) == effective_labels).float())
+				writer.add_scalar("accuracy", accuracy, samples)
+				# assert (outputs_sigmoided[mask_exact].shape == effective_end_labels.shape)
+				end_accuracy = torch.mean((torch.round(outputs_sigmoided[mask_exact]) == effective_end_labels).float())
+				writer.add_scalar("end_accuracy", end_accuracy, samples)
 
-			not_attack_mask = effective_labels == 0
-			confidences = torch.sigmoid(effective_output.detach())
-			confidences[not_attack_mask] = 1 - confidences[not_attack_mask]
+				not_attack_mask = effective_labels == 0
+				confidences = torch.sigmoid(effective_output.detach())
+				confidences[not_attack_mask] = 1 - confidences[not_attack_mask]
 
-			not_attack_mask_end = effective_end_labels == 0
-			end_confidences = torch.sigmoid(outputs_catted[mask_exact].view(-1).detach())
-			end_confidences[not_attack_mask_end] = 1 - end_confidences[not_attack_mask_end]
-			writer.add_scalar("confidence", torch.mean(confidences), samples)
-			writer.add_scalar("end_confidence", torch.mean(end_confidences), samples)
+				not_attack_mask_end = effective_end_labels == 0
+				end_confidences = torch.sigmoid(outputs_catted[mask_exact].view(-1).detach())
+				end_confidences[not_attack_mask_end] = 1 - end_confidences[not_attack_mask_end]
+				writer.add_scalar("confidence", torch.mean(confidences), samples)
+				writer.add_scalar("end_confidence", torch.mean(end_confidences), samples)
 
-			chosen_packets = torch.sum(already_found_packets_per_sample).float()/(torch.sum(already_found_packets_per_sample)+torch.sum(already_skipped_packets_per_sample)).float()
-			# print("already_found_packets_per_sample", already_found_packets_per_sample, "already_skipped_packets_per_sample", already_skipped_packets_per_sample, "chosen_packets_ratio", chosen_packets)
-			writer.add_scalar("chosen_packets_ratio", chosen_packets, samples)
+				chosen_packets = torch.sum(already_found_packets_per_sample).float()/(torch.sum(already_found_packets_per_sample)+torch.sum(already_skipped_packets_per_sample)).float()
+				# print("already_found_packets_per_sample", already_found_packets_per_sample, "already_skipped_packets_per_sample", already_skipped_packets_per_sample, "chosen_packets_ratio", chosen_packets)
+				writer.add_scalar("chosen_packets_ratio", chosen_packets, samples)
 
-			writer.add_scalar("entropy", torch.mean(current_entropy), samples)
+				writer.add_scalar("entropy", torch.mean(current_entropy), samples)
 
 			if samples % save_period < batch_size:
 				if len(train_indices) % save_period == 0:
@@ -1834,6 +1838,7 @@ if __name__=="__main__":
 	parser.add_argument('--tradeoff', type=float, default=0.5)
 	parser.add_argument('--penaltyTradeoff', type=float, default=0, help='Tradeoff to enforce constant flow duration')
 	parser.add_argument('--lr', type=float, default=10**(-2), help='learning rate')
+	parser.add_argument('--optimizer', default="SGD", type=str)
 	parser.add_argument('--advTraining', action='store_true', help='Train with adversarial flows')
 	parser.add_argument('--allowIATReduction', action='store_true', help='allow reducing IAT below original value')
 	parser.add_argument('--order', type=int, default=1, help='order of the norm for adversarial sample generation')
@@ -1843,8 +1848,8 @@ if __name__=="__main__":
 	parser.add_argument('--averageFeaturesToPruneDuringTraining', type=int, default=-1, help='average number of features that should be "dropped out"; -1 to disable (default)')
 	parser.add_argument('--modelSavePeriod', type=float, default=1, help='number of epochs, after which to save the model, can be decimal')
 	parser.add_argument('--mutinfo', action='store_true', help='also compute mutinfo during the feature_importance function')
-	parser.add_argument('--hidden_size', type=int, default=256, help='number of neurons per layer')
-	parser.add_argument('--n_layers', type=int, default=3, help='number of LSTM layers')
+	parser.add_argument('--hidden_size', type=int, default=128, help='number of neurons per layer')
+	parser.add_argument('--n_layers', type=int, default=2, help='number of LSTM layers')
 	parser.add_argument('--adjustFeatImpDistribution', action='store_true', help='adjust randomization feature importance distributions to a practically relevant shape')
 	parser.add_argument('--skipArsDistanceCheck', action='store_true', help='stop ARS computation as soon as 50% theshold is reached')
 	parser.add_argument('--rl', action="store_true", help='do RL')
