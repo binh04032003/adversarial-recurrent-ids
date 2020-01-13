@@ -292,8 +292,11 @@ def train():
 					with open(adv_filename(), 'wb') as f:
 						pickle.dump(train_data.adv_flows, f)
 
-def train_rl():
+def compute_normal_distribution_from_log_normal(mu_log, sigma_log):
+	log_term = torch.log((mu_log**2 + sigma_log**2)/(mu_log**2))
+	return (0.5*(2*torch.log(mu_log) - log_term), torch.sqrt(log_term))
 
+def train_rl():
 	n_fold = opt.nFold
 	fold = opt.fold
 	lstm_module.train()
@@ -369,13 +372,20 @@ def train_rl():
 				outputs.append(current_slice_output)
 
 				# assert len(current_slice_action_probs.shape) == 3 and current_slice_action_probs.shape[2] == opt.lookaheadSteps
-				current_slice_action_dists = torch.distributions.categorical.Categorical(logits=current_slice_action_probs)
-
+				if not opt.continuous:
+					current_slice_action_dists = torch.distributions.categorical.Categorical(logits=current_slice_action_probs, validate_args=True)
+				else:
+					current_slice_action_probs = torch.nn.functional.softplus(current_slice_action_probs)
+					locs, scales = compute_normal_distribution_from_log_normal(current_slice_action_probs[:,:,0], current_slice_action_probs[:,:,1])
+					current_slice_action_dists = torch.distributions.log_normal.LogNormal(locs, scales, validate_args=True)
 				outputs_rl_actor.append(current_slice_action_probs)
 				decisions = current_slice_action_dists.sample()
 				outputs_rl_actor_decisions.append(decisions)
 
-				seq_index = seq_index + (decisions.view(-1)+1)
+				if not opt.continuous:
+					seq_index = seq_index + decisions.view(-1)+1
+				else:
+					seq_index = seq_index + (torch.floor(decisions.view(-1))+1).long()
 				chosen_indices.append(seq_index)
 				# assert len(orig_seq_lens) == len(seq_index)
 				remaining_seq_lens = torch.max(orig_seq_lens - seq_index, torch.zeros_like(orig_seq_lens))
@@ -500,11 +510,16 @@ def train_rl():
 			outputs_catted_rl_actor = torch.cat(outputs_rl_actor)
 			outputs_catted_rl_actor_decisions = torch.cat(outputs_rl_actor_decisions)
 
-			effective_output_rl_actor = outputs_catted_rl_actor[mask_rl.repeat(1,1,opt.lookaheadSteps)].view(-1)
+			effective_output_rl_actor = outputs_catted_rl_actor[mask_rl.repeat(1,1,current_slice_action_probs.shape[-1])].view(-1,current_slice_action_probs.shape[-1])
 			mask_rl_first = mask_rl[:,:,0]
 			effective_output_rl_actor_decisions = outputs_catted_rl_actor_decisions[mask_rl_first].view(-1)
+			assert effective_output_rl_actor.shape[0] == effective_output_rl_actor_decisions.shape[0]
 
-			effective_rl_actor_dists = torch.distributions.categorical.Categorical(logits=effective_output_rl_actor)
+			if not opt.continuous:
+				effective_rl_actor_dists = torch.distributions.categorical.Categorical(logits=effective_output_rl_actor, validate_args=True)
+			else:
+				locs, scales = compute_normal_distribution_from_log_normal(effective_output_rl_actor[:,0], effective_output_rl_actor[:,1])
+				effective_rl_actor_dists = torch.distributions.log_normal.LogNormal(locs, scales, validate_args=True)
 
 			effective_rewards_sparsity = rewards_sparsity_catted.detach()[mask_rl_first].view(-1)
 			effective_rewards_classification = rewards_classification_catted.detach()[mask_rl_first].view(-1)
@@ -514,7 +529,9 @@ def train_rl():
 			effective_output_rl_critic_added = output_rl_critic_added[mask_rl_first].view(-1)
 			# assert (effective_output_rl_critic_added.shape == effective_rewards_sparsity.shape)
 			current_entropy = effective_rl_actor_dists.entropy()
-			loss_rl_actor = torch.mean(- effective_rl_actor_dists.log_prob(effective_output_rl_actor_decisions)*((opt.accuracySparsityTradeoff*effective_rewards_sparsity + effective_rewards_classification) - effective_output_rl_critic_added) - opt.entropyRegularizationMultiplier*current_entropy)
+			log_prob = effective_rl_actor_dists.log_prob(effective_output_rl_actor_decisions)
+			assert effective_output_rl_critic_added.shape == log_prob.shape == current_entropy.shape == effective_rewards_sparsity.shape == effective_rewards_classification.shape
+			loss_rl_actor = torch.mean(- log_prob*((opt.accuracySparsityTradeoff*effective_rewards_sparsity + effective_rewards_classification) - effective_output_rl_critic_added) - opt.entropyRegularizationMultiplier*current_entropy)
 
 
 			total_loss = loss + loss_rl_critic + loss_rl_actor
