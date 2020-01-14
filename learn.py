@@ -219,7 +219,7 @@ def train():
 		adv_generator = adv_internal(in_training=True, iterations=10)
 	train_loader = torch.utils.data.DataLoader(train_data, batch_size=opt.batchSize, shuffle=True, collate_fn=custom_collate)
 
-	optimizer = optim.SGD(lstm_module.parameters(), lr=opt.lr)
+	optimizer = getattr(optim, opt.optimizer)(lstm_module.parameters(), lr=opt.lr)
 	criterion = nn.BCEWithLogitsLoss(reduction="mean")
 
 	writer = SummaryWriter()
@@ -402,6 +402,7 @@ def train_rl():
 			already_found_packets_per_sample = torch.FloatTensor([0] * batch_size).to(device)
 			new_already_found_packets_per_sample = torch.FloatTensor([0] * batch_size).to(device)
 			leave_out_last = torch.FloatTensor([0] * batch_size).to(device)
+			overshoot = torch.FloatTensor([0] * batch_size).to(device)
 			already_skipped_packets_per_sample = torch.FloatTensor([0] * batch_size).to(device)
 
 			for step_index in reversed(range(len(chosen_indices)-1)):
@@ -409,9 +410,13 @@ def train_rl():
 					if chosen_indices[step_index][seq_index] < orig_seq_lens[seq_index]:
 						if chosen_indices[step_index][seq_index] == orig_seq_lens[seq_index]-1:
 							leave_out_last[seq_index] += 1
+						# XXX: Penalty if choosing packets that are faaar away from the edge...
+						if chosen_indices[step_index+1][seq_index] > orig_seq_lens[seq_index]:
+							overshoot[seq_index] = chosen_indices[step_index+1][seq_index] - orig_seq_lens[seq_index]
 						new_already_found_packets_per_sample[seq_index] += 1
 						already_skipped_packets_per_sample[seq_index] += torch.min(chosen_indices[step_index+1][seq_index] if step_index+1 < len(chosen_indices) else torch.tensor(float("inf")), orig_seq_lens[seq_index]) - chosen_indices[step_index][seq_index] - 1
-				rewards_sparsity.append(already_skipped_packets_per_sample/(already_skipped_packets_per_sample+already_found_packets_per_sample))
+				rewards_sparsity.append((already_skipped_packets_per_sample)/(already_skipped_packets_per_sample+already_found_packets_per_sample+overshoot))
+				overshoot = torch.FloatTensor([0] * batch_size).to(device)
 				already_found_packets_per_sample = new_already_found_packets_per_sample
 
 			rewards_sparsity = list(reversed(rewards_sparsity))
@@ -513,7 +518,7 @@ def train_rl():
 			effective_output_rl_actor = outputs_catted_rl_actor[mask_rl.repeat(1,1,current_slice_action_probs.shape[-1])].view(-1,current_slice_action_probs.shape[-1])
 			mask_rl_first = mask_rl[:,:,0]
 			effective_output_rl_actor_decisions = outputs_catted_rl_actor_decisions[mask_rl_first].view(-1)
-			assert effective_output_rl_actor.shape[0] == effective_output_rl_actor_decisions.shape[0]
+			assert effective_output_rl_actor.shape[0] == effective_output_rl_actor_decisions.shape[0] and (not opt.continuous or effective_output_rl_actor.shape[-1] == 2)
 
 			if not opt.continuous:
 				effective_rl_actor_dists = torch.distributions.categorical.Categorical(logits=effective_output_rl_actor, validate_args=True)
@@ -548,6 +553,20 @@ def train_rl():
 				writer.add_scalar("sparsity_estimated", torch.mean(outputs_catted_rl_critic[:,:,0:1][mask_rl]).item(), samples)
 				writer.add_scalar("classification_estimated", torch.mean(outputs_catted_rl_critic[:,:,1:][mask_rl]).item(), samples)
 
+				actual_actions = torch.floor(effective_output_rl_actor_decisions.float())+1
+				writer.add_scalar("action_mean", torch.mean(actual_actions).item(), samples)
+				writer.add_scalar("action_std", torch.mean(actual_actions).item(), samples)
+
+				if opt.continuous:
+					writer.add_scalar("log_normal_mean", torch.mean(effective_output_rl_actor[:,0]).item(), samples)
+					writer.add_scalar("log_normal_std", torch.mean(effective_output_rl_actor[:,1]).item(), samples)
+					writer.add_scalar("normal_mean", torch.mean(locs).item(), samples)
+					writer.add_scalar("normal_std", torch.mean(scales).item(), samples)
+
+					print("log_normal_mean", effective_output_rl_actor[:,0])
+					print("log_normal_std", effective_output_rl_actor[:,1])
+					print("normal_mean", locs)
+					print("normal_std", scales)
 
 				# assert (outputs_sigmoided[mask].shape == effective_labels.shape)
 				accuracy = torch.mean((torch.round(outputs_sigmoided[mask]) == effective_labels).float())
@@ -1843,7 +1862,7 @@ if __name__=="__main__":
 	parser.add_argument('--normalizationData', default="", type=str, help='normalization data to use')
 	parser.add_argument('--fold', type=int, default=0, help='fold to use')
 	parser.add_argument('--nFold', type=int, default=3, help='total number of folds')
-	parser.add_argument('--batchSize', type=int, default=128, help='input batch size')
+	parser.add_argument('--batchSize', type=int, default=32, help='input batch size')
 	parser.add_argument('--net', default='', help="path to net (to continue training)")
 	parser.add_argument('--net_actor', default='', help="path to net (to continue training) for RL actor")
 	parser.add_argument('--net_critic', default='', help="path to net (to continue training) for RL critic")
@@ -1854,8 +1873,8 @@ if __name__=="__main__":
 	parser.add_argument('--removeChangeable', action='store_true', help='when training remove all features that an attacker could manipulate easily without changing the attack itself')
 	parser.add_argument('--tradeoff', type=float, default=0.5)
 	parser.add_argument('--penaltyTradeoff', type=float, default=0, help='Tradeoff to enforce constant flow duration')
-	parser.add_argument('--lr', type=float, default=10**(-2), help='learning rate')
-	parser.add_argument('--optimizer', default="SGD", type=str)
+	parser.add_argument('--lr', type=float, default=10**(-3), help='learning rate')
+	parser.add_argument('--optimizer', default="Adam", type=str)
 	parser.add_argument('--advTraining', action='store_true', help='Train with adversarial flows')
 	parser.add_argument('--allowIATReduction', action='store_true', help='allow reducing IAT below original value')
 	parser.add_argument('--order', type=int, default=1, help='order of the norm for adversarial sample generation')
@@ -1866,7 +1885,7 @@ if __name__=="__main__":
 	parser.add_argument('--modelSavePeriod', type=float, default=1, help='number of epochs, after which to save the model, can be decimal')
 	parser.add_argument('--mutinfo', action='store_true', help='also compute mutinfo during the feature_importance function')
 	parser.add_argument('--hidden_size', type=int, default=128, help='number of neurons per layer')
-	parser.add_argument('--n_layers', type=int, default=2, help='number of LSTM layers')
+	parser.add_argument('--n_layers', type=int, default=3, help='number of LSTM layers')
 	parser.add_argument('--adjustFeatImpDistribution', action='store_true', help='adjust randomization feature importance distributions to a practically relevant shape')
 	parser.add_argument('--skipArsDistanceCheck', action='store_true', help='stop ARS computation as soon as 50% theshold is reached')
 	parser.add_argument('--rl', action="store_true", help='do RL')
