@@ -164,8 +164,20 @@ def get_one_hot_vector(class_indices, num_classes, batch_size):
 
 def custom_collate(seqs, things=(True, True, True)):
 	seqs, labels, categories = zip(*seqs)
+	if opt.sampling=="random":
+		total_length = sum([len(item) for item in seqs])
+		n_seqs = len(seqs)
+		p = ((opt.samplingProbability*total_length)-n_seqs)/(total_length-n_seqs)
+		assert p>=0 and p<=1
+		masks = []
+		for seq_index in range(len(seqs)):
+			current_seq_len = len(seqs[seq_index])
+			d = torch.distributions.bernoulli.Bernoulli(torch.tensor([p] * (current_seq_len-1)))
+			s = torch.cat((torch.tensor([1.0]), d.sample()))
+			masks.append(s)
+
 	assert len(seqs) == len(labels) == len(categories)
-	return [collate_things(item, index==0) for index, (item, thing) in enumerate(zip((seqs, labels, categories), things)) if thing]
+	return [collate_things(item, index==0, sampling_masks=masks if opt.sampling!="" else None) for index, (item, thing) in enumerate(zip((seqs, labels, categories), things)) if thing]
 
 def unpad_padded_sequences(sequences, lengths):
 	unbound = [seq[:len] for seq, len in zip(torch.unbind(sequences, 1), lengths)]
@@ -186,7 +198,7 @@ def bernoullize_seq(seq, p):
 
 	return seq
 
-def collate_things(seqs, is_seqs=False):
+def collate_things(seqs, is_seqs=False, sampling_masks=None):
 	# import pdb; pdb.set_trace()
 	if is_seqs and opt.averageFeaturesToPruneDuringTraining!=-1:
 		assert not opt.function=="dropout_feature_importance" or not lstm_module.training
@@ -196,6 +208,8 @@ def collate_things(seqs, is_seqs=False):
 		# XXX Next line must be commented out!!!
 		# p = feature_dropout_probability
 		seqs = tuple(bernoullize_seq(item, p) for item in seqs)
+	elif sampling_masks is not None:
+		seqs = [item[mask.byte()] for item, mask in zip(seqs, sampling_masks)]
 
 	seq_lengths = torch.LongTensor([len(seq) for seq in seqs]).to(device)
 	seq_tensor = torch.nn.utils.rnn.pad_sequence(seqs).to(device)
@@ -1895,6 +1909,8 @@ if __name__=="__main__":
 	parser.add_argument('--continuous', action='store_true', help='whether the probability distribution of the actor should be continuous (log-normal)')
 	parser.add_argument('--shareNet', action='store_true', help='whether one net should be shared for RL')
 	parser.add_argument('--device', type=str, default="", help='device to use (cpu, gpu etc.)')
+	parser.add_argument('--sampling', type=str, default="", help='technique employed to sample packets of flows; blank if no sampling is applied')
+	parser.add_argument('--samplingProbability', type=float, default=0.5, help='desired probability of choosing a packet when sampling; the first packet of a flow is always chosen')
 
 	# parser.add_argument('--nSamples', type=int, default=1, help='number of items to sample for the feature importance metric')
 
