@@ -169,13 +169,29 @@ def custom_collate(seqs, things=(True, True, True)):
 		total_length = sum([len(item) for item in seqs])
 		n_seqs = len(seqs)
 		p = ((opt.samplingProbability*total_length)-n_seqs)/(total_length-n_seqs)
-		assert p>=0 and p<=1
+		assert p>=0
+		if p > 1 or p < 0:
+			print("opt.samplingProbability", opt.samplingProbability, "total_length", total_length, "n_seqs", n_seqs, "p", p)
+		p = max(min(p, 1), 0)
+
 		masks = []
 		for seq_index in range(len(seqs)):
 			current_seq_len = len(seqs[seq_index])
 			d = torch.distributions.bernoulli.Bernoulli(torch.tensor([p] * (current_seq_len-1)))
 			s = torch.cat((torch.tensor([1.0]), d.sample()))
 			masks.append(s)
+	elif opt.sampling=="first_n":
+		total_length = sum([len(item) for item in seqs])
+		n_seqs = len(seqs)
+		chosen_packets = math.floor(opt.samplingProbability*total_length)
+		packets_that_should_be_chosen = [p*len(seq) for seq in seqs]
+		packets_actually_chosen = [math.max(item, 1) for item in packets_that_should_be_chosen]
+
+		off = [should_be - actually_chosen for should_be, actually_chosen in zip(packets_that_should_be_chosen, packets_actually_chosen)]
+		assert chosen_packets >= n_seqs
+
+		packets_to_choose = [1] * n_seqs
+
 
 	assert len(seqs) == len(labels) == len(categories)
 	return [collate_things(item, index==0, sampling_masks=masks if opt.sampling!="" else None) for index, (item, thing) in enumerate(zip((seqs, labels, categories), things)) if thing]
