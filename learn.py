@@ -164,6 +164,7 @@ def get_one_hot_vector(class_indices, num_classes, batch_size):
 
 def custom_collate(seqs, things=(True, True, True)):
 	seqs, labels, categories = zip(*seqs)
+	assert not opt.sampling!="" or opt.rl
 	if opt.sampling=="random":
 		total_length = sum([len(item) for item in seqs])
 		n_seqs = len(seqs)
@@ -209,6 +210,21 @@ def collate_things(seqs, is_seqs=False, sampling_masks=None):
 		# p = feature_dropout_probability
 		seqs = tuple(bernoullize_seq(item, p) for item in seqs)
 	elif sampling_masks is not None:
+		skipped = []
+		if is_seqs:
+			for mask in sampling_masks:
+				skipped.append([])
+				skipped_counter = 0
+				for index in range(len(mask)):
+					skipped[-1].append(skipped_counter)
+					if not mask[index]:
+						skipped_counter += 1
+					else:
+						skipped_counter = 0
+				skipped[-1] = torch.tensor(skipped[-1], dtype=torch.float32)
+			for seq, skipped_seq in zip(seqs, skipped):
+				assert len(seq) == len(skipped_seq)
+				seq[:,-1] = skipped_seq
 		seqs = [item[mask.byte()] for item, mask in zip(seqs, sampling_masks)]
 
 	seq_lengths = torch.LongTensor([len(seq) for seq in seqs]).to(device)
