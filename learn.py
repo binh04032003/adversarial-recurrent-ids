@@ -207,6 +207,46 @@ def custom_collate(seqs, things=(True, True, True)):
 			current_mask = torch.zeros(current_seq_len, dtype=torch.float32)
 			current_mask[:int(allocated_per_seq_discrete[seq_index])] = 1
 			masks.append(current_mask)
+	elif opt.sampling=="uniform":
+		total_length = sum([len(item) for item in seqs])
+		n_seqs = len(seqs)
+		non_first_packets = total_length - n_seqs
+
+		chosen_packets = round(opt.samplingProbability*total_length)
+		packets_that_can_be_chosen_freely = max(chosen_packets-n_seqs, 0)
+
+		ratio_of_packets_to_choose = float(torch.tensor(packets_that_can_be_chosen_freely, dtype=torch.float32)/torch.tensor(non_first_packets, dtype=torch.float32))
+		ratio_of_packets_to_choose = max(min(ratio_of_packets_to_choose, 1.0), 0.0)
+
+		prev = 0
+		results = []
+		for index in range(non_first_packets):
+			packets_till_now = (index+1)*ratio_of_packets_to_choose
+			if math.floor(prev) < math.floor(packets_till_now):
+				results.append(1)
+			else:
+				results.append(0)
+			prev = packets_till_now
+
+		# print("sum(results) + n_seqs - chosen_packets", sum(results) + n_seqs - chosen_packets)
+		# assert sum(results) + n_seqs == chosen_packets or ratio_of_packets_to_choose==1 or ratio_of_packets_to_choose==0
+		assert sum(results) + n_seqs == chosen_packets or results[-1] == 0
+		if sum(results) + n_seqs - chosen_packets == -1:
+			results[-1] = 1
+		assert sum(results) + n_seqs == chosen_packets or ratio_of_packets_to_choose==1 or ratio_of_packets_to_choose==0
+
+		results = torch.tensor(results, dtype=torch.float32)
+		masks = []
+		already_chosen_packets = 0
+		for seq_index in range(len(seqs)):
+			current_seq_len = len(seqs[seq_index])
+			current_mask = torch.tensor([1], dtype=torch.float32)
+			next_already_chosen_packets = already_chosen_packets + current_seq_len-1
+			if next_already_chosen_packets > already_chosen_packets:
+				current_mask = torch.cat((current_mask, results[already_chosen_packets:next_already_chosen_packets]))
+			already_chosen_packets = next_already_chosen_packets
+			assert len(current_mask) == current_seq_len
+			masks.append(current_mask)
 
 	assert len(seqs) == len(labels) == len(categories)
 	return [collate_things(item, index==0, sampling_masks=masks if opt.sampling!="" else None) for index, (item, thing) in enumerate(zip((seqs, labels, categories), things)) if thing]
