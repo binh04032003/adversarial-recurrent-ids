@@ -169,10 +169,9 @@ def custom_collate(seqs, things=(True, True, True)):
 		total_length = sum([len(item) for item in seqs])
 		n_seqs = len(seqs)
 		p = ((opt.samplingProbability*total_length)-n_seqs)/(total_length-n_seqs)
-		assert p>=0
 		if p > 1 or p < 0:
 			print("opt.samplingProbability", opt.samplingProbability, "total_length", total_length, "n_seqs", n_seqs, "p", p)
-		p = max(min(p, 1), 0)
+		p = max(min(p, 1.0), 0.0)
 
 		masks = []
 		for seq_index in range(len(seqs)):
@@ -183,15 +182,31 @@ def custom_collate(seqs, things=(True, True, True)):
 	elif opt.sampling=="first_n":
 		total_length = sum([len(item) for item in seqs])
 		n_seqs = len(seqs)
-		chosen_packets = math.floor(opt.samplingProbability*total_length)
-		packets_that_should_be_chosen = [p*len(seq) for seq in seqs]
-		packets_actually_chosen = [math.max(item, 1) for item in packets_that_should_be_chosen]
+		chosen_packets = round(opt.samplingProbability*total_length)
+		packets_that_can_be_chosen_freely = max(chosen_packets-n_seqs, 0)
 
-		off = [should_be - actually_chosen for should_be, actually_chosen in zip(packets_that_should_be_chosen, packets_actually_chosen)]
-		assert chosen_packets >= n_seqs
+		len_of_each_seq = torch.tensor([len(seq) for seq in seqs], dtype=torch.float32)
+		weight_per_seq = torch.max(opt.samplingProbability*len_of_each_seq-1, torch.tensor(0.0))
+		summed_weight_for_all_seqs = torch.sum(weight_per_seq)
+		weight_per_seq_normalized = weight_per_seq/summed_weight_for_all_seqs
+		allocated_per_seq = torch.ones((n_seqs))
+		fair_remaining_part = packets_that_can_be_chosen_freely*weight_per_seq_normalized
+		allocated_per_seq += fair_remaining_part
+		allocated_per_seq_discrete = torch.floor(allocated_per_seq)
 
-		packets_to_choose = [1] * n_seqs
+		packets_left_to_distribute = int((chosen_packets-torch.sum(allocated_per_seq_discrete)).item())
+		missing = allocated_per_seq - allocated_per_seq_discrete
+		missing[missing==0] = 1
+		those_which_get_an_extra_packet = torch.argsort(missing)[:packets_left_to_distribute]
+		allocated_per_seq_discrete[those_which_get_an_extra_packet] += 1
+		assert torch.sum(allocated_per_seq_discrete) == chosen_packets
 
+		masks = []
+		for seq_index in range(len(seqs)):
+			current_seq_len = len(seqs[seq_index])
+			current_mask = torch.zeros(current_seq_len, dtype=torch.float32)
+			current_mask[:int(allocated_per_seq_discrete[seq_index])] = 1
+			masks.append(current_mask)
 
 	assert len(seqs) == len(labels) == len(categories)
 	return [collate_things(item, index==0, sampling_masks=masks if opt.sampling!="" else None) for index, (item, thing) in enumerate(zip((seqs, labels, categories), things)) if thing]
