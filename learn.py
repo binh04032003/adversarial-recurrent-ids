@@ -273,7 +273,7 @@ def custom_collate(seqs, things=(True, True, True)):
 			# print("remaining_seq_lens", remaining_seq_lens, "len(current_slice)", len(current_slice))
 			for index, item in enumerate(current_slice):
 				assert item.shape[0] >= 0 and item.shape[1] > 0
-				item[:,-1] = chosen_indices[-2][index]-chosen_indices[-1][index] if len(chosen_indices) > 1 else 0
+				item[:,-1] = chosen_indices[-2][index]-chosen_indices[-1][index]-1 if len(chosen_indices) > 1 else 0
 			current_collated_slice = torch.nn.utils.rnn.pad_sequence(current_slice).to(device)
 
 			if not opt.shareNet:
@@ -338,8 +338,11 @@ def bernoullize_seq(seq, p):
 
 	return seq
 
+global_chosen_packets = 0
+global_skipped_packets = 0
+
 def collate_things(seqs, is_seqs=False, sampling_masks=None):
-	# import pdb; pdb.set_trace()
+	global global_chosen_packets, global_skipped_packets
 	if is_seqs and opt.averageFeaturesToPruneDuringTraining!=-1:
 		assert not opt.function=="dropout_feature_importance" or not lstm_module.training
 		assert not opt.function=="test" or not lstm_module.training
@@ -349,22 +352,38 @@ def collate_things(seqs, is_seqs=False, sampling_masks=None):
 		# p = feature_dropout_probability
 		seqs = tuple(bernoullize_seq(item, p) for item in seqs)
 	elif sampling_masks is not None:
+		sampling_masks = [mask.byte() for mask in sampling_masks]
 		skipped = []
 		if is_seqs:
 			for mask in sampling_masks:
-				skipped.append([])
-				skipped_counter = 0
-				for index in range(len(mask)):
-					skipped[-1].append(skipped_counter)
-					if not mask[index]:
-						skipped_counter += 1
-					else:
-						skipped_counter = 0
-				skipped[-1] = torch.tensor(skipped[-1], dtype=torch.float32)
-			for seq, skipped_seq in zip(seqs, skipped):
-				assert len(seq) == len(skipped_seq)
-				seq[:,-1] = skipped_seq
-		seqs = [item[mask.byte()] for item, mask in zip(seqs, sampling_masks)]
+				# skipped.append([])
+				# skipped_counter = 0
+				# for index in range(len(mask)):
+				# 	skipped[-1].append(skipped_counter)
+				# 	if not mask[index]:
+				# 		skipped_counter += 1
+				# 	else:
+				# 		skipped_counter = 0
+				# skipped[-1] = torch.tensor(skipped[-1], dtype=torch.float32)
+				seq_range = torch.arange(len(mask))[mask]
+				skipped.append(torch.cat((torch.tensor([0]), seq_range[1:]-seq_range[:-1]-1)))
+				# print("mask", mask, "skipped", skipped[-1], "seq_range", seq_range)
+				# skipped.append([seq_range[index]-seq_range[index-1] if index>0 else 0 for index in range(len(seq_range))])
+
+		for index in range(len(sampling_masks)):
+			assert len(sampling_masks[index]) == len(seqs[index])
+			chosen_ones = int(torch.sum(sampling_masks[index] == 1))
+			global_chosen_packets += chosen_ones
+			global_skipped_packets += len(sampling_masks[index]) - chosen_ones
+		seqs = [item[mask] for item, mask in zip(seqs, sampling_masks)]
+		for seq, skipped_seq in zip(seqs, skipped):
+			assert len(seq) == len(skipped_seq)
+			seq[:,-1] = skipped_seq
+
+	# if is_seqs:
+	# 	# XXX: AHH!!! HACK
+	# 	for seq in seqs:
+	# 		seq[:,-1] = torch.cat((torch.tensor([0], dtype=torch.float32), torch.ones(len(seq)-1, dtype=torch.float32)))
 
 	seq_lengths = torch.LongTensor([len(seq) for seq in seqs]).to(device)
 	seq_tensor = torch.nn.utils.rnn.pad_sequence(seqs).to(device)
@@ -525,7 +544,7 @@ def train_rl():
 				current_slice = [item[index:index+1] for index, item in zip(seq_index, input_data)]
 				for index, item in enumerate(current_slice):
 					assert item.shape[0] >= 0 and item.shape[1] > 0
-					item[:,-1] = chosen_indices[-2][index]-chosen_indices[-1][index] if len(chosen_indices) > 1 else 0
+					item[:,-1] = chosen_indices[-2][index]-chosen_indices[-1][index]-1 if len(chosen_indices) > 1 else 0
 				current_collated_slice = torch.nn.utils.rnn.pad_sequence(current_slice).to(device)
 
 				# all_slices.append(current_collated_slice)
@@ -856,6 +875,9 @@ def test():
 
 	print("Flow metrics:")
 	output_scores(all_labels, all_predictions)
+
+	if global_chosen_packets > 0 and global_skipped_packets > 0:
+		print("global_chosen_packets", global_chosen_packets, "global_skipped_packets", global_skipped_packets, "ratio", global_chosen_packets/(global_skipped_packets+global_chosen_packets))
 
 	with open(file_name, "wb") as f:
 		pickle.dump({"results_by_attack_number": results_by_attack_number, "sample_indices_by_attack_number": sample_indices_by_attack_number}, f)
