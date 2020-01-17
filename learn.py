@@ -271,10 +271,13 @@ def custom_collate(seqs, things=(True, True, True)):
 		while (remaining_seq_lens > torch.zeros_like(remaining_seq_lens)).any():
 			current_slice = [item[index:index+1] for index, item in zip(seq_index, input_data)]
 			# print("remaining_seq_lens", remaining_seq_lens, "len(current_slice)", len(current_slice))
-			for index, item in enumerate(current_slice):
-				assert item.shape[0] >= 0 and item.shape[1] > 0
-				item[:,-1] = chosen_indices[-2][index]-chosen_indices[-1][index]-1 if len(chosen_indices) > 1 else 0
+			# for index, item in enumerate(current_slice):
+			# 	assert item.shape[0] >= 0 and item.shape[1] > 0
+			# 	item[:,-1] = chosen_indices[-1][index]-chosen_indices[-2][index]-1 if len(chosen_indices) > 1 else 0
 			current_collated_slice = torch.nn.utils.rnn.pad_sequence(current_slice).to(device)
+			currently_skipped = chosen_indices[-1]-chosen_indices[-2]-1 if len(chosen_indices) > 1 else chosen_indices[0]
+			assert (currently_skipped >= 0).all()
+			current_collated_slice[0,:,-1] = currently_skipped
 
 			if not opt.shareNet:
 				current_slice_action_probs, _ = lstm_module_rl_actor(current_collated_slice)
@@ -299,7 +302,7 @@ def custom_collate(seqs, things=(True, True, True)):
 				seq_index = seq_index + increment
 			# print("increment", increment)
 			chosen_indices.append(seq_index)
-			assert ((chosen_indices[-1] - chosen_indices[-2]) > 0).all(), f"{chosen_indices[-1]} {chosen_indices[-2]}"
+			# assert ((chosen_indices[-1] - chosen_indices[-2]) > 0).all(), f"{chosen_indices[-1]} {chosen_indices[-2]}"
 			remaining_seq_lens = torch.max(orig_seq_lens - seq_index, torch.zeros_like(orig_seq_lens))
 
 		masks = []
@@ -542,12 +545,15 @@ def train_rl():
 
 			while (remaining_seq_lens > torch.zeros_like(remaining_seq_lens)).any():
 				current_slice = [item[index:index+1] for index, item in zip(seq_index, input_data)]
-				for index, item in enumerate(current_slice):
-					assert item.shape[0] >= 0 and item.shape[1] > 0
-					item[:,-1] = chosen_indices[-2][index]-chosen_indices[-1][index]-1 if len(chosen_indices) > 1 else 0
+				# for index, item in enumerate(current_slice):
+				# 	assert item.shape[0] >= 0 and item.shape[1] > 0
+				# 	currently_skipped = chosen_indices[-1][index]-chosen_indices[-2][index]-1 if len(chosen_indices) > 1 else 0
+				# 	item[:,-1] = currently_skipped
+				# 	assert currently_skipped >= 0
 				current_collated_slice = torch.nn.utils.rnn.pad_sequence(current_slice).to(device)
-
-				# all_slices.append(current_collated_slice)
+				currently_skipped = chosen_indices[-1]-chosen_indices[-2]-1 if len(chosen_indices) > 1 else chosen_indices[0]
+				assert (currently_skipped >= 0).all()
+				current_collated_slice[0,:,-1] = currently_skipped
 
 				if not opt.shareNet:
 					current_slice_output, _ = lstm_module(current_collated_slice)
@@ -746,10 +752,10 @@ def train_rl():
 					writer.add_scalar("normal_mean", torch.mean(locs).item(), samples)
 					writer.add_scalar("normal_std", torch.mean(scales).item(), samples)
 
-					print("log_normal_mean", effective_output_rl_actor[:,0])
-					print("log_normal_std", effective_output_rl_actor[:,1])
-					print("normal_mean", locs)
-					print("normal_std", scales)
+					# print("log_normal_mean", effective_output_rl_actor[:,0])
+					# print("log_normal_std", effective_output_rl_actor[:,1])
+					# print("normal_mean", locs)
+					# print("normal_std", scales)
 
 				# assert (outputs_sigmoided[mask].shape == effective_labels.shape)
 				accuracy = torch.mean((torch.round(outputs_sigmoided[mask]) == effective_labels).float())
@@ -2054,7 +2060,7 @@ if __name__=="__main__":
 	parser.add_argument('--net_critic', default='', help="path to net (to continue training) for RL critic")
 	parser.add_argument('--function', default='train', help='the function that is going to be called')
 	parser.add_argument('--manualSeed', default=0, type=int, help='manual seed')
-	parser.add_argument('--maxLength', type=int, default=100, help='max length')
+	parser.add_argument('--maxLength', type=int, default=20, help='max length')
 	parser.add_argument('--maxSize', type=int, default=sys.maxsize, help='limit of samples to consider')
 	parser.add_argument('--removeChangeable', action='store_true', help='when training remove all features that an attacker could manipulate easily without changing the attack itself')
 	parser.add_argument('--tradeoff', type=float, default=0.5)
