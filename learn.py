@@ -227,7 +227,6 @@ def custom_collate(seqs, things=(True, True, True)):
 			else:
 				results.append(0)
 			prev = packets_till_now
-
 		# print("sum(results) + n_seqs - chosen_packets", sum(results) + n_seqs - chosen_packets)
 		# assert sum(results) + n_seqs == chosen_packets or ratio_of_packets_to_choose==1 or ratio_of_packets_to_choose==0
 		assert sum(results) + n_seqs == chosen_packets or results[-1] == 0
@@ -247,6 +246,75 @@ def custom_collate(seqs, things=(True, True, True)):
 			already_chosen_packets = next_already_chosen_packets
 			assert len(current_mask) == current_seq_len
 			masks.append(current_mask)
+
+	elif opt.sampling=="rl":
+		assert opt.function=="test" and opt.rl
+
+		input_data = seqs
+
+		orig_seq_lens = torch.LongTensor([len(item) for item in input_data]).to(device)
+		remaining_seq_lens = orig_seq_lens
+		batch_size = len(input_data)
+
+		seq_index = torch.LongTensor([0] * batch_size).to(device)
+		chosen_indices = [seq_index]
+
+		lstm_module.eval()
+		lstm_module.init_hidden(batch_size)
+		if not opt.shareNet:
+			lstm_module_rl_actor.eval()
+			lstm_module_rl_actor.init_hidden(batch_size)
+
+		# outputs_rl_actor = []
+		# outputs_rl_actor_decisions = []
+
+		while (remaining_seq_lens > torch.zeros_like(remaining_seq_lens)).any():
+			current_slice = [item[index:index+1] for index, item in zip(seq_index, input_data)]
+			# print("remaining_seq_lens", remaining_seq_lens, "len(current_slice)", len(current_slice))
+			for index, item in enumerate(current_slice):
+				assert item.shape[0] >= 0 and item.shape[1] > 0
+				item[:,-1] = chosen_indices[-2][index]-chosen_indices[-1][index] if len(chosen_indices) > 1 else 0
+			current_collated_slice = torch.nn.utils.rnn.pad_sequence(current_slice).to(device)
+
+			if not opt.shareNet:
+				current_slice_action_probs, _ = lstm_module_rl_actor(current_collated_slice)
+			else:
+				(_, current_slice_action_probs, _), _ = lstm_module(current_collated_slice)
+
+			if not opt.continuous:
+				decisions = torch.argmax(current_slice_action_probs, dim=-1)
+			else:
+				current_slice_action_probs = torch.nn.functional.softplus(current_slice_action_probs)
+				# locs, _ = compute_normal_distribution_from_log_normal(current_slice_action_probs[:,:,0], current_slice_action_probs[:,:,1])
+				decisions = current_slice_action_probs[:,:,0]
+			# outputs_rl_actor.append(current_slice_action_probs)
+			# outputs_rl_actor_decisions.append(decisions)
+			# print("decisions", decisions)
+
+			if not opt.continuous:
+				increment = decisions.view(-1)+1
+				seq_index = seq_index + increment
+			else:
+				increment = (torch.floor(decisions.view(-1))+1).long()
+				seq_index = seq_index + increment
+			# print("increment", increment)
+			chosen_indices.append(seq_index)
+			assert ((chosen_indices[-1] - chosen_indices[-2]) > 0).all(), f"{chosen_indices[-1]} {chosen_indices[-2]}"
+			remaining_seq_lens = torch.max(orig_seq_lens - seq_index, torch.zeros_like(orig_seq_lens))
+
+		masks = []
+		for seq_index in range(batch_size):
+			current_seq_len = len(seqs[seq_index])
+			masks.append([])
+			for step_index in range(len(chosen_indices)):
+				how_many_skipped_since_previous = int(min(chosen_indices[step_index][seq_index], current_seq_len) - chosen_indices[step_index-1][seq_index]-1 if step_index > 0 else 0)
+				masks[-1] += ([False] * how_many_skipped_since_previous)
+				if chosen_indices[step_index][seq_index] >= current_seq_len:
+					break
+				masks[-1].append(True)
+			masks[-1] = torch.tensor(masks[-1])
+			assert len(masks[-1]) == current_seq_len
+		# TODO: Make sure that all_seqs becomes the new seqs variable and that everything goes smoothly :)
 
 	assert len(seqs) == len(labels) == len(categories)
 	return [collate_things(item, index==0, sampling_masks=masks if opt.sampling!="" else None) for index, (item, thing) in enumerate(zip((seqs, labels, categories), things)) if thing]
@@ -456,6 +524,7 @@ def train_rl():
 			while (remaining_seq_lens > torch.zeros_like(remaining_seq_lens)).any():
 				current_slice = [item[index:index+1] for index, item in zip(seq_index, input_data)]
 				for index, item in enumerate(current_slice):
+					assert item.shape[0] >= 0 and item.shape[1] > 0
 					item[:,-1] = chosen_indices[-2][index]-chosen_indices[-1][index] if len(chosen_indices) > 1 else 0
 				current_collated_slice = torch.nn.utils.rnn.pad_sequence(current_slice).to(device)
 
@@ -472,7 +541,6 @@ def train_rl():
 
 				outputs.append(current_slice_output)
 
-				# assert len(current_slice_action_probs.shape) == 3 and current_slice_action_probs.shape[2] == opt.lookaheadSteps
 				if not opt.continuous:
 					current_slice_action_dists = torch.distributions.categorical.Categorical(logits=current_slice_action_probs, validate_args=True)
 				else:
@@ -488,14 +556,9 @@ def train_rl():
 				else:
 					seq_index = seq_index + (torch.floor(decisions.view(-1))+1).long()
 				chosen_indices.append(seq_index)
-				# assert len(orig_seq_lens) == len(seq_index)
 				remaining_seq_lens = torch.max(orig_seq_lens - seq_index, torch.zeros_like(orig_seq_lens))
 
-				# assert len(current_slice_values.shape) == 3 and current_slice_values.shape[2] == 2
 				outputs_rl_critic.append(current_slice_values)
-				# print("Finished iteration")
-
-			# print("Finished while loop")
 
 			rewards_classification = []
 			rewards_sparsity = []
@@ -2066,25 +2129,25 @@ if __name__=="__main__":
 			model_dict.update(pretrained_dict)
 			lstm_module.load_state_dict(model_dict)
 
-	if "rl" in opt.function and not opt.shareNet:
+	if ("rl" in opt.function or opt.sampling=="rl") and not opt.shareNet:
 		lstm_module_rl_actor = OurLSTMModule(x[0].shape[-1], opt.lookaheadSteps if not opt.continuous else 2, opt.hidden_size, opt.n_layers, batchSize, device).to(device)
 		lstm_module_rl_critic = OurLSTMModule(x[0].shape[-1], 2, opt.hidden_size, opt.n_layers, batchSize, device).to(device)
 
 		if opt.net_actor != '':
-			print("Loading", opt.net_actor)
+			print("Loading actor", opt.net_actor)
 
 			model_dict = lstm_module_rl_actor.state_dict()
-			pretrained_dict = {k: v for k, v in torch.load(opt.net, map_location=device).items() if k in model_dict and model_dict[k].shape==v.shape}
+			pretrained_dict = {k: v for k, v in torch.load(opt.net_actor, map_location=device).items() if k in model_dict and model_dict[k].shape==v.shape}
 			model_dict.update(pretrained_dict)
 			lstm_module_rl_actor.load_state_dict(model_dict)
 
 			# lstm_module_rl_actor.load_state_dict(torch.load(opt.net_actor, map_location=device))
 
 		if opt.net_critic != '':
-			print("Loading", opt.net_critic)
+			print("Loading critic", opt.net_critic)
 
 			model_dict = lstm_module_rl_critic.state_dict()
-			pretrained_dict = {k: v for k, v in torch.load(opt.net, map_location=device).items() if k in model_dict and model_dict[k].shape==v.shape}
+			pretrained_dict = {k: v for k, v in torch.load(opt.net_critic, map_location=device).items() if k in model_dict and model_dict[k].shape==v.shape}
 			model_dict.update(pretrained_dict)
 			lstm_module_rl_critic.load_state_dict(model_dict)
 
