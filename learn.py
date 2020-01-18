@@ -545,10 +545,11 @@ def train_rl():
 			padded_input_data = torch.nn.utils.rnn.pad_sequence(input_data).to(device)
 
 			# all_slices = []
+			batch_indices = torch.arange(batch_size)
 
 			while (remaining_seq_lens > torch.zeros_like(remaining_seq_lens)).any():
 				# current_slice_old = [item[index:index+1] for index, item in zip(seq_index, input_data)]
-				current_collated_slice = padded_input_data[torch.min(seq_index, orig_seq_lens_minus_one), torch.arange(batch_size), :].unsqueeze(0)
+				current_collated_slice = padded_input_data[torch.min(seq_index, orig_seq_lens_minus_one), batch_indices, :].unsqueeze(0)
 				# for index, item in enumerate(current_slice):
 				# 	assert item.shape[0] >= 0 and item.shape[1] > 0
 				# 	currently_skipped = chosen_indices[-1][index]-chosen_indices[-2][index]-1 if len(chosen_indices) > 1 else 0
