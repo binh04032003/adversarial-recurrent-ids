@@ -521,6 +521,7 @@ def train_rl():
 			input_data, labels, flow_categories = [[item.to(device) for item in supitem] for supitem in zip(*all_seqs)]
 
 			orig_seq_lens = torch.LongTensor([len(item) for item in input_data]).to(device)
+			orig_seq_lens_minus_one = orig_seq_lens - 1
 			remaining_seq_lens = orig_seq_lens
 			batch_size = len(input_data)
 			samples += batch_size
@@ -541,18 +542,22 @@ def train_rl():
 			outputs_rl_actor_decisions = []
 			outputs_rl_critic = []
 
+			padded_input_data = torch.nn.utils.rnn.pad_sequence(input_data).to(device)
+
 			# all_slices = []
 
 			while (remaining_seq_lens > torch.zeros_like(remaining_seq_lens)).any():
-				current_slice = [item[index:index+1] for index, item in zip(seq_index, input_data)]
+				# current_slice_old = [item[index:index+1] for index, item in zip(seq_index, input_data)]
+				current_collated_slice = padded_input_data[torch.min(seq_index, orig_seq_lens_minus_one), torch.arange(batch_size), :].unsqueeze(0)
 				# for index, item in enumerate(current_slice):
 				# 	assert item.shape[0] >= 0 and item.shape[1] > 0
 				# 	currently_skipped = chosen_indices[-1][index]-chosen_indices[-2][index]-1 if len(chosen_indices) > 1 else 0
 				# 	item[:,-1] = currently_skipped
 				# 	assert currently_skipped >= 0
-				current_collated_slice = torch.nn.utils.rnn.pad_sequence(current_slice).to(device)
+				# current_collated_slice_old = torch.nn.utils.rnn.pad_sequence(current_slice_old).to(device)
+				# assert (current_collated_slice_old == current_collated_slice).all()
 				currently_skipped = chosen_indices[-1]-chosen_indices[-2]-1 if len(chosen_indices) > 1 else chosen_indices[0]
-				assert (currently_skipped >= 0).all()
+				# assert (currently_skipped >= 0).all()
 				current_collated_slice[0,:,-1] = currently_skipped
 
 				if not opt.shareNet:
