@@ -587,7 +587,7 @@ def train_rl():
 
 			# assert batch_size <= opt.batchSize
 
-			seq_index = torch.LongTensor([0] * batch_size).to(device)
+			seq_index = torch.zeros((batch_size), dtype=torch.int64).to(device)
 			chosen_indices = [seq_index]
 
 			lstm_module.init_hidden(batch_size)
@@ -652,11 +652,11 @@ def train_rl():
 			rewards_classification = []
 			rewards_sparsity = []
 
-			already_found_packets_per_sample = torch.FloatTensor([0] * batch_size).to(device)
-			new_already_found_packets_per_sample = torch.FloatTensor([0] * batch_size).to(device)
-			leave_out_last = torch.FloatTensor([0] * batch_size).to(device)
-			overshoot = torch.FloatTensor([0] * batch_size).to(device)
-			already_skipped_packets_per_sample = torch.FloatTensor([0] * batch_size).to(device)
+			already_found_packets_per_sample = torch.zeros((batch_size), dtype=torch.float32).to(device)
+			new_already_found_packets_per_sample = torch.zeros((batch_size), dtype=torch.float32).to(device)
+			leave_out_last = torch.zeros((batch_size), dtype=torch.float32).to(device)
+			overshoot = torch.zeros((batch_size), dtype=torch.float32).to(device)
+			already_skipped_packets_per_sample = torch.zeros((batch_size), dtype=torch.float32).to(device)
 
 			for step_index in reversed(range(len(chosen_indices)-1)):
 				for seq_index in range(len(chosen_indices[step_index])):
@@ -668,9 +668,9 @@ def train_rl():
 							overshoot[seq_index] = chosen_indices[step_index+1][seq_index] - orig_seq_lens[seq_index]
 						new_already_found_packets_per_sample[seq_index] += 1
 						already_skipped_packets_per_sample[seq_index] += torch.min(chosen_indices[step_index+1][seq_index] if step_index+1 < len(chosen_indices) else torch.tensor(float("inf")), orig_seq_lens[seq_index]) - chosen_indices[step_index][seq_index] - 1
-				rewards_sparsity.append((already_skipped_packets_per_sample)/(already_skipped_packets_per_sample+already_found_packets_per_sample+overshoot))
+				# rewards_sparsity.append((already_skipped_packets_per_sample)/(already_skipped_packets_per_sample+already_found_packets_per_sample+overshoot))
 				rewards_sparsity.append((already_skipped_packets_per_sample-overshoot)/(already_skipped_packets_per_sample+already_found_packets_per_sample))
-				overshoot = torch.FloatTensor([0] * batch_size).to(device)
+				overshoot = torch.zeros((batch_size), dtype=torch.float32).to(device)
 				already_found_packets_per_sample = new_already_found_packets_per_sample
 
 			rewards_sparsity = list(reversed(rewards_sparsity))
