@@ -210,7 +210,7 @@ def custom_collate(seqs, things=(True, True, True)):
 	elif opt.sampling=="first_n_equal":
 		total_length = sum([len(item) for item in seqs])
 		n_seqs = len(seqs)
-		chosen_packets = round(opt.samplingProbability*total_length)
+		chosen_packets = min(round(opt.samplingProbability*total_length), n_seqs)
 
 		len_of_each_seq = torch.tensor([len(seq) for seq in seqs], dtype=torch.float32)
 
