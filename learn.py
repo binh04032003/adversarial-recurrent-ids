@@ -311,6 +311,7 @@ def custom_collate(seqs, things=(True, True, True)):
 		input_data = seqs
 
 		orig_seq_lens = torch.LongTensor([len(item) for item in input_data]).to(device)
+		orig_seq_lens_minus_one = orig_seq_lens - 1
 		remaining_seq_lens = orig_seq_lens
 		batch_size = len(input_data)
 
@@ -323,18 +324,12 @@ def custom_collate(seqs, things=(True, True, True)):
 			lstm_module_rl_actor.eval()
 			lstm_module_rl_actor.init_hidden(batch_size)
 
-		# outputs_rl_actor = []
-		# outputs_rl_actor_decisions = []
+		padded_input_data = torch.nn.utils.rnn.pad_sequence(input_data).to(device)
+		batch_indices = torch.arange(batch_size)
 
 		while (remaining_seq_lens > torch.zeros_like(remaining_seq_lens)).any():
-			current_slice = [item[index:index+1] for index, item in zip(seq_index, input_data)]
-			# print("remaining_seq_lens", remaining_seq_lens, "len(current_slice)", len(current_slice))
-			# for index, item in enumerate(current_slice):
-			# 	assert item.shape[0] >= 0 and item.shape[1] > 0
-			# 	item[:,-1] = chosen_indices[-1][index]-chosen_indices[-2][index]-1 if len(chosen_indices) > 1 else 0
-			current_collated_slice = torch.nn.utils.rnn.pad_sequence(current_slice).to(device)
+			current_collated_slice = padded_input_data[torch.min(seq_index, orig_seq_lens_minus_one), batch_indices, :].unsqueeze(0)
 			currently_skipped = chosen_indices[-1]-chosen_indices[-2]-1 if len(chosen_indices) > 1 else chosen_indices[0]
-			assert (currently_skipped >= 0).all()
 			current_collated_slice[0,:,-1] = currently_skipped
 
 			if not opt.shareNet:
@@ -346,11 +341,7 @@ def custom_collate(seqs, things=(True, True, True)):
 				decisions = torch.argmax(current_slice_action_probs, dim=-1)
 			else:
 				current_slice_action_probs = torch.nn.functional.softplus(current_slice_action_probs)
-				# locs, _ = compute_normal_distribution_from_log_normal(current_slice_action_probs[:,:,0], current_slice_action_probs[:,:,1])
 				decisions = current_slice_action_probs[:,:,0]
-			# outputs_rl_actor.append(current_slice_action_probs)
-			# outputs_rl_actor_decisions.append(decisions)
-			# print("decisions", decisions)
 
 			if not opt.continuous:
 				increment = decisions.view(-1)+1
@@ -360,7 +351,6 @@ def custom_collate(seqs, things=(True, True, True)):
 				seq_index = seq_index + increment
 			# print("increment", increment)
 			chosen_indices.append(seq_index)
-			# assert ((chosen_indices[-1] - chosen_indices[-2]) > 0).all(), f"{chosen_indices[-1]} {chosen_indices[-2]}"
 			remaining_seq_lens = torch.max(orig_seq_lens - seq_index, torch.zeros_like(orig_seq_lens))
 
 		masks = []
@@ -601,8 +591,6 @@ def train_rl():
 			outputs_rl_critic = []
 
 			padded_input_data = torch.nn.utils.rnn.pad_sequence(input_data).to(device)
-
-			# all_slices = []
 			batch_indices = torch.arange(batch_size)
 
 			while (remaining_seq_lens > torch.zeros_like(remaining_seq_lens)).any():
