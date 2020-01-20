@@ -391,9 +391,10 @@ def bernoullize_seq(seq, p):
 
 global_chosen_packets = 0
 global_skipped_packets = 0
+global_total = 0
 
 def collate_things(seqs, is_seqs=False, sampling_masks=None):
-	global global_chosen_packets, global_skipped_packets
+	global global_chosen_packets, global_skipped_packets, global_total
 	if is_seqs and opt.averageFeaturesToPruneDuringTraining!=-1:
 		assert not opt.function=="dropout_feature_importance" or not lstm_module.training
 		assert not opt.function=="test" or not lstm_module.training
@@ -407,34 +408,25 @@ def collate_things(seqs, is_seqs=False, sampling_masks=None):
 		skipped = []
 		if is_seqs:
 			for mask in sampling_masks:
-				# skipped.append([])
-				# skipped_counter = 0
-				# for index in range(len(mask)):
-				# 	skipped[-1].append(skipped_counter)
-				# 	if not mask[index]:
-				# 		skipped_counter += 1
-				# 	else:
-				# 		skipped_counter = 0
-				# skipped[-1] = torch.tensor(skipped[-1], dtype=torch.float32)
 				seq_range = torch.arange(len(mask))[mask]
 				skipped.append(torch.cat((torch.tensor([0]), seq_range[1:]-seq_range[:-1]-1)))
-				# print("mask", mask, "skipped", skipped[-1], "seq_range", seq_range)
-				# skipped.append([seq_range[index]-seq_range[index-1] if index>0 else 0 for index in range(len(seq_range))])
+				assert (skipped[-1] >= 0).all()
 
-		for index in range(len(sampling_masks)):
-			assert len(sampling_masks[index]) == len(seqs[index])
-			chosen_ones = int(torch.sum(sampling_masks[index] == 1))
-			global_chosen_packets += chosen_ones
-			global_skipped_packets += len(sampling_masks[index]) - chosen_ones
+			for index in range(len(sampling_masks)):
+				assert len(sampling_masks[index]) == len(seqs[index])
+				assert len(seqs[index]) <= opt.maxLength
+				chosen_ones = int(torch.sum(sampling_masks[index] == 1))
+				global_chosen_packets += chosen_ones
+				skipped_ones = len(sampling_masks[index]) - chosen_ones
+				global_skipped_packets += skipped_ones
+				global_total += len(seqs[index])
+				# print("len", len(seqs[index]), "chosen_ones", chosen_ones, "skipped_ones", skipped_ones)
+
 		seqs = [item[mask] for item, mask in zip(seqs, sampling_masks)]
-		for seq, skipped_seq in zip(seqs, skipped):
-			assert len(seq) == len(skipped_seq)
-			seq[:,-1] = skipped_seq
-
-	# if is_seqs:
-	# 	# XXX: AHH!!! HACK
-	# 	for seq in seqs:
-	# 		seq[:,-1] = torch.cat((torch.tensor([0], dtype=torch.float32), torch.ones(len(seq)-1, dtype=torch.float32)))
+		if is_seqs:
+			for seq, skipped_seq in zip(seqs, skipped):
+				assert len(seq) == len(skipped_seq)
+				seq[:,-1] = skipped_seq
 
 	seq_lengths = torch.LongTensor([len(seq) for seq in seqs]).to(device)
 	seq_tensor = torch.nn.utils.rnn.pad_sequence(seqs).to(device)
@@ -857,6 +849,7 @@ def test():
 	lstm_module.eval()
 
 	_, test_indices = get_nth_split(dataset, n_fold, fold)
+	print("Got", len(test_indices), "data")
 	test_data = torch.utils.data.Subset(dataset, test_indices)
 	test_loader = torch.utils.data.DataLoader(test_data, batch_size=opt.batchSize, shuffle=False, collate_fn=custom_collate)
 
@@ -937,7 +930,7 @@ def test():
 	output_scores(all_labels, all_predictions)
 
 	if global_chosen_packets > 0 and global_skipped_packets > 0:
-		print("global_chosen_packets", global_chosen_packets, "global_skipped_packets", global_skipped_packets, "ratio", global_chosen_packets/(global_skipped_packets+global_chosen_packets))
+		print("global_chosen_packets", global_chosen_packets, "global_skipped_packets", global_skipped_packets, "global_total", global_total, "ratio", global_chosen_packets/(global_skipped_packets+global_chosen_packets))
 
 	with open(file_name, "wb") as f:
 		pickle.dump({"results_by_attack_number": results_by_attack_number, "sample_indices_by_attack_number": sample_indices_by_attack_number}, f)
