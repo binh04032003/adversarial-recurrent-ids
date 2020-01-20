@@ -169,8 +169,8 @@ def custom_collate(seqs, things=(True, True, True)):
 		total_length = sum([len(item) for item in seqs])
 		n_seqs = len(seqs)
 		p = ((opt.samplingProbability*total_length)-n_seqs)/(total_length-n_seqs)
-		if p > 1 or p < 0:
-			print("opt.samplingProbability", opt.samplingProbability, "total_length", total_length, "n_seqs", n_seqs, "p", p)
+		# if p > 1 or p < 0:
+		# 	print("opt.samplingProbability", opt.samplingProbability, "total_length", total_length, "n_seqs", n_seqs, "p", p)
 		p = max(min(p, 1.0), 0.0)
 
 		masks = []
@@ -199,7 +199,7 @@ def custom_collate(seqs, things=(True, True, True)):
 		missing[missing==0] = 1
 		those_which_get_an_extra_packet = torch.argsort(missing)[:packets_left_to_distribute]
 		allocated_per_seq_discrete[those_which_get_an_extra_packet] += 1
-		assert torch.sum(allocated_per_seq_discrete) == chosen_packets
+		assert torch.sum(allocated_per_seq_discrete) == chosen_packets or chosen_packets < n_seqs
 
 		masks = []
 		for seq_index in range(len(seqs)):
@@ -210,43 +210,30 @@ def custom_collate(seqs, things=(True, True, True)):
 	elif opt.sampling=="first_n_equal":
 		total_length = sum([len(item) for item in seqs])
 		n_seqs = len(seqs)
-		chosen_packets = min(round(opt.samplingProbability*total_length), n_seqs)
+		chosen_packets = max(round(opt.samplingProbability*total_length), n_seqs)
 
 		len_of_each_seq = torch.tensor([len(seq) for seq in seqs], dtype=torch.float32)
 
 		sorted_by_length, sorted_by_length_indices = torch.sort(len_of_each_seq, descending=True)
-		# cumulative_lens_for_each_step
 		cumulative_packets = 0
 
-		# TODO:
 		last_full_length_packets = 0
 		final_length = 0
-		# print("int(max(len_of_each_seq))+1", int(max(len_of_each_seq))+1)
 		for current_len in range(1, int(max(len_of_each_seq))+1):
-			# print("beginning", current_len, "cumulative_packets", cumulative_packets, "chosen_packets", chosen_packets, "final_length", final_length)
 			if cumulative_packets >= chosen_packets:
-				# print("first break")
 				break
 			for seq_len in sorted_by_length:
-				# print("cumulative_packets incremented", cumulative_packets)
-
-				# print("seq_len", seq_len)
 				if seq_len < current_len:
-					# print("second break")
 					break
 				if cumulative_packets >= chosen_packets:
-					# print("third_break")
 					break
 				cumulative_packets += 1
 			if cumulative_packets < chosen_packets:
 				final_length = current_len
 				last_full_length_packets = cumulative_packets
-				# print("last_full_length_packets", last_full_length_packets)
-
 
 		assert last_full_length_packets <= chosen_packets
 		difference = chosen_packets - last_full_length_packets
-		# print("difference", difference)
 
 		positions_that_could_be_filled = sorted_by_length >= final_length+1
 		assert torch.sum(positions_that_could_be_filled) >= difference
@@ -256,6 +243,7 @@ def custom_collate(seqs, things=(True, True, True)):
 		packets_per_seq = torch.min(len_of_each_seq, torch.tensor([final_length] * len(len_of_each_seq), dtype=torch.float32))
 		packets_per_seq[chosen_indices] += 1
 
+		# print("packets_per_seq", packets_per_seq, "chosen_packets", chosen_packets)
 		assert sum(packets_per_seq) == chosen_packets
 
 		masks = []
@@ -648,8 +636,8 @@ def train_rl():
 							overshoot[seq_index] = chosen_indices[step_index+1][seq_index] - orig_seq_lens[seq_index]
 						new_already_found_packets_per_sample[seq_index] += 1
 						already_skipped_packets_per_sample[seq_index] += torch.min(chosen_indices[step_index+1][seq_index] if step_index+1 < len(chosen_indices) else torch.tensor(float("inf")), orig_seq_lens[seq_index]) - chosen_indices[step_index][seq_index] - 1
-				# rewards_sparsity.append((already_skipped_packets_per_sample)/(already_skipped_packets_per_sample+already_found_packets_per_sample+overshoot))
-				rewards_sparsity.append((already_skipped_packets_per_sample-overshoot)/(already_skipped_packets_per_sample+already_found_packets_per_sample))
+				rewards_sparsity.append((already_skipped_packets_per_sample)/(already_skipped_packets_per_sample+already_found_packets_per_sample+overshoot))
+				# rewards_sparsity.append((already_skipped_packets_per_sample-overshoot)/(already_skipped_packets_per_sample+already_found_packets_per_sample))
 				overshoot = torch.zeros((batch_size), dtype=torch.float32).to(device)
 				already_found_packets_per_sample = new_already_found_packets_per_sample
 
