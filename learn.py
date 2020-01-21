@@ -571,6 +571,13 @@ def train_rl():
 			outputs_rl_critic = []
 
 			padded_input_data = torch.nn.utils.rnn.pad_sequence(input_data).to(device)
+
+			if not opt.variableTradeoff:
+				tradeoff = opt.accuracySparsityTradeoff
+			else:
+				tradeoff = torch.FloatTensor(batch_size).uniform_(0.0, 1.0).unsqueeze(0).to(device)
+				tradeoff_for_input = tradeoff.repeat(padded_input_data.shape[0],1).unsqueeze(2)
+				padded_input_data = torch.cat((padded_input_data, tradeoff_for_input), dim=-1)
 			batch_indices = torch.arange(batch_size)
 
 			while (remaining_seq_lens > torch.zeros_like(remaining_seq_lens)).any():
@@ -722,6 +729,9 @@ def train_rl():
 			mask_rl_two = mask_rl.repeat(1,1,2)
 			effective_output_rl_critic = outputs_catted_rl_critic[mask_rl_two].view(-1)
 
+			if opt.variableTradeoff:
+				tradeoff = tradeoff.repeat(outputs_catted_rl_critic.shape[0],1)
+
 			rewards_sparsity_catted = torch.stack(rewards_sparsity).to(device)
 			rewards_classification_catted = torch.stack(rewards_classification).to(device)
 
@@ -750,16 +760,22 @@ def train_rl():
 				effective_rl_actor_dists = torch.distributions.log_normal.LogNormal(locs, scales, validate_args=True)
 
 			effective_rewards_sparsity = rewards_sparsity_catted.detach()[mask_rl_first].view(-1)
+			effective_rewards_sparsity_with_tradeoff = (tradeoff*rewards_sparsity_catted.detach())[mask_rl_first].view(-1)
 			effective_rewards_classification = rewards_classification_catted.detach()[mask_rl_first].view(-1)
 			# assert (effective_rewards_sparsity.shape == effective_rewards_classification.shape)
 
-			output_rl_critic_added = opt.accuracySparsityTradeoff*outputs_catted_rl_critic.detach()[:,:,0] + outputs_catted_rl_critic.detach()[:,:,1]
+			outputs_catted_rl_critic_sparsity = outputs_catted_rl_critic.detach()[:,:,0]
+			outputs_catted_rl_critic_classification = outputs_catted_rl_critic.detach()[:,:,1]
+
+			assert type(tradeoff) is float or outputs_catted_rl_critic_sparsity.shape == tradeoff.shape
+
+			output_rl_critic_added = tradeoff*outputs_catted_rl_critic_sparsity + outputs_catted_rl_critic_classification
 			effective_output_rl_critic_added = output_rl_critic_added[mask_rl_first].view(-1)
 			# assert (effective_output_rl_critic_added.shape == effective_rewards_sparsity.shape)
 			current_entropy = effective_rl_actor_dists.entropy()
 			log_prob = effective_rl_actor_dists.log_prob(effective_output_rl_actor_decisions)
-			assert effective_output_rl_critic_added.shape == log_prob.shape == current_entropy.shape == effective_rewards_sparsity.shape == effective_rewards_classification.shape
-			loss_rl_actor = torch.mean(- log_prob*((opt.accuracySparsityTradeoff*effective_rewards_sparsity + effective_rewards_classification) - effective_output_rl_critic_added) - opt.entropyRegularizationMultiplier*current_entropy)
+			assert effective_output_rl_critic_added.shape == log_prob.shape == current_entropy.shape == effective_rewards_sparsity_with_tradeoff.shape == effective_rewards_classification.shape
+			loss_rl_actor = torch.mean(- log_prob*((effective_rewards_sparsity_with_tradeoff + effective_rewards_classification) - effective_output_rl_critic_added) - opt.entropyRegularizationMultiplier*current_entropy)
 
 
 			total_loss = loss + loss_rl_critic + loss_rl_actor
@@ -2124,6 +2140,7 @@ if __name__=="__main__":
 	parser.add_argument('--device', type=str, default="", help='device to use (cpu, gpu etc.)')
 	parser.add_argument('--sampling', type=str, default="", help='technique employed to sample packets of flows; blank if no sampling is applied')
 	parser.add_argument('--samplingProbability', type=float, default=0.5, help='desired probability of choosing a packet when sampling; the first packet of a flow is always chosen')
+	parser.add_argument('--variableTradeoff', action='store_true', help='whether the tradeoff between accuracy and sparsity for RL should be randomly chosen for each flow')
 
 	# parser.add_argument('--nSamples', type=int, default=1, help='number of items to sample for the feature importance metric')
 
@@ -2180,7 +2197,7 @@ if __name__=="__main__":
 	dataset = OurDataset(x, y, categories)
 
 	batchSize = 1 if opt.function == 'pred_plots' else opt.batchSize # FIXME Max: Why? What's wrong?
-	lstm_module = OurLSTMModule(x[0].shape[-1], y[0].shape[-1], opt.hidden_size, opt.n_layers, batchSize, device, num_outputs_actor=opt.lookaheadSteps if not opt.continuous else 2, num_outputs_critic=2).to(device)
+	lstm_module = OurLSTMModule(x[0].shape[-1] + int(opt.variableTradeoff), y[0].shape[-1], opt.hidden_size, opt.n_layers, batchSize, device, num_outputs_actor=opt.lookaheadSteps if not opt.continuous else 2, num_outputs_critic=2).to(device)
 
 	if opt.net != '':
 		print("Loading", opt.net)
@@ -2193,8 +2210,8 @@ if __name__=="__main__":
 			lstm_module.load_state_dict(model_dict)
 
 	if ("rl" in opt.function or opt.sampling=="rl") and not opt.shareNet:
-		lstm_module_rl_actor = OurLSTMModule(x[0].shape[-1], opt.lookaheadSteps if not opt.continuous else 2, opt.hidden_size, opt.n_layers, batchSize, device).to(device)
-		lstm_module_rl_critic = OurLSTMModule(x[0].shape[-1], 2, opt.hidden_size, opt.n_layers, batchSize, device).to(device)
+		lstm_module_rl_actor = OurLSTMModule(x[0].shape[-1] + int(opt.variableTradeoff), opt.lookaheadSteps if not opt.continuous else 2, opt.hidden_size, opt.n_layers, batchSize, device).to(device)
+		lstm_module_rl_critic = OurLSTMModule(x[0].shape[-1] + int(opt.variableTradeoff), 2, opt.hidden_size, opt.n_layers, batchSize, device).to(device)
 
 		if opt.net_actor != '':
 			print("Loading actor", opt.net_actor)
