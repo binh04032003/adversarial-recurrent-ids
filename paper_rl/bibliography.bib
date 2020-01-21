@@ -1,0 +1,147 @@
+
+@article{fang_learning_2017,
+	title = {Learning how to {Active} {Learn}: {A} {Deep} {Reinforcement} {Learning} {Approach}},
+	shorttitle = {Learning how to {Active} {Learn}},
+	url = {http://arxiv.org/abs/1708.02383},
+	abstract = {Active learning aims to select a small subset of data for annotation such that a classiﬁer learned on the data is highly accurate. This is usually done using heuristic selection methods, however the effectiveness of such methods is limited and moreover, the performance of heuristics varies between datasets. To address these shortcomings, we introduce a novel formulation by reframing the active learning as a reinforcement learning problem and explicitly learning a data selection policy, where the policy takes the role of the active learning heuristic. Importantly, our method allows the selection policy learned using simulation on one language to be transferred to other languages. We demonstrate our method using cross-lingual named entity recognition, observing uniform improvements over traditional active learning.},
+	language = {en},
+	urldate = {2020-01-14},
+	journal = {arXiv:1708.02383 [cs]},
+	author = {Fang, Meng and Li, Yuan and Cohn, Trevor},
+	month = aug,
+	year = {2017},
+	note = {arXiv: 1708.02383},
+	keywords = {Computer Science - Artificial Intelligence, Computer Science - Machine Learning, Computer Science - Computation and Language},
+	annote = {Comment: To appear in EMNLP 2017},
+	file = {Fang et al. - 2017 - Learning how to Active Learn A Deep Reinforcement.pdf:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/2X43X5UN/Fang et al. - 2017 - Learning how to Active Learn A Deep Reinforcement.pdf:application/pdf}
+}
+
+@misc{noauthor_active_nodate,
+	title = {Active learning (machine learning) - {Wikipedia}},
+	url = {https://en.wikipedia.org/wiki/Active_learning_(machine_learning)},
+	urldate = {2020-01-14},
+	file = {Active learning (machine learning) - Wikipedia:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/L6D29GB4/Active_learning_(machine_learning).html:text/html}
+}
+
+@article{mnih_asynchronous_2016,
+	title = {Asynchronous {Methods} for {Deep} {Reinforcement} {Learning}},
+	url = {http://arxiv.org/abs/1602.01783},
+	abstract = {We propose a conceptually simple and lightweight framework for deep reinforcement learning that uses asynchronous gradient descent for optimization of deep neural network controllers. We present asynchronous variants of four standard reinforcement learning algorithms and show that parallel actor-learners have a stabilizing effect on training allowing all four methods to successfully train neural network controllers. The best performing method, an asynchronous variant of actor-critic, surpasses the current state-of-the-art on the Atari domain while training for half the time on a single multi-core CPU instead of a GPU. Furthermore, we show that asynchronous actor-critic succeeds on a wide variety of continuous motor control problems as well as on a new task of navigating random 3D mazes using a visual input.},
+	urldate = {2020-01-16},
+	journal = {arXiv:1602.01783 [cs]},
+	author = {Mnih, Volodymyr and Badia, Adrià Puigdomènech and Mirza, Mehdi and Graves, Alex and Lillicrap, Timothy P. and Harley, Tim and Silver, David and Kavukcuoglu, Koray},
+	month = jun,
+	year = {2016},
+	note = {arXiv: 1602.01783},
+	keywords = {Computer Science - Machine Learning},
+	file = {arXiv Fulltext PDF:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/ZYPU4IR5/Mnih et al. - 2016 - Asynchronous Methods for Deep Reinforcement Learni.pdf:application/pdf;arXiv.org Snapshot:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/27VWHXNW/1602.html:text/html}
+}
+
+@article{wassermann_ral_2019,
+	title = {{RAL} - {Improving} {Stream}-{Based} {Active} {Learning} by {Reinforcement} {Learning}},
+	abstract = {One of the main challenges associated with supervised learning under dynamic scenarios is that of periodically getting access to labels of fresh, previously unseen samples. Labeling new data is usually an expensive and cumbersome process, while not all data points are equally valuable. Active learning aims at labeling only the most informative samples to reduce cost. In this paradigm, a learner can choose from which new samples it wants to learn, and can obtain the ground truth by asking an oracle for the corresponding labels. We introduce RAL – Reinforced stream-based Active Learning –, a new active-learning approach, coupling stream-based active learning with reinforcement-learning concepts. In particular, we model active learning as a contextual-bandit problem, in which rewards are based on the usefulness of the system’s querying behavior. Empirical evaluations on multiple datasets conﬁrm that RAL outperforms the state of the art, both by improving learning accuracy and by reducing the number of requested labels. As an additional contribution, we release RAL as an open-source Python package to the machine-learning community.},
+	language = {en},
+	author = {Wassermann, Sarah and Cuvelier, Thibaut and Casas, Pedro},
+	year = {2019},
+	pages = {17},
+	file = {Wassermann et al. - RAL - Improving Stream-Based Active Learning by Re.pdf:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/HJDHMIFA/Wassermann et al. - RAL - Improving Stream-Based Active Learning by Re.pdf:application/pdf}
+}
+
+@article{wassermann_adam_2019,
+	title = {{ADAM} \& {RAL}: {Adaptive} {Memory} {Learning} and {Reinforcement} {Active} {Learning} for {Network} {Monitoring}},
+	abstract = {Network-trafﬁc data commonly arrives in the form of fast data streams; online network-monitoring systems continuously analyze these kinds of streams, sequentially collecting measurements over time. Continuous and dynamic learning is an effective learning strategy when operating in these fast and dynamic environments, where concept drifts constantly occur. In this paper, we propose different approaches for stream-based machine learning, able to analyze network-trafﬁc streams on the ﬂy, using supervised learning techniques. We address two major challenges associated to stream-based machine learning and online network monitoring: (i) how to dynamically learn from and adapt to non-stationary data and patterns changing over time, and (ii) how to deal with the limited availability of ground truth or labeled data to continuously tune a supervised learning model. We introduce ADAM \& RAL, two stream-based machine-learning approaches to tackle these challenges. ADAM implements multiple stream-based machine-learning models and relies on an adaptive memory strategy to dynamically adapt the size of the system’s learning memory to the most recent data distribution, triggering new learning steps when concept drifts are detected. RAL implements a stream-based active-learning strategy to reduce the amount of labeled data needed for streambased learning, dynamically deciding on the most informative samples to integrate into the continuous learning scheme. Using a reinforcement learning loop, RAL improves prediction performance by additionally learning from the goodness of its previous sample-selection decisions. We focus on a particularly challenging problem in network monitoring: continuously tuning detection models able to recognize network attacks over time. By continuously learning from and detecting concept drifts within real network measurements, we show that ADAM \& RAL can continuously achieve high detection accuracy and limit the amount of training data needed to detect attacks over dynamic network data streams.},
+	language = {en},
+	author = {Wassermann, Sarah and Cuvelier, Thibaut and Mulinka, Pavol and Casas, Pedro},
+	year = {2019},
+	pages = {10},
+	file = {Wassermann et al. - ADAM & RAL Adaptive Memory Learning and Reinforce.pdf:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/LQ9HU24M/Wassermann et al. - ADAM & RAL Adaptive Memory Learning and Reinforce.pdf:application/pdf}
+}
+
+@article{campos_skip_2018,
+	title = {Skip {RNN}: {Learning} to {Skip} {State} {Updates} in {Recurrent} {Neural} {Networks}},
+	shorttitle = {Skip {RNN}},
+	url = {http://arxiv.org/abs/1708.06834},
+	abstract = {Recurrent Neural Networks (RNNs) continue to show outstanding performance in sequence modeling tasks. However, training RNNs on long sequences often face challenges like slow inference, vanishing gradients and difficulty in capturing long term dependencies. In backpropagation through time settings, these issues are tightly coupled with the large, sequential computational graph resulting from unfolding the RNN in time. We introduce the Skip RNN model which extends existing RNN models by learning to skip state updates and shortens the effective size of the computational graph. This model can also be encouraged to perform fewer state updates through a budget constraint. We evaluate the proposed model on various tasks and show how it can reduce the number of required RNN updates while preserving, and sometimes even improving, the performance of the baseline RNN models. Source code is publicly available at https://imatge-upc.github.io/skiprnn-2017-telecombcn/ .},
+	urldate = {2020-01-21},
+	journal = {arXiv:1708.06834 [cs]},
+	author = {Campos, Victor and Jou, Brendan and Giro-i-Nieto, Xavier and Torres, Jordi and Chang, Shih-Fu},
+	month = feb,
+	year = {2018},
+	note = {arXiv: 1708.06834},
+	keywords = {Computer Science - Artificial Intelligence, Computer Science - Computer Vision and Pattern Recognition},
+	annote = {Comment: Accepted as conference paper at ICLR 2018},
+	file = {arXiv Fulltext PDF:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/NDQDYF8X/Campos et al. - 2018 - Skip RNN Learning to Skip State Updates in Recurr.pdf:application/pdf;arXiv.org Snapshot:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/TXSEWRMW/1708.html:text/html}
+}
+
+@article{seo_neural_2018,
+	title = {Neural {Speed} {Reading} via {Skim}-{RNN}},
+	url = {http://arxiv.org/abs/1711.02085},
+	abstract = {Inspired by the principles of speed reading, we introduce Skim-RNN, a recurrent neural network (RNN) that dynamically decides to update only a small fraction of the hidden state for relatively unimportant input tokens. Skim-RNN gives computational advantage over an RNN that always updates the entire hidden state. Skim-RNN uses the same input and output interfaces as a standard RNN and can be easily used instead of RNNs in existing models. In our experiments, we show that Skim-RNN can achieve significantly reduced computational cost without losing accuracy compared to standard RNNs across five different natural language tasks. In addition, we demonstrate that the trade-off between accuracy and speed of Skim-RNN can be dynamically controlled during inference time in a stable manner. Our analysis also shows that Skim-RNN running on a single CPU offers lower latency compared to standard RNNs on GPUs.},
+	urldate = {2020-01-21},
+	journal = {arXiv:1711.02085 [cs]},
+	author = {Seo, Minjoon and Min, Sewon and Farhadi, Ali and Hajishirzi, Hannaneh},
+	month = mar,
+	year = {2018},
+	note = {arXiv: 1711.02085},
+	keywords = {Computer Science - Computation and Language},
+	annote = {Comment: ICLR 2018},
+	file = {arXiv Fulltext PDF:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/BK7T9QEG/Seo et al. - 2018 - Neural Speed Reading via Skim-RNN.pdf:application/pdf;arXiv.org Snapshot:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/TTMEA56F/1711.html:text/html}
+}
+
+@article{yu_learning_2017,
+	title = {Learning to {Skim} {Text}},
+	url = {http://arxiv.org/abs/1704.06877},
+	abstract = {Recurrent Neural Networks are showing much promise in many sub-areas of natural language processing, ranging from document classification to machine translation to automatic question answering. Despite their promise, many recurrent models have to read the whole text word by word, making it slow to handle long documents. For example, it is difficult to use a recurrent network to read a book and answer questions about it. In this paper, we present an approach of reading text while skipping irrelevant information if needed. The underlying model is a recurrent network that learns how far to jump after reading a few words of the input text. We employ a standard policy gradient method to train the model to make discrete jumping decisions. In our benchmarks on four different tasks, including number prediction, sentiment analysis, news article classification and automatic Q{\textbackslash}\&A, our proposed model, a modified LSTM with jumping, is up to 6 times faster than the standard sequential LSTM, while maintaining the same or even better accuracy.},
+	urldate = {2020-01-21},
+	journal = {arXiv:1704.06877 [cs]},
+	author = {Yu, Adams Wei and Lee, Hongrae and Le, Quoc V.},
+	month = apr,
+	year = {2017},
+	note = {arXiv: 1704.06877},
+	keywords = {Computer Science - Computation and Language, Computer Science - Machine Learning},
+	file = {arXiv Fulltext PDF:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/3WSXFEAQ/Yu et al. - 2017 - Learning to Skim Text.pdf:application/pdf;arXiv.org Snapshot:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/6PWJB5ZU/1704.html:text/html}
+}
+
+@article{gui_long_2018,
+	title = {Long {Short}-{Term} {Memory} with {Dynamic} {Skip} {Connections}},
+	url = {http://arxiv.org/abs/1811.03873},
+	abstract = {In recent years, long short-term memory (LSTM) has been successfully used to model sequential data of variable length. However, LSTM can still experience difficulty in capturing long-term dependencies. In this work, we tried to alleviate this problem by introducing a dynamic skip connection, which can learn to directly connect two dependent words. Since there is no dependency information in the training data, we propose a novel reinforcement learning-based method to model the dependency relationship and connect dependent words. The proposed model computes the recurrent transition functions based on the skip connections, which provides a dynamic skipping advantage over RNNs that always tackle entire sentences sequentially. Our experimental results on three natural language processing tasks demonstrate that the proposed method can achieve better performance than existing methods. In the number prediction experiment, the proposed model outperformed LSTM with respect to accuracy by nearly 20\%.},
+	urldate = {2020-01-21},
+	journal = {arXiv:1811.03873 [cs]},
+	author = {Gui, Tao and Zhang, Qi and Zhao, Lujun and Lin, Yaosong and Peng, Minlong and Gong, Jingjing and Huang, Xuanjing},
+	month = nov,
+	year = {2018},
+	note = {arXiv: 1811.03873},
+	keywords = {Computer Science - Computation and Language},
+	file = {arXiv Fulltext PDF:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/BQAEUSNQ/Gui et al. - 2018 - Long Short-Term Memory with Dynamic Skip Connectio.pdf:application/pdf;arXiv.org Snapshot:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/CRG3WLSL/1811.html:text/html}
+}
+
+@article{hartl_explainability_2019,
+	title = {Explainability and {Adversarial} {Robustness} for {RNNs}},
+	url = {http://arxiv.org/abs/1912.09855},
+	abstract = {Recurrent Neural Networks (RNNs) yield attractive properties for constructing Intrusion Detection Systems (IDSs) for network data. With the rise of ubiquitous Machine Learning (ML) systems, malicious actors have been catching up quickly to find new ways to exploit ML vulnerabilities for profit. Recently developed adversarial ML techniques focus on computer vision and their applicability to network traffic is not straightforward: Network packets expose fewer features than an image, are sequential and impose several constraints on their features. We show that despite these completely different characteristics, adversarial samples can be generated reliably for RNNs. To understand a classifier's potential for misclassification, we extend existing explainability techniques and propose new ones, suitable particularly for sequential data. Applying them shows that already the first packets of a communication flow are of crucial importance and are likely to be targeted by attackers. Feature importance methods show that even relatively unimportant features can be effectively abused to generate adversarial samples. Since traditional evaluation metrics such as accuracy are not sufficient for quantifying the adversarial threat, we propose the Adversarial Robustness Score (ARS) for comparing IDSs, capturing a common notion of adversarial robustness, and show that an adversarial training procedure can significantly and successfully reduce the attack surface.},
+	urldate = {2020-01-21},
+	journal = {arXiv:1912.09855 [cs, stat]},
+	author = {Hartl, Alexander and Bachl, Maximilian and Fabini, Joachim and Zseby, Tanja},
+	month = dec,
+	year = {2019},
+	note = {arXiv: 1912.09855},
+	keywords = {Computer Science - Cryptography and Security, Computer Science - Machine Learning, Computer Science - Networking and Internet Architecture, Statistics - Machine Learning},
+	file = {arXiv Fulltext PDF:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/Q96GWYPR/Hartl et al. - 2019 - Explainability and Adversarial Robustness for RNNs.pdf:application/pdf;arXiv.org Snapshot:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/UTLUVCAX/1912.html:text/html}
+}
+
+@article{meghdouri_analysis_2018,
+	title = {Analysis of {Lightweight} {Feature} {Vectors} for {Attack} {Detection} in {Network} {Traffic}},
+	volume = {8},
+	copyright = {http://creativecommons.org/licenses/by/3.0/},
+	abstract = {The consolidation of encryption and big data in network communications have made deep packet inspection no longer feasible in large networks. Early attack detection requires feature vectors which are easy to extract, process, and analyze, allowing their generation also from encrypted traffic. So far, experts have selected features based on their intuition, previous research, or acritically assuming standards, but there is no general agreement about the features to use for attack detection in a broad scope. We compared five lightweight feature sets that have been proposed in the scientific literature for the last few years, and evaluated them with supervised machine learning. For our experiments, we use the UNSW-NB15 dataset, recently published as a new benchmark for network security. Results showed three remarkable findings: (1) Analysis based on source behavior instead of classic flow profiles is more effective for attack detection; (2) meta-studies on past research can be used to establish satisfactory benchmarks; and (3) features based on packet length are clearly determinant for capturing malicious activity. Our research showed that vectors currently used for attack detection are oversized, their accuracy and speed can be improved, and are to be adapted for dealing with encrypted traffic.},
+	language = {en},
+	number = {11},
+	urldate = {2019-07-30},
+	journal = {Applied Sciences},
+	author = {Meghdouri, Fares and Zseby, Tanja and Iglesias, Félix},
+	month = nov,
+	year = {2018},
+	keywords = {feature selection, network attack detection, supervised learning},
+	pages = {2196}
+}
