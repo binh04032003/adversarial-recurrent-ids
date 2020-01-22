@@ -92,6 +92,7 @@ firstname.lastname@tuwien.ac.at}}
 \newacronym{dos}{DoS}{Denial-of-Service}
 \newacronym{iat}{IAT}{Interarrival time}
 \newacronym{rl}{RL}{Reinforcement Learning}
+\newacronym{dpi}{DPI}{Deep Packet Inspection}
 
 \newcommand{\ours}{SparseIDS}
 
@@ -156,6 +157,54 @@ These proposed techniques focus their evaluation on text and hence do not fulfil
 
 \section{Setup}
 
+\subsection{Classifier}
+\label{classifier}
+We implemented a three-layer LSTM-based classifier with 128 neurons at each layer. As the input features we use source port, destination port, protocol identifier, packet length, \gls{iat} to the previous packet in the flow, packet direction (i.e. forward or reverse path) and all TCP flags (0 if the flow is not TCP).
+We omitted \gls{ttl} values, as they are likely to lead to unwanted prediction behaviour \cite{bachl_walling_2019}.  Among the used features, source port, destination port and protocol identifier are constant over the whole flow while the others vary.
+During flow extraction we used the usual 5-tuple flow key, which distinguishes flows based on the protocol they use and their source and destination port and IP address.
+We use Z-score normalization and a train/test split of 2:1.
+
+\subsection{RL for Sampling}
+Reinforcement Learning algorithms have shown that, given enough training instances, they perform optimally in decision-making situations. To this end, we introduce a \gls{rl}-based architecture that enables packet sampling decisions based on the current state/confidence of the LSTM classifier. We opt for an \emph{Actor-Critic} structure (as shown in \autoref{rnn:sampling}) which is a mixture of \emph{value-based} and \emph{policy-based} \gls{rl} strategies in which the decision of which packet to choose next (exactly how many packets to skip from the current packet) is made by the Actor deep network which, at the same time, constructs a probabilistic distribution of how many packets to skip and, tries to learn the best policy, i.e. action to be taken on the basis of the current state. The Critic network subsequently evaluates the behavior of the Actor network using the computed value function and gives it feedback based on the performance obtained by the LSTM classifier. The jump is taken from the Actor output distribution and fed into the packet parser, which is responsible for counting the packets and selecting the appropriate one.
+
+In what follows, we explore two technical details on how decisions are performed, either continuously or gradually. 
+
+\begin{figure}
+\center
+  \includegraphics[width=0.3\textwidth]{img/rnn-sampling}
+  \caption{SparseIDS framework. Three deep networks are shown: an LSTM classifier, An Actor network and a Critic network. The Actor takes actions based on the feedback from the the Critic network and the classifier. The Critic network tracks the Actor actions based on the classifier confidence and finally, the packets selector parses packets based on the decision of the Actor network.}
+  \label{rnn:sampling}
+\end{figure}
+
+
+\subsubsection{Continuous Actions}
+% here goes the math
+
+
+\subsubsection{Discrete Actions}
+
+
+\subsection{Rule-based Sampling Strategies}
+Traditionally, network packet sampling is performed on backbone infrastructures where, due to large bandwidths, not every packet can be analyzed. Sampling consequently helps experts understand the behavior of their network without the need to capture each and every packet. Assuming that the behavior of the network follows a predefined underlying process, sampling is therefore not detrimental on average to statistical analysis or measurement. Although the dataset in this work does not come from a backbone network, sampling reduces the high computational effort due to additional processing  required by the complex \gls{ml} based \gls{ids}. As a consequence, several intuitive but efficient sampling techniques can be applied in practice. In this study, we compare a few techniques to our sparseIDS approach. 
+We opt for three rule-based sampling families that are widely used in practice, such rule-based approaches do not require feedback from higher layers (i.e. sampling rates are constant and not correlated with subsequent analysis). The strategy of each family is summarized as follows:
+
+\subsubsection{Random Sampling}
+Given the fraction $\alpha$ of packets to be selected in a set of $N$ packets, such techniques take exactly $n = \alpha \times N$ samples that are randomly sampled from a given probability mass function, such as a uniform distribution that keeps the pick-up probability similar for all packets.
+Practically, these techniques work properly if the candidate packets have similar properties (redundancy) and therefore the probability of skipping important information is low. 
+
+\subsubsection{First 'n' Sampling}
+As its name suggests, this technique only samples the first $n$ packets and ignores the rest of the flow. In such a case, the length of the entire flow is not needed and the capture can be stopped once enough packets are captured. Again, similar techniques work properly if the important information is present in the first few packets of a flow, i.e. a large data transfer in which the initial packets represent a hand-shake after which the majority of packets contain the raw data and are blind to non-\gls{dpi} systems. 
+
+\subsubsection{Every 'i'th Sampling}
+Last but not least, a periodic sampling technique that takes a sample each $i= 1/ \alpha$ packet. Similar to the last technique, the length of the flow is not needed in this case. In practice, this technique is best suited to keep the behavioral distribution of the sampled set similar to the original distribution, thus suited for scenarios where information is heterogeneously distributed between packets.
+
+To begin with, the first packet of each flow is always taken for which a record is created in memory and after which the sampling routine is used. 
+
+In each of the above techniques, the sequence of selected packets is then fed to the classifier discussed in \ref{classifier}, where features are extracted and a decision is made after each packet. Finally, the overall accuracy is calculated after the last packet in the sequence is received.
+
+There exists many more rule-based sampling techniques i.e., temporal, adaptive etc. However, studying their behaviors is out of the scope of this paper.
+
+\subsection{Dataset}
 % \begin{table}[b]
 % \caption{occurrence frequency of attack types.} \label{tab:occurrence}
 % \centering
@@ -227,16 +276,15 @@ Heartbleed	&	$<$0.01\%	\\
 %}{}
 \end{table}
 
-We implemented a three-layer LSTM-based classifier with 128 neurons at each layer. As the input features we use
-source port, destination port, protocol identifier, packet length, \gls{iat} to the previous packet in the flow, packet direction (i.e. forward or reverse path) and all TCP flags (0 if the flow is not TCP).
-We omitted \gls{ttl} values, as they are likely to lead to unwanted prediction behaviour \cite{bachl_walling_2019}.  Among the used features, source port, destination port and protocol identifier are constant over the whole flow while the others vary.
-During flow extraction we used the usual 5-tuple flow key, which distinguishes flows based on the protocol they use and their source and destination port and IP address.
-We use Z-score normalization and a train/test split of 2:1.
+
+
+
+
 
 %For evaluation, we use the \textit{CIC-IDS-2017} \cite{sharafaldin_toward_2018} and \textit{UNSW-NB15} \cite{moustafa_unsw-nb15:_2015} datasets which each include more than 2 million flows of network data, containing both benign traffic and a large number of different attacks. 
-For evaluation, we use the \textit{CIC-IDS-2017} \cite{sharafaldin_toward_2018} dataset which includes more than 2 million flows of network data, containing both benign traffic and a large number of different attacks. 
+For evaluation, we use the \textit{CIC-IDS-2017} \cite{sharafaldin2018toward} dataset which includes more than 2 million flows of network data, containing both benign traffic and a large number of different attacks. 
 
-Attacks contained in the datasets are shown in \autoref{tab:occurrence}.
+The distribution of different attacks in the datasets are shown in \autoref{tab:occurrence}.
 
 %\begin{table}
 %% Evaluated using
@@ -256,6 +304,8 @@ Attacks contained in the datasets are shown in \autoref{tab:occurrence}.
 %\bottomrule
 %\end{tabular}
 %\end{table}
+
+\section{Results and Discussion}
 
 \section{Conclusion}
 
