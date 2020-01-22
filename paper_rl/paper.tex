@@ -146,7 +146,7 @@ To encourage reproducibility and facilitate experimentation, we publicly release
 
 \cite{yu_learning_2017} propose using \gls{rl} to let an LSTM learn to skim text. Their technique does not aim to maximize sparsity but only lets the \gls{rl} optimize classification performance for the sequence as a whole. Thus, if it learns to skip elements it is only because it is better for achieving good classification performance, not because it wants to increase sparsity. 
 
-\cite{campos_skip_2018} develop a technique that includes a \textit{skip gate} into LSTM or GRU \todo{citation needed} cells. It works without \gls{rl} but on the downside, their method cannot only be trained once and not be adapted afterwards and also it explicitly depends on the the implementation of the underlying classifier. 
+\cite{campos_skip_2018} develop a technique that includes a \textit{skip gate} into LSTM or GRU \todo{citation needed} cells. It works without \gls{rl} but on the downside, their method can only be trained once and not be adapted afterwards and also it explicitly depends on the the implementation of the underlying classifier, while we want to be independent of it. 
 
 \cite{seo_neural_2018} use an LSTM with one full state vector and one reduced one. At each step they decide whether to use the reduced or the full state vector and can reduce computational cost by using the reduced one. For network traffic we think that it is often not even necessary to have a reduced state vector since from some attack flows, already the first couple of packets might contain enough information and then the remaining packets of the flow do not have to be considered anymore at all. 
 
