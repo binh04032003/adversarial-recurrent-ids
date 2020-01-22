@@ -116,6 +116,7 @@ firstname.lastname@tuwien.ac.at}}
 \maketitle
 
 \section{Introduction}
+\label{sec:introduction}
 
 There is a significant body of scientific work focusing on the detection of unwanted behavior in networks. In the past, a viable way of performing intrusion detection was to inspect the content of packets themselves and detect if a packet delivers potentially harmful content. More recently, with the increasing deployment of encryption, the focus now lies on features that are always available to network monitoring equipment like port numbers, protocol flags or packet sizes when encrypting above the transport layer.
 
@@ -124,9 +125,34 @@ While these approaches frequently work well, it is problematic that the whole fl
 At the same time, an \gls{rnn}-based \gls{ids} has the benefit of avoiding tedious feature engineering procedures, which derive statistical measures from the sequence of packet features, but providing any available information to the classifier.
 \cite{hartl_explainability_2019} showed that such a system has similar performance to other flow-based anomaly detection systems but can detect anomalies \textit{before} the flow terminates and analyzed its security with respect to adversaries extensively. 
 
-However, for practical use, not only classification accuracy and security are important but also computational efficiency. This follows from the fact that a rationally-acting company will only deploy an \gls{ids} if the cost that is saved by avoiding additional security breaches is higher than the cost of the \gls{ids} itself. The cost of the \gls{ids} can be split in the cost of purchase/installation, the cost of operating it and the cost of maintaining it. The goal we pursue here is to develop sampling strategies that do not significantly degrade classification performance while being able to only process a small fraction of the original data. For this purpose, we develop the \gls{rl}-based \gls{ids} \textit{\ours{}} that has a tunable parameter that allows trading off accuracy for sparsity of the data. We show that a significant number of packets can be skipped while accuracy doesn't drop significantly. Compared to other common sampling strategies, \ours{} performs better when being trained on the same number of packets. 
+However, for practical use, not only classification accuracy and security are important but also computational efficiency. This follows from the fact that a rationally-acting company will only deploy an \gls{ids} if the cost that is saved by avoiding security breaches is higher than the cost of the \gls{ids} itself. The cost of the \gls{ids} can be split in the cost of purchase/installation, the cost of operating it and the cost of maintaining it. The goal we pursue here is to develop sampling strategies that do not significantly degrade classification performance while being able to only process a small fraction of the original data. Specifically, the sampling technique should
+\begin{enumerate}
+\item \textbf{choose optimally}, taking only the data that contain the most information and skip the less relevant ones. 
+\item have a parameter that allows to \textbf{trade off} classification performance for sparsity.
+\item be \textbf{independent of the classifier} so that any classifier can be used and that the classifier doesn't have to be aware of the sampling strategy. 
+\item be \textbf{retrainable} so that the sampling can be continuously adapted depending on the current threat landscape. 
+\item be able to \textbf{skip arbitrarily} many packets since network flows can be very long but only the first couple of packets are needed to decide whether an attack occurred or not and the remaining packets can be skipped altogether. 
+\end{enumerate}
+
+For this purpose, we develop the \gls{rl}-based \gls{ids} \textit{\ours{}} fulfills the above properties. We show that a significant number of packets can be skipped while accuracy doesn't drop significantly. Compared to other common sampling strategies, \ours{} performs better when being trained on the same number of packets. 
 
 As \ours{} uses a parameter to trade off accuracy for sparsity, the resulting accuracy and sparsity are determined by this parameter. However, since it also might be desired to specify the sparsity itself, we propose a steering system which takes a desired sparsity as its input and modifies the parameter of the reinforcement learning in a control loop until the specified sparsity is reached. 
+
+To encourage reproducibility and facilitate experimentation, we publicly release the source code, the data and the figures of this work at \url{https://github.com/CN-TU/adversarial-recurrent-ids/tree/rl}
+
+\section{Related Work}
+
+\cite{hartl_explainability_2019} build an LSTM-based recurrent classifier for Network Intrusion Detection and develop methods for explainability and to assess the security of recurrent classifiers. 
+
+\cite{yu_learning_2017} propose using \gls{rl} to let an LSTM learn to skim text. Their technique does not aim to maximize sparsity but only lets the \gls{rl} optimize classification performance for the sequence as a whole. Thus, if it learns to skip elements it is only because it is better for achieving good classification performance, not because it wants to increase sparsity. 
+
+\cite{campos_skip_2018} develop a technique that includes a \textit{skip gate} into LSTM or GRU \todo{citation needed} cells. It works without \gls{rl} but on the downside, their method cannot only be trained once and not be adapted afterwards and also it explicitly depends on the the implementation of the underlying classifier. 
+
+\cite{seo_neural_2018} use an LSTM with one full state vector and one reduced one. At each step they decide whether to use the reduced or the full state vector and can reduce computational cost by using the reduced one. For network traffic we think that it is often not even necessary to have a reduced state vector since from some attack flows, already the first couple of packets might contain enough information and then the remaining packets of the flow do not have to be considered anymore at all. 
+
+\cite{gui_long_2018} use \gls{rl} but their intention is not to skip samples but instead to make the \gls{rl} learn to choose a previous state that can aid at the current step. Thus it tries to help the \gls{rnn} with memorizing information from the past but does not actually take less data, which is the goal we pursue in this work. 
+
+These proposed techniques focus their evaluation on text and hence do not fulfill certain criteria we set out in \autoref{sec:introduction}. Furthermore, all techniques that use \gls{rl} use discrete actions, meaning that there is a hyperparameter $k$, which influences the maximum jump that is possible. However, for a network flow, already after the second packet it might be obvious that a flow is an attack and thus the remaining packets can be completely ignored. It is thus beneficial to not have a fixed maximum step size but a continuous one. 
 
 \section{Setup}
 
