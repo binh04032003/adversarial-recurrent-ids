@@ -161,19 +161,27 @@ These proposed techniques focus their evaluation on text and hence do not fulfil
 \label{classifier}
 We implemented a three-layer LSTM-based classifier with 128 neurons at each layer. As the input features we use source port, destination port, protocol identifier, packet length, \gls{iat} to the previous packet in the flow, packet direction (i.e. forward or reverse path) and all TCP flags (0 if the flow is not TCP).
 We omitted \gls{ttl} values, as they are likely to lead to unwanted prediction behaviour \cite{bachl_walling_2019}.  Among the used features, source port, destination port and protocol identifier are constant over the whole flow while the others vary.
+Additionally, we add the number of skipped packets since the last packet as a feature, which can help the classifier because otherwise it might be confused because of missing packets. 
 During flow extraction we used the usual 5-tuple flow key, which distinguishes flows based on the protocol they use and their source and destination port and IP address.
 We use Z-score normalization and a train/test split of 2:1.
 
 \subsection{RL for Sampling}
 Reinforcement Learning algorithms have shown that, given enough training instances, they perform optimally in decision-making situations. To this end, we introduce a \gls{rl}-based architecture that enables packet sampling decisions based on the current state/confidence of the LSTM classifier. We opt for an \emph{Actor-Critic} structure (as shown in \autoref{rnn:sampling}) which is a mixture of \emph{value-based} and \emph{policy-based} \gls{rl} strategies in which the decision of which packet to choose next (exactly how many packets to skip from the current packet) is made by the Actor deep network which, at the same time, constructs a probabilistic distribution of how many packets to skip and, tries to learn the best policy, i.e. action to be taken on the basis of the current state. The Critic network subsequently evaluates the behavior of the Actor network using the computed value function and gives it feedback based on the performance obtained by the LSTM classifier. The jump is taken from the Actor output distribution and fed into the packet parser, which is responsible for counting the packets and selecting the appropriate one.
 
-In what follows, we explore two technical details on how decisions are performed, either continuously or gradually. 
+In what follows, we explore two technical details on how decisions are performed, either continuously or descretely. 
 
 \begin{figure}
-\center
-  \includegraphics[width=0.3\textwidth]{img/rnn-sampling.pdf}
+\centering
+  \includegraphics[width=\columnwidth]{img/rnn-sampling.pdf}
   \caption{SparseIDS framework. Three deep networks are shown: an LSTM classifier, An Actor network and a Critic network. The Actor takes actions based on the feedback from the the Critic network and the classifier. The Critic network tracks the Actor actions based on the classifier confidence and finally, the packets selector parses packets based on the decision of the Actor network.}
   \label{rnn:sampling}
+\end{figure}
+
+\begin{figure}
+\centering
+  \includegraphics[width=\columnwidth]{neural_network.pdf}
+  \caption{An overview of the complete neural network being used in our experiments. Ocher stands for the input, blue for linear layers, red for LSTM layers and purple for the outputs of the neural network. The numbers in parentheses next to each label stand for the width of that layer (i.e.~the number of neurons (except for the inputs and outputs)). Parts of the neural network are shared between $v_\text{classification}$ and $v_\text{sparsity}$ as well as $\mu$ and $\sigma$ as they output quantities of similar magnitude and thus the gradients that are computed when updating the neural network are of the same order of magnitude as well. Our implementation also supports sharing the LSTM between all three neural network. However, as the five outputs can produce losses that have different order of magnitude, larger gradients or larger losses would ``overwrite'' the gradients of the smaller ones.}
+  \label{rnn:neuralNetworkArchitecture}
 \end{figure}
 
 

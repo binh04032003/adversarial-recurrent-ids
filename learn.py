@@ -2197,7 +2197,9 @@ if __name__=="__main__":
 	dataset = OurDataset(x, y, categories)
 
 	batchSize = 1 if opt.function == 'pred_plots' else opt.batchSize # FIXME Max: Why? What's wrong?
-	lstm_module = OurLSTMModule(x[0].shape[-1] + int(opt.variableTradeoff), y[0].shape[-1], opt.hidden_size, opt.n_layers, batchSize, device, num_outputs_actor=opt.lookaheadSteps if not opt.continuous else 2, num_outputs_critic=2).to(device)
+	input_dim = x[0].shape[-1] + int(opt.variableTradeoff)
+	print("input_dim", input_dim)
+	lstm_module = OurLSTMModule(input_dim, y[0].shape[-1], opt.hidden_size, opt.n_layers, batchSize, device, num_outputs_actor=opt.lookaheadSteps if not opt.continuous else 2, num_outputs_critic=2).to(device)
 
 	if opt.net != '':
 		print("Loading", opt.net)
@@ -2210,8 +2212,8 @@ if __name__=="__main__":
 			lstm_module.load_state_dict(model_dict)
 
 	if ("rl" in opt.function or opt.sampling=="rl") and not opt.shareNet:
-		lstm_module_rl_actor = OurLSTMModule(x[0].shape[-1] + int(opt.variableTradeoff), opt.lookaheadSteps if not opt.continuous else 2, opt.hidden_size, opt.n_layers, batchSize, device).to(device)
-		lstm_module_rl_critic = OurLSTMModule(x[0].shape[-1] + int(opt.variableTradeoff), 2, opt.hidden_size, opt.n_layers, batchSize, device).to(device)
+		lstm_module_rl_actor = OurLSTMModule(input_dim, opt.lookaheadSteps if not opt.continuous else 2, opt.hidden_size, opt.n_layers, batchSize, device).to(device)
+		lstm_module_rl_critic = OurLSTMModule(input_dim, 2, opt.hidden_size, opt.n_layers, batchSize, device).to(device)
 
 		if opt.net_actor != '':
 			print("Loading actor", opt.net_actor)
