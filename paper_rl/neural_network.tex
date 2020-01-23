@@ -1,0 +1,112 @@
+\documentclass[crop]{standalone}
+\usepackage{libertine}
+\usepackage{pgf}
+\usepackage{tikz}
+\usetikzlibrary{arrows,backgrounds}
+\usepackage{amsmath}
+\begin{document}
+\newcommand{\nodedistance}{1.2}%
+\newcommand{\numUnits}{128}%
+%\pgfmathsetmacro{\shortside}{sqrt((\nodedistance * \nodedistance ) /2)}%
+\pgfmathsetmacro{\shortside}{sqrt(2)/2 * \nodedistance}%
+%\pgfmathsetmacro{\solutionx}{ \shortside }%
+%\pgfmathsetmacro{\solutiony}{ - (3 * \shortside + 3 * \nodedistance ) }%
+%\pgfmathsetmacro{\solutiondurationx}{ \shortside }%
+%\pgfmathsetmacro{\solutiondurationy}{ - (3 * \shortside + 1 * \nodedistance ) }%
+\tikzstyle{texto} = [above, text width=6em, text centered]%
+\newcommand{\backgroundna}[3]{%%
+  \begin{pgfonlayer}{background}%
+    \path (#1.south -| #1.west)+(-0.5,-0.5) node (a1) {};%
+    \path (#2.north -| #2.east)+(+0.5,+0.5) node (a2) {};%
+    \path[rounded corners, draw=black!50]%
+      (a1) rectangle (a2);%
+    \path (a1.west |- a2.north)+(0.25,-0.25) node (u1)[anchor=north west]%
+      {\textit{#3}};%
+  \end{pgfonlayer}}%
+\newcommand{\backgroundnc}[4]{%%
+  \begin{pgfonlayer}{background}%
+    \path (#1.south -| #4.west)+(-0.5,-0.5) node (a1) {};%
+    \path (#2.north -| #2.east)+(+0.5,+0.5) node (a2) {};%
+    \path[rounded corners, draw=black!50]%
+      (a1) rectangle (a2);%
+    \path (a1.east |- a1.south)+(2.5,0.25) node (u1)[anchor=south west]%
+      {\textit{#3}};%
+  \end{pgfonlayer}}%
+\newcommand{\backgroundnclass}[3]{%%
+  \begin{pgfonlayer}{background}%
+    \path (#1.south -| #1.west)+(-0.5,-0.8) node (a1) {};%
+    \path (#2.north -| #2.east)+(+0.5,+0.5) node (a2) {};%
+    \path[rounded corners, draw=black!50]%
+      (a1) rectangle (a2);%
+    \path (a2.west |- a1.north)+(0.,-0.) node (u1)[anchor=south east]%
+      {\textit{#3}};%
+  \end{pgfonlayer}}%
+  \tikzstyle{place}=[circle,thick,draw=blue!75,fill=blue!20,minimum size=6mm]%
+  \tikzstyle{input place}=[circle,thick,draw=olive!75,fill=olive!20,minimum size=6mm]%
+  \tikzstyle{output place}=[circle,thick,draw=magenta!75,fill=magenta!20,minimum size=6mm]%
+   \tikzstyle{lstm place}=[circle,thick,draw=red!75,fill=red!20,minimum size=6mm]%
+   \tikzstyle{softplus place}=[circle,thick,draw=green!75,fill=green!20,minimum size=6mm]%
+  \tikzstyle{transition}=[rectangle,thick,draw=black!75,%
+  			  fill=black!20,minimum size=4mm]%
+\begin{tikzpicture}[every label/.append style={font=\tiny}, node distance=\nodedistance cm, >=stealth',bend angle=45]
+\begin{scope}
+\node [input place] (s1) [label={[align=center]left: State (8)}] {};
+\node [place] (s2) [above right of=s1, label={[align=center]above: Linear}] {};
+\path[->] (s1) edge node {} (s2);
+\node [lstm place] (s3) [right of=s2, label={[align=center]below: LSTM (\numUnits{})}] {};
+\path[->] (s2) edge node {} (s3); 
+\path[->] (s3) edge [loop above] node {} (s3);   
+\node [lstm place] (s4) [right of=s3, label={[align=center]below: LSTM (\numUnits{})}] {};    
+\path[->] (s3) edge node {} (s4);
+\path[->] (s4) edge [loop above] node {} (s4);
+\node [lstm place] (s9) [right of=s4, label={[align=center]below: LSTM (\numUnits{})}] {};    
+\path[->] (s4) edge node {} (s9);
+\path[->] (s9) edge [loop above] node {} (s9);   
+\node [place] (s7) [right of=s9, label={[align=center]below:{ Linear}}] {};    
+\path[->] (s9) edge node {} (s7);    
+\node [output place] (s8) [right of=s7, label={[align=center]below: $\sigma$~(1)}] {};    
+\path[->] (s7) edge node {} (s8);
+\node [place] (s5) [above of=s7, label={[align=center]above: Linear}] {};
+\path[->] (s9) edge node {} (s5);
+\node [output place] (s6) [right of=s5, label={[align=center]above: $\mu$ (1)}] {};        
+\backgroundna{s2}{s6}{Actor network}
+\path[->] (s5) edge node {} (s6);        
+\node [place] (s10) [below right of=s1, label={[align=center]below: Linear}] {};
+\path[->] (s1) edge node {} (s10);    
+\node [lstm place] (s11) [right of=s10, label={[align=center]above: LSTM (\numUnits{})}] {};
+\path[->] (s10) edge node {} (s11);
+\path[->] (s11) edge [loop below] node {} (s11);
+\node [lstm place] (s12) [right of=s11, label={[align=center]above: LSTM (\numUnits{})}] {};
+\path[->] (s11) edge node {} (s12);
+\path[->] (s12) edge [loop below] node {} (s12);    
+\node [lstm place] (s21) [right of=s12, label={[align=center]above: LSTM (\numUnits{})}] {};
+\path[->] (s12) edge node {} (s21);
+\path[->] (s21) edge [loop below] node {} (s21);    
+\node [place] (s13) [right of=s21, label={[align=center]above: Linear}] {};
+\path[->] (s21) edge node {} (s13);
+\node [output place] (s17) [right of=s13, label={[align=center]above: $v_\text{classification}$ (1)}] {};
+\path[->] (s13) edge node {} (s17);
+\node [place] (s16) [below of=s13, label={[align=center]below: Linear}] {};
+\path[->] (s21) edge node {} (s16);    
+\node [output place] (s20) [right of=s16, label={[align=center]below: $v_\text{sparsity}$ (1)}] {};    
+\path[->] (s16) edge node {} (s20);
+\backgroundnc{s20}{s17}{Critic network}{s10}
+\node [place] (s30) at (\shortside,-3*\shortside-\nodedistance) [label={[align=center]below: Linear}] {};
+\path[->] (s1) edge node {} (s30);
+\node [lstm place] (s31) [right of=s30, label={[align=center]above: LSTM (\numUnits{})}] {};
+\path[->] (s30) edge node {} (s31);
+\path[->] (s31) edge [loop below] node {} (s31);
+\node [lstm place] (s32) [right of=s31, label={[align=center]above: LSTM (\numUnits{})}] {};
+\path[->] (s31) edge node {} (s32);
+\path[->] (s32) edge [loop below] node {} (s32);    
+\node [lstm place] (s33) [right of=s32, label={[align=center]above: LSTM (\numUnits{})}] {};
+\path[->] (s32) edge node {} (s33);
+\path[->] (s33) edge [loop below] node {} (s33);  
+\node [place] (s34) [right of=s33, label={[align=center]above: Linear}] {};
+\path[->] (s33) edge node {} (s34);    
+\node [output place] (s35) [right of=s34, label={[align=center]above: confidence (1)}] {};    
+\path[->] (s34) edge node {} (s35);
+\backgroundnclass{s30}{s35}{Classifier};
+\end{scope}
+\end{tikzpicture}
+\end{document}
