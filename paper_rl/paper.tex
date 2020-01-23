@@ -156,7 +156,7 @@ To encourage reproducibility and facilitate experimentation, we publicly release
 These proposed techniques focus their evaluation on text and hence do not fulfill certain criteria we set out in \autoref{sec:introduction}. Furthermore, all techniques that use \gls{rl} use discrete actions, meaning that there is a hyperparameter $k$, which influences the maximum jump that is possible. However, for a network flow, already after the second packet it might be obvious that a flow is an attack and thus the remaining packets can be completely ignored. It is thus beneficial to not have a fixed maximum step size but a continuous one. 
 
 \section{Setup}
-
+%ci
 \subsection{Classifier}
 \label{classifier}
 We implemented a three-layer LSTM-based classifier with 128 neurons at each layer. As the input features we use source port, destination port, protocol identifier, packet length, \gls{iat} to the previous packet in the flow, packet direction (i.e. forward or reverse path) and all TCP flags (0 if the flow is not TCP).
@@ -173,7 +173,7 @@ In what follows, we explore two technical details on how decisions are performed
 \begin{figure}
 \centering
   \includegraphics[width=\columnwidth]{img/rnn-sampling.pdf}
-  \caption{SparseIDS framework. Three deep networks are shown: an LSTM classifier, An Actor network and a Critic network. The Actor takes actions based on the feedback from the the Critic network and the classifier. The Critic network tracks the Actor actions based on the classifier confidence and finally, the packets selector parses packets based on the decision of the Actor network.}
+  \caption{SparseIDS framework. Three deep networks are shown: an LSTM classifier, An Actor network and a Critic network. The Actor takes actions based on the feedback from the the Critic network and the classifier. The Critic network tracks the Actor actions based on the classifier confidence and finally, the packets selector parses packets based on the decision of the Actor network. \todo{Max: I don't like the icon that is used for the distribution. It's a bit pixelated.}}
   \label{rnn:sampling}
 \end{figure}
 
