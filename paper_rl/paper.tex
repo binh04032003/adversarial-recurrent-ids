@@ -171,7 +171,7 @@ In what follows, we explore two technical details on how decisions are performed
 
 \begin{figure}
 \center
-  \includegraphics[width=0.3\textwidth]{img/rnn-sampling}
+  \includegraphics[width=0.3\textwidth]{img/rnn-sampling.pdf}
   \caption{SparseIDS framework. Three deep networks are shown: an LSTM classifier, An Actor network and a Critic network. The Actor takes actions based on the feedback from the the Critic network and the classifier. The Critic network tracks the Actor actions based on the classifier confidence and finally, the packets selector parses packets based on the decision of the Actor network.}
   \label{rnn:sampling}
 \end{figure}
@@ -189,11 +189,13 @@ Traditionally, network packet sampling is performed on backbone infrastructures 
 We opt for three rule-based sampling families that are widely used in practice, such rule-based approaches do not require feedback from higher layers (i.e. sampling rates are constant and not correlated with subsequent analysis). The strategy of each family is summarized as follows:
 
 \subsubsection{Random Sampling}
-Given the fraction $\alpha$ of packets to be selected in a set of $N$ packets, such techniques take exactly $n = \alpha \times N$ samples that are randomly sampled from a given probability mass function, such as a uniform distribution that keeps the pick-up probability similar for all packets.
-Practically, these techniques work properly if the candidate packets have similar properties (redundancy) and therefore the probability of skipping important information is low. 
+%Given the fraction $\alpha$ of packets to be selected in a set of $N$ packets, such techniques take exactly $n = \alpha \times N$ samples that are randomly sampled from a given probability mass function, such as a uniform distribution that keeps the pick-up probability similar for all packets.
+%Practically, these techniques work properly if the candidate packets have similar properties (redundancy) and therefore the probability of skipping important information is low. 
 
-\subsubsection{First 'n' Sampling}
-As its name suggests, this technique only samples the first $n$ packets and ignores the rest of the flow. In such a case, the length of the entire flow is not needed and the capture can be stopped once enough packets are captured. Again, similar techniques work properly if the important information is present in the first few packets of a flow, i.e. a large data transfer in which the initial packets represent a hand-shake after which the majority of packets contain the raw data and are blind to non-\gls{dpi} systems. 
+Given the fraction $\alpha$ of packets to be selected in a sequence of $N$ packets, these techniques can sequentially sample or skip a packet with a probability of $p_{sample}=\alpha$ and $p_{skip}=1-\alpha$ respectively. If the sequence is large enough, $n$ packets will be randomly sampled from a uniform distribution whereby $n= \alpha \times N$. Practically, these techniques work properly if the candidate packets have similar properties (redundancy) and therefore the probability of skipping important information is minimal.
+
+\subsubsection{(Equal) First 'n' Sampling}
+As its name suggests, this technique only samples the first $n$ packets and ignores the rest of the flow. Nevertheless, there are two variants of this technique: (a) taking the first $n$ packets, where $n$ is the same for all flows, and (b) taking the first ``Equal'' proportion of packets from each flow (e.g. half of the flow, regardless of its length). In the first example, the size of the entire flow is not necessary and the capture can be stopped once enough packets are captured. In the second scenario, however, the length of each flow needs to be known. Again, similar techniques work properly if the important information is present in the first few packets of a flow, i.e. a large data transfer in which the initial packets represent a hand-shake after which the majority of packets contain the raw data and are blind to non-\gls{dpi} systems. 
 
 \subsubsection{Every 'i'th Sampling}
 Last but not least, a periodic sampling technique that takes a sample each $i= 1/ \alpha$ packet. Similar to the last technique, the length of the flow is not needed in this case. In practice, this technique is best suited to keep the behavioral distribution of the sampled set similar to the original distribution, thus suited for scenarios where information is heterogeneously distributed between packets.
