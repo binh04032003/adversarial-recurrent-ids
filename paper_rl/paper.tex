@@ -121,23 +121,46 @@ firstname.lastname@tuwien.ac.at}}
 
 There is a significant body of scientific work focusing on the detection of unwanted behavior in networks. In the past, a viable way of performing intrusion detection was to inspect the content of packets themselves and detect if a packet delivers potentially harmful content. More recently, with the increasing deployment of encryption, the focus now lies on features that are always available to network monitoring equipment like port numbers, protocol flags or packet sizes when encrypting above the transport layer.
 
+% Fares:
+%As the need for security mechanisms in today's infrastructure communication networks grows, a substantial body of scientific work focuses on developing reliable, explainable frameworks for the identification of unwanted behaviors. In the past, a viable way to detect intrusion was to analyze the contents of the packets themselves and determine, for example, whether a packet contains potentially harmful content by matching patterns. More recently, with the increasing deployment of encryption, the focus is now on features that are always available for network monitoring devices such as port numbers, protocol flags, packet sizes when encrypting above the transport layer.
+
 Network communication is usually aggregated into \textit{flows}, which are commonly defined as a sequence of packets sharing certain properties. When analyzing flows, not only the aforementioned features are available but also features related to the timing of the individual packets. Various approaches have been proposed to extract features from flows and then perform anomaly detection with the extracted flows \cite{meghdouri_analysis_2018}.
-While these approaches frequently work well, it is problematic that the whole flow has to be received first and only afterwards anomaly detection is applied, revealing attack flows. Thus, we design a network \gls{ids} that operates on a per-packet basis and decides if a packet is anomalous based on features that are available even for traffic that is encrypted above the transport layer, like for example TLS or QUIC.
-At the same time, an \gls{rnn}-based \gls{ids} has the benefit of avoiding tedious feature engineering procedures, which derive statistical measures from the sequence of packet features, but providing any available information to the classifier.
-\cite{hartl_explainability_2019} showed that such a system has similar performance to other flow-based anomaly detection systems but can detect anomalies \textit{before} the flow terminates and analyzed its security with respect to adversaries extensively. 
+%While these approaches frequently work well, it is problematic that the whole flow has to be received first and only afterwards anomaly detection is applied, revealing attack flows. Thus, we design a network \gls{ids} that operates on a per-packet basis and decides if a packet is anomalous based on features that are available even for traffic that is encrypted above the transport layer, like for example TLS or QUIC.
+%At the same time, an \gls{rnn}-based \gls{ids} has the benefit of avoiding tedious feature engineering procedures, which derive statistical measures from the sequence of packet features, but providing any available information to the classifier.
+%\cite{hartl_explainability_2019} showed that such a system has similar performance to other flow-based anomaly detection systems but can detect anomalies \textit{before} the flow terminates and analyzed its security with respect to adversaries extensively. 
+
+% Fares:
+%A network communication is typically aggregated into \textit{flows}, which are commonly defined as a sequence of packets that share certain properties. When analyzing flows, not only the aforementioned features are available but also features representing the temporal behavior of the individual packets. Various approaches have been proposed to extract flows features after which anomaly detection can be performed, in \cite{meghdouri_analysis_2018} Meghdouri et al. compare such approaches.
+%While these approaches often work well, it is troublesome because, in the worst case, the whole flow must be received first and only then anomaly detection can be applied; revealing malicious flows. Thus, we design a network \gls{ids} that operates on a per-packet basis and determines whether packet is anomalous based on features that are available even for traffic that is encrypted above the transport layer, like for example TLS or QUIC.
+%At the same time, an \gls{rnn}-based \gls{ids} has the benefit of avoiding tedious feature engineering procedures, which derive statistical measures from the sequence of packet features, but providing any available information to the classifier.
+%In \cite{hartl_explainability_2019}, Hartl et al. show that such an architecture has similar performance to other flow-based anomaly detection systems, but can still detect anomalies \textit{before} the flow ends and analyzed its robustness with respect to adversaries extensively. 
 
 However, for practical use, not only classification accuracy and security are important but also computational efficiency. This follows from the fact that a rationally-acting company will only deploy an \gls{ids} if the cost that is saved by avoiding security breaches is higher than the cost of the \gls{ids} itself. The cost of the \gls{ids} can be split in the cost of purchase/installation, the cost of operating it and the cost of maintaining it. The goal we pursue here is to develop sampling strategies that do not significantly degrade classification performance while being able to only process a small fraction of the original data. Specifically, the sampling technique should
+
+% Fares:
+%Nevertheless, not only the accuracy and reliability of classification, but also the computational efficiency, are critical for practical use. This follows from the fact that a rationally-acting organization will only implement an \gls{ids} if the cost saved by preventing security breaches is higher than the cost of the \gls{ids} itself. Noteworthy that the cost of an \gls{ids} can be divided into (a) the cost of purchase/installation, (b) the cost of operation and (c) the cost of maintenance.  The goal we pursue here is to develop autonomous sampling strategies that do not significantly degrade classification performance while being able to only process a small fraction of the original data. Specifically, the sampling technique should:
+
 \begin{enumerate}
 \item \textbf{choose optimally}, taking only the data that contain the most information and skip the less relevant ones. 
+% Fares:
+%\item \textbf{choose optimally}, taking only samples that contain the most information and skip the less relevant ones. 
 \item have a parameter that allows to \textbf{trade off} classification performance for sparsity.
 \item be \textbf{independent of the classifier} so that any classifier can be used and that the classifier doesn't have to be aware of the sampling strategy. 
 \item be \textbf{retrainable} so that the sampling can be continuously adapted depending on the current threat landscape. 
 \item be able to \textbf{skip arbitrarily} many packets since network flows can be very long but only the first couple of packets are needed to decide whether an attack occurred or not and the remaining packets can be skipped altogether. 
 \end{enumerate}
 
+
 For this purpose, we develop the \gls{rl}-based \gls{ids} \textit{\ours{}} fulfills the above properties. We show that a significant number of packets can be skipped while accuracy doesn't drop significantly. Compared to other common sampling strategies, \ours{} performs better when being trained on the same number of packets. 
 
-As \ours{} uses a parameter to trade off accuracy for sparsity, the resulting accuracy and sparsity are determined by this parameter. However, since it also might be desired to specify the sparsity itself, we propose a steering system which takes a desired sparsity as its input and modifies the parameter of the reinforcement learning in a control loop until the specified sparsity is reached. 
+% Fares:
+%For this purpose we develop a \gls{rl}-based \gls{ids}: \textit{\ours{}} that fulfills the above properties. We show that a significant number of packets can be skipped while the accuracy does not drop
+considerably. Compared to other common sampling techniques, \ours{} performs better when being trained on the same number of packets.
+
+As \ours{} uses a parameter to trade-off accuracy for sparsity, the resulting accuracy and sparsity are determined by this parameter. However, since it also might be desired to specify the sparsity itself, we propose a steering system which takes a desired sparsity as its input and modifies the parameter of the reinforcement learning in a control loop until the specified sparsity is reached. 
+
+% Fares:
+%The accuracy-sparsity trade-off of \ours{} can be regulated by a reinforcement learning parameter that directly affects both later quantities. However, in certain situations, a certain sparsity is to be achieved, hence we further develop and propose a steering system that fluctuates such a trade-off parameter in order to obtain a coveted sparsity in a closed control loop.
 
 To encourage reproducibility and facilitate experimentation, we publicly release the source code, the data and the figures of this work at \url{https://github.com/CN-TU/adversarial-recurrent-ids/tree/rl}
 
