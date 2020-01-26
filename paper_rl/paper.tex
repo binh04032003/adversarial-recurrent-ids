@@ -210,7 +210,13 @@ Given enough training instances, \gls{rl} algorithms have been shown to perform 
 
 For a flow of length $T$ at each timestep $t$ we have two reward metrics which we compute in a fashion that is known from \textit{R-learning} \cite{schwartz_reinforcement_1993}:
 
-\todo{Max: Add figure}
+\begin{figure}
+\centering
+  \includegraphics[width=\columnwidth]{img/rewards.pdf}
+  \caption{The computation of the rewards for a sample flow: Gray packets are skipped while white ones are chosen. At the top row the resulting rewards for classification for each chosen packet are depicted and in the bottom row the ones for sparsity. Numbers are rounded to two digits after the decimal point.}
+  \label{fig:rewards}
+\end{figure}
+
 The classification reward metric captures how correct the classifier is on average for all future packets of a flow. The label of each packet in a flow has a value of 0 for non-attack traffic and 1 for attack traffic with one flow being only attack or non-attack but not mixed. The confidence is the sigmoided ($\frac{e^x}{1+e^x}$) output of the classifier, yielding a value between 0 and 1, where 0 is absolute confidence for a flow being benign and 1 is absolute confidence for a flow being an attack. 
 \begin{align}
 \begin{split}
@@ -257,7 +263,7 @@ Combining these objectives, the actor network aims to minimize the loss function
 \begin{split}
 l_{\text{a},t} =& -\log \left( \pi \left( a_t \given s_t ; \theta_\text{a} \right) \right) U_t \\ 
 &- \beta H\left( \pi\left( s_t; \theta_a \right)\right)
-\end{split}
+\end{split}\label{eq:actor}
 \end{align}
 
 %The Critic network evaluates the behavior of the Actor network and computes the classification performance and sparsity that it thinks is going to be achieved.% using the computed value function and gives it feedback based on the performance obtained by the LSTM classifier. 
@@ -267,21 +273,45 @@ In related work regarding \gls{rl}-based sampling for sequences, only discrete a
 
 \begin{figure}
 \centering
-  \includegraphics[width=\columnwidth]{img/rnn-sampling.pdf}
-  \caption{SparseIDS framework. Three deep networks are shown: an LSTM classifier, An Actor network and a Critic network. The Actor takes actions based on the feedback from the the Critic network and the classifier. The Critic network tracks the Actor actions based on the classifier confidence and finally, the packets selector parses packets based on the decision of the Actor network.}
-  \label{fig:sampling}
-\end{figure}
-
-\begin{figure}
-\centering
   \includegraphics[width=\columnwidth]{neural_network.pdf}
   \caption{An overview of the complete neural network being used in our experiments. Ocher stands for the input, blue for linear layers, red for LSTM layers and purple for the outputs of the neural network. The numbers in parentheses next to each label stand for the width of that layer (i.e.~the number of neurons (except for the inputs and outputs)). Parts of the neural network are shared between $v_\text{classification}$ and $v_\text{sparsity}$ as well as $\mu$ and $\sigma$ as they output quantities of similar magnitude and thus the gradients that are computed when updating the neural network are of the same order of magnitude as well. Our implementation also supports sharing the LSTM between all three neural network. However, as the five outputs can produce losses that have different order of magnitude, larger gradients or larger losses would ``overwrite'' the gradients of the smaller ones.}
   \label{fig:neuralNetworkArchitecture}
 \end{figure}
 
+An overview of the neural networks of the classifier, actor and critic that we use in this work is given in \autoref{fig:neuralNetworkArchitecture}.
+
+\begin{figure}
+\centering
+  \includegraphics[width=\columnwidth]{img/rnn-sampling.pdf}
+  \caption{SparseIDS framework. Three deep networks are shown: an LSTM classifier, An Actor network and a Critic network. The Actor takes actions based on the feedback from the the Critic network and the classifier. The Critic network tracks the Actor actions based on the classifier confidence and finally, the packets selector parses packets based on the decision of the Actor network.}
+  \label{fig:sampling}
+\end{figure}
+
+A schematic overview over the \gls{rl} for sampling is given in \autoref{fig:sampling}. 
 
 \subsection{Continuous Actions}
-\todo{Max: Add formulas for the Log-Normal distribution}
+
+For performing continious actions we need a probability distribution which can be parametrized to have the mean between 0 and positive infinity. Furthermore it must have at least two parameters so that the standard deviation, which is required for the entropy (\autoref{eq:actor}), can be changed independent of the mean. For example, the Exponential distribution can be parametrized to have its mean anywhere between 0 and positive infinity, however, it has only one parameter and thus the mean and the standard deviation cannot be independently changed. Conversely, a simple distribution which fits our requirements is the Log-normal distribution, which is defined as a normal distribution whose output is exponentiated:
+
+Let $Z$ be standard normally distributed and $\mu_{\text{normal}}$ and $\sigma_{\text{normal}} > 0$ be two real numbers. Then 
+\begin{align}
+X = e^{\mu_{\text{normal}}+\sigma_{\text{normal}} Z}
+\end{align}
+is log-normally distributed. 
+
+The actor network (\autoref{fig:neuralNetworkArchitecture}) shows that the actor network has two outputs: $\mu$ and $\sigma$. These encode the mean and standard deviation of a log-normal distribution. Since the mean and the standard deviation of a log-normal distribution can never be smaller or equal to zero, we always apply the softplus function to them, so that the actor can only output $\mu$ and $\sigma$ that are larger than 0: 
+\begin{align}
+\text{softplus}(x) = \log\left(1 + e^x \right)
+\end{align}
+To parametrize the normal distribution that underlies the log-normal distribution, we first have to compute the parameters $\mu_{\text{normal}}$ and $\sigma_{\text{normal}}$ from $\mu$ and $\sigma$. We can compute them as follows: 
+
+\begin{align}
+\mu_{\text{normal}} = \frac{1}{2}\left( 2\log(\mu) - \log\left(\frac{\mu^2 + \sigma^2}{\mu^2}\right) \right)
+\end{align}
+
+\begin{align}
+\sigma_{\text{normal}} = \sqrt{\log\left(\frac{\mu^2 + \sigma^2}{\mu^2}\right)}
+\end{align}
 
 \subsection{Rule-based Sampling Strategies}
 Traditionally, network packet sampling is performed on backbone infrastructures where, due to large bandwidths, not every packet can be analyzed. Sampling consequently helps experts understand the behavior of their network without the need to capture each and every packet. Assuming that the behavior of the network follows a predefined underlying process, sampling is therefore not detrimental on average to statistical analysis or measurement. Although the dataset in this work does not come from a backbone network, sampling reduces the high computational effort due to additional processing  required by the complex \gls{ml} based \gls{ids}. As a consequence, several intuitive but efficient sampling techniques can be applied in practice. In this study, we compare a few techniques to our sparseIDS approach. 
