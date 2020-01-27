@@ -217,7 +217,7 @@ For a flow of length $T$ at each timestep $t$ we have two reward metrics which w
   \label{fig:rewards}
 \end{figure}
 
-The classification reward metric captures how correct the classifier is on average for all future packets of a flow. The label of each packet in a flow has a value of 0 for non-attack traffic and 1 for attack traffic with one flow being only attack or non-attack but not mixed. The confidence is the sigmoided ($\frac{e^x}{1+e^x}$) output of the classifier, yielding a value between 0 and 1, where 0 is absolute confidence for a flow being benign and 1 is absolute confidence for a flow being an attack. 
+The classification reward metric captures how correct the classifier is on average for all future packets of a flow. The label of each packet in a flow has a value of 0 for non-attack traffic and 1 for attack traffic with one flow being only attack or non-attack but not mixed. The confidence is the sigmoided $\left(\frac{e^x}{1+e^x}\right)$ output of the classifier, yielding a value between 0 and 1, where 0 is absolute confidence for a flow being benign and 1 is absolute confidence for a flow being an attack. 
 \begin{align}
 \begin{split}
 R_{\text{classification},t} = \frac{1}{T-t} \sum_{i=t+1}^{T} |\text{label}_i - \text{confidence}_i

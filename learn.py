@@ -313,12 +313,17 @@ def custom_collate(seqs, things=(True, True, True)):
 			lstm_module_rl_actor.init_hidden(batch_size)
 
 		padded_input_data = torch.nn.utils.rnn.pad_sequence(input_data).to(device)
+		if opt.variableTradeoff:
+			tradeoff = torch.tensor([opt.global_tradeoff]).repeat((batch_size)).unsqueeze(0).to(device)
+			tradeoff_for_input = tradeoff.repeat(padded_input_data.shape[0],1).unsqueeze(2)
+			padded_input_data = torch.cat((padded_input_data, tradeoff_for_input), dim=-1)
 		batch_indices = torch.arange(batch_size)
 
 		while (remaining_seq_lens > torch.zeros_like(remaining_seq_lens)).any():
 			current_collated_slice = padded_input_data[torch.min(seq_index, orig_seq_lens_minus_one), batch_indices, :].unsqueeze(0)
 			currently_skipped = chosen_indices[-1]-chosen_indices[-2]-1 if len(chosen_indices) > 1 else chosen_indices[0]
-			current_collated_slice[0,:,-1] = currently_skipped
+			current_collated_slice[0,:,-1-int(opt.variableTradeoff)] = currently_skipped
+			# print("current_collated_slice", current_collated_slice)
 
 			if not opt.shareNet:
 				current_slice_action_probs, _ = lstm_module_rl_actor(current_collated_slice)
@@ -352,8 +357,16 @@ def custom_collate(seqs, things=(True, True, True)):
 					break
 				masks[-1].append(True)
 			masks[-1] = torch.tensor(masks[-1])
-			assert len(masks[-1]) == current_seq_len
-		# TODO: Make sure that all_seqs becomes the new seqs variable and that everything goes smoothly :)
+
+		assert len(masks[-1]) == current_seq_len
+		if opt.variableTradeoff:
+			masks_catted = torch.cat(masks)
+			empirical_sparsity = float(torch.sum(masks_catted==0).item())/len(masks_catted)
+			print("opt.global_tradeoff", opt.global_tradeoff, "empirical_sparsity", empirical_sparsity)
+			if empirical_sparsity > opt.steering_target_sparsity:
+				opt.global_tradeoff -= opt.steering_step_size
+			elif empirical_sparsity < opt.steering_target_sparsity:
+				opt.global_tradeoff += opt.steering_step_size
 
 	assert len(seqs) == len(labels) == len(categories)
 	return [collate_things(item, index==0, sampling_masks=masks if opt.sampling!="" else None) for index, (item, thing) in enumerate(zip((seqs, labels, categories), things)) if thing]
@@ -411,11 +424,18 @@ def collate_things(seqs, is_seqs=False, sampling_masks=None):
 				# print("len", len(seqs[index]), "chosen_ones", chosen_ones, "skipped_ones", skipped_ones)
 
 		seqs = [item[mask] for item, mask in zip(seqs, sampling_masks)]
+		if opt.variableTradeoff:
+			new_seqs = []
 		if is_seqs:
 			for seq, skipped_seq in zip(seqs, skipped):
 				assert len(seq) == len(skipped_seq)
 				seq[:,-1] = skipped_seq
-
+				if opt.variableTradeoff:
+					seq = torch.cat((seq, torch.FloatTensor([opt.global_tradeoff]).repeat(len(seq)).unsqueeze(1)), dim=-1)
+					new_seqs.append(seq)
+			if opt.variableTradeoff:
+				seqs = new_seqs
+			# print("seqs", seqs)
 	seq_lengths = torch.LongTensor([len(seq) for seq in seqs]).to(device)
 	seq_tensor = torch.nn.utils.rnn.pad_sequence(seqs).to(device)
 
@@ -592,7 +612,7 @@ def train_rl():
 				# assert (current_collated_slice_old == current_collated_slice).all()
 				currently_skipped = chosen_indices[-1]-chosen_indices[-2]-1 if len(chosen_indices) > 1 else chosen_indices[0]
 				# assert (currently_skipped >= 0).all()
-				current_collated_slice[0,:,-1] = currently_skipped
+				current_collated_slice[0,:,-1-int(opt.variableTradeoff)] = currently_skipped
 
 				if not opt.shareNet:
 					current_slice_output, _ = lstm_module(current_collated_slice)
@@ -643,8 +663,8 @@ def train_rl():
 							overshoot[seq_index] = chosen_indices[step_index+1][seq_index] - orig_seq_lens[seq_index]
 						new_already_found_packets_per_sample[seq_index] += 1
 						already_skipped_packets_per_sample[seq_index] += torch.min(chosen_indices[step_index+1][seq_index] if step_index+1 < len(chosen_indices) else torch.tensor(float("inf")), orig_seq_lens[seq_index]) - chosen_indices[step_index][seq_index] - 1
-				rewards_sparsity.append((already_skipped_packets_per_sample)/(already_skipped_packets_per_sample+already_found_packets_per_sample+overshoot))
-				# rewards_sparsity.append((already_skipped_packets_per_sample-overshoot)/(already_skipped_packets_per_sample+already_found_packets_per_sample))
+				# rewards_sparsity.append((already_skipped_packets_per_sample)/(already_skipped_packets_per_sample+already_found_packets_per_sample+overshoot))
+				rewards_sparsity.append((already_skipped_packets_per_sample-overshoot)/(already_skipped_packets_per_sample+already_found_packets_per_sample))
 				overshoot = torch.zeros((batch_size), dtype=torch.float32).to(device)
 				already_found_packets_per_sample = new_already_found_packets_per_sample
 
@@ -827,7 +847,6 @@ def train_rl():
 				chosen_packets = torch.sum(already_found_packets_per_sample).float()/(torch.sum(already_found_packets_per_sample)+torch.sum(already_skipped_packets_per_sample)).float()
 				# print("already_found_packets_per_sample", already_found_packets_per_sample, "already_skipped_packets_per_sample", already_skipped_packets_per_sample, "chosen_packets_ratio", chosen_packets)
 				writer.add_scalar("chosen_packets_ratio", chosen_packets, samples)
-
 				writer.add_scalar("entropy", torch.mean(current_entropy), samples)
 
 			if samples % save_period < batch_size:
@@ -933,8 +952,9 @@ def test():
 	print("Flow metrics:")
 	output_scores(all_labels, all_predictions)
 
-	if global_chosen_packets > 0 and global_skipped_packets > 0:
-		print("global_chosen_packets", global_chosen_packets, "global_skipped_packets", global_skipped_packets, "global_total", global_total, "ratio", global_chosen_packets/(global_skipped_packets+global_chosen_packets))
+	if opt.sampling!="":
+	# if global_chosen_packets > 0 and global_skipped_packets > 0:
+		print("global_chosen_packets", global_chosen_packets, "global_skipped_packets", global_skipped_packets, "global_total", global_total, "ratio", global_chosen_packets/(global_skipped_packets+global_chosen_packets), "average_packets_per_flow", (global_skipped_packets+global_chosen_packets)/len(test_indices), "average_chosen_per_flow", global_chosen_packets/len(test_indices))
 
 	with open(file_name, "wb") as f:
 		pickle.dump({"results_by_attack_number": results_by_attack_number, "sample_indices_by_attack_number": sample_indices_by_attack_number}, f)
@@ -2141,6 +2161,9 @@ if __name__=="__main__":
 	parser.add_argument('--sampling', type=str, default="", help='technique employed to sample packets of flows; blank if no sampling is applied')
 	parser.add_argument('--samplingProbability', type=float, default=0.5, help='desired probability of choosing a packet when sampling; the first packet of a flow is always chosen')
 	parser.add_argument('--variableTradeoff', action='store_true', help='whether the tradeoff between accuracy and sparsity for RL should be randomly chosen for each flow')
+	parser.add_argument('--global_tradeoff', type=float, default=0.0, help='the initial tradeoff to use when using the control loop')
+	parser.add_argument('--steering_step_size', type=float, default=0.01, help='step size for steering')
+	parser.add_argument('--steering_target_sparsity', type=float, default=0.9, help='target sparsity for steering')
 
 	# parser.add_argument('--nSamples', type=int, default=1, help='number of items to sample for the feature importance metric')
 
@@ -2218,21 +2241,21 @@ if __name__=="__main__":
 		if opt.net_actor != '':
 			print("Loading actor", opt.net_actor)
 
-			model_dict = lstm_module_rl_actor.state_dict()
-			pretrained_dict = {k: v for k, v in torch.load(opt.net_actor, map_location=device).items() if k in model_dict and model_dict[k].shape==v.shape}
-			model_dict.update(pretrained_dict)
-			lstm_module_rl_actor.load_state_dict(model_dict)
+			# model_dict = lstm_module_rl_actor.state_dict()
+			# pretrained_dict = {k: v for k, v in torch.load(opt.net_actor, map_location=device).items() if k in model_dict and model_dict[k].shape==v.shape}
+			# model_dict.update(pretrained_dict)
+			# lstm_module_rl_actor.load_state_dict(model_dict)
 
-			# lstm_module_rl_actor.load_state_dict(torch.load(opt.net_actor, map_location=device))
+			lstm_module_rl_actor.load_state_dict(torch.load(opt.net_actor, map_location=device))
 
 		if opt.net_critic != '':
 			print("Loading critic", opt.net_critic)
 
-			model_dict = lstm_module_rl_critic.state_dict()
-			pretrained_dict = {k: v for k, v in torch.load(opt.net_critic, map_location=device).items() if k in model_dict and model_dict[k].shape==v.shape}
-			model_dict.update(pretrained_dict)
-			lstm_module_rl_critic.load_state_dict(model_dict)
+			# model_dict = lstm_module_rl_critic.state_dict()
+			# pretrained_dict = {k: v for k, v in torch.load(opt.net_critic, map_location=device).items() if k in model_dict and model_dict[k].shape==v.shape}
+			# model_dict.update(pretrained_dict)
+			# lstm_module_rl_critic.load_state_dict(model_dict)
 
-			# lstm_module_rl_critic.load_state_dict(torch.load(opt.net_critic, map_location=device))
+			lstm_module_rl_critic.load_state_dict(torch.load(opt.net_critic, map_location=device))
 
 	globals()[opt.function]()
