@@ -220,14 +220,14 @@ For a flow of length $T$ at each timestep $t$ we have two reward metrics which w
 The classification reward metric captures how correct the classifier is on average for all future packets of a flow. The label of each packet in a flow has a value of 0 for non-attack traffic and 1 for attack traffic with one flow being only attack or non-attack but not mixed. The confidence is the sigmoided ($\frac{e^x}{1+e^x}$) output of the classifier, yielding a value between 0 and 1, where 0 is absolute confidence for a flow being benign and 1 is absolute confidence for a flow being an attack. 
 \begin{align}
 \begin{split}
-R_{\text{classification},t} = \frac{1}{T-t} \sum_{i=t+1}^{T} |\text{label}_t - \text{confidence}_t|
+R_{\text{classification},t} = \frac{1}{T-t} \sum_{i=t+1}^{T} |\text{label}_i - \text{confidence}_i
 \end{split}
 \end{align}
 
 The sparsity reward metric captures how much sparsity is achieved on average for all future packets of a flow. E.g. for a flow of length 10 if after timestep 5, 3 packets are chosen and 2 are skipped, the sparsity reward metric at timestep 5 is $\frac{2}{2+3}=\frac{2}{5}$.
 \begin{align}
 \begin{split}
-R_{\text{sparsity},t} = \frac{\sum_{i=t+1}^{T} 1_{\text{skipped},t}}{\sum_{i=t+1}^{T} 1_{\text{chosen},t}+\sum_{i=t+1}^{T} 1_{\text{skipped},t}}
+R_{\text{sparsity},t} = \frac{\sum_{i=t+1}^{T} 1_{\text{skipped},i}}{\sum_{i=t+1}^{T} 1_{\text{chosen},i}+\sum_{i=t+1}^{T} 1_{\text{skipped},i}}
 \end{split}
 \end{align}
 
