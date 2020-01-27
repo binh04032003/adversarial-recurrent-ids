@@ -189,16 +189,22 @@ These proposed techniques focus their evaluation on text and hence do not fulfil
 
 %\section{Setup}
 %%ci
-\section{Classifier}
-\label{sec:classifier}
+
+\section{\ours{}}
+
+Traditionally, network packet sampling is performed on backbone infrastructures where, due to large bandwidths, not every packet can be analyzed. Sampling consequently helps experts understand the behavior of their network without the need to capture each and every packet. Assuming that the behavior of the network follows a predefined underlying process, sampling is therefore not detrimental on average to statistical analysis or measurement. Although the dataset in this work does not come from a backbone network, sampling reduces the high computational effort due to additional processing required by the complex \gls{ml}-based \glspl{ids}. As a consequence, several intuitive but efficient sampling techniques can be applied in practice. In this Section, we discuss the architecture of our proposed sampling framework \ours.
+
+\subsection{Classifier}
+\label{subsec:classifier}
 We implemented a three-layer LSTM-based classifier with 128 neurons at each layer. As the input features we use source port, destination port, protocol identifier, packet length, \gls{iat} to the previous packet in the flow, packet direction (i.e. forward or reverse path) and all TCP flags (0 if the flow is not TCP).
 We omitted \gls{ttl} values, as they are likely to lead to unwanted prediction behaviour \cite{bachl_walling_2019}.  Among the used features, source port, destination port and protocol identifier are constant over the whole flow while the others vary.
 Additionally, we add the number of skipped packets since the last packet as a feature, which can help the classifier because otherwise it might be confused because of missing packets. 
 During flow extraction we used the usual 5-tuple flow key, which distinguishes flows based on the protocol they use and their source and destination port and IP address.
 We use Z-score normalization and a train/test split of 2:1.
 
-\section{RL for Sampling}
-\label{sec:rlForSampling}
+\subsection{Reinforcement Learning-based Sampling}
+\label{subsec:rlForSampling}
+
 Given enough training instances, \gls{rl} algorithms have been shown to perform very well in complex decision-making situations such as playing video games \cite{mnih_playing_2013} as well as networking problems such as congestion control \cite{bachl_rax_2019}. We thus consider an \gls{rl}-based architecture to be suitable for taking packet sampling decisions. The system should look at the current packet as well as the history of the conversation flow and output how many packets should be skipped until the next packet is considered in the current flow. The reward that the \gls{rl} tries to maximize should be a combination of classification accuracy and the number of packets that could be skipped (sparsity). An operator should be able to specify how much accuracy is allowed to be traded off for achieving higher sparsity.% and the objective of the \gls{rl} at a timestep t of a flow is defined as:
 
 %\begin{align}
@@ -217,34 +223,41 @@ For a flow of length $T$ at each timestep $t$ we have two reward metrics which w
   \label{fig:rewards}
 \end{figure}
 
-The classification reward metric captures how correct the classifier is on average for all future packets of a flow. The label of each packet in a flow has a value of 0 for non-attack traffic and 1 for attack traffic with one flow being only attack or non-attack but not mixed. The confidence is the sigmoided ($\frac{e^x}{1+e^x}$) output of the classifier, yielding a value between 0 and 1, where 0 is absolute confidence for a flow being benign and 1 is absolute confidence for a flow being an attack. 
+The classification reward metric (\autoref{eq:R_classification}) captures how correct the classifier is on average for all future packets of a flow. The label of each packet in a flow has a value of 0 for non-attack traffic and 1 for attack traffic with one flow being only attack or non-attack but not mixed. The confidence is the sigmoided ($\frac{e^x}{1+e^x}$) output of the classifier, yielding a value between 0 and 1, where 0 is absolute confidence for a flow being benign and 1 is absolute confidence for a flow being an attack. 
 \begin{align}
 \begin{split}
-R_{\text{classification},t} = \frac{1}{T-t} \sum_{i=t+1}^{T} |\text{label}_i - \text{confidence}_i
+R_{\text{classification},t} = \frac{1}{T-t} \sum_{i=t+1}^{T} |\text{label}_i - \text{confidence}_i|
 \end{split}
+\label{eq:R_classification}
 \end{align}
 
-The sparsity reward metric captures how much sparsity is achieved on average for all future packets of a flow. E.g. for a flow of length 10 if after timestep 5, 3 packets are chosen and 2 are skipped, the sparsity reward metric at timestep 5 is $\frac{2}{2+3}=\frac{2}{5}$.
+The sparsity reward metric (\autoref{eq:R_sparsity}) captures how much sparsity is achieved on average for all future packets of a flow. E.g. for a flow of length 10 if after timestep 5, 3 packets are chosen and 2 are skipped from what is left, the sparsity reward metric at timestep 5 is $\frac{2}{2+3}=\frac{2}{5}$.
+\note{blue}{Fares: This equation can be shortened by diving by the total count of packets left.\\
+Fares: If the length of the flow is not known, how do we estimate T}.
 \begin{align}
 \begin{split}
 R_{\text{sparsity},t} = \frac{\sum_{i=t+1}^{T} 1_{\text{skipped},i}}{\sum_{i=t+1}^{T} 1_{\text{chosen},i}+\sum_{i=t+1}^{T} 1_{\text{skipped},i}}
 \end{split}
+\label{eq:R_sparsity}
 \end{align}
+
+\autoref{fig:rewards} shows how classification and sparsity rewards are computed for a toy example. 
 
 We opt for an \emph{\gls{ac}} approach (as shown in \autoref{fig:sampling}) modeled after \cite{mnih_asynchronous_2016} because we consider it being more interpretable than a Deep \gls{rl} approach based on a \textit{Deep Q Network} like \cite{mnih_playing_2013} for reasons we explain later \todo{Max: Add ref to the section where we explain this}. 
 
 Our proposed framework consists of three independent neural networks: the classifier, the critic and the actor. 
 
-The classifier's goal is to guess correctly if a flow is an attack or not. For this, it outputs its confidence for non-attack/attack after reading a packet. As stated in \autoref{sec:classifier}, we choose an LSTM-based supervised classifier for this work, but our framework can work together with any classifier as long as it outputs a confidence for non-attack/attack at each timestep and can handle skipped packets. For instance it would also be possible to replace the LSTM with an unsupervised autoencoder like in \cite{mirsky_kitsune_2018}. 
+The classifier's goal is to guess correctly if a flow is an attack or not. For this, it outputs its confidence for non-attack/attack after reading a packet. As stated in \autoref{subsec:classifier}, we choose an LSTM-based supervised classifier for this work, but our framework can work together with any classifier as long as it outputs a confidence for non-attack/attack at each timestep and can handle skipped packets. For instance it would also be possible to replace the LSTM with an unsupervised autoencoder like in \cite{mirsky_kitsune_2018}. 
 
-The Critic aims to estimate the future expected average classification performance and the future expected average sparsity that can be achieved at a timestep $t$. For this it outputs $v_{\text{classification},t}$ and $v_{\text{sparsity},t}$ at each timestep $t$. It aims to predict the classification performance and sparsity correctly for each timestep by minimizing the following loss function:
+The Critic aims to estimate the future expected average classification performance and the future expected average sparsity that can be achieved at a timestep $t$. For this it outputs $v_{\text{classification},t}$ and $v_{\text{sparsity},t}$ at each timestep $t$. It aims to predict the classification performance and sparsity correctly for each timestep by minimizing the following value loss function:
 \begin{align}
 \begin{split}
-l_{\text{v},t} =& \left(R_{\text{classification},t} - v_{\text{sparsity},t}\right)^2 + \left(R_{\text{sparsity},t} - v_{\text{sparsity},t}\right)^2
+l_{\text{v},t} =& \left(R_{\text{classification},t} - v_{\text{classification},t}\right)^2 \\
++ & \left(R_{\text{sparsity},t} - v_{\text{sparsity},t}\right)^2
 \end{split}
 \end{align}
 
-Now that the reward metrics and the Critic's outputs are defined, we can define the overall utility that we want to maximize at each timestep $t$ as follows:
+Now that the reward metrics and the Critic's outputs are defined, we can define the overall utility $U$ that we want to maximize at each timestep $t$ as follows:
 \begin{align}
 \begin{split}
 U_t =& \left(R_{\text{classification},t} + \alpha \cdot R_{\text{sparsity},t}\right) \\
@@ -252,24 +265,24 @@ U_t =& \left(R_{\text{classification},t} + \alpha \cdot R_{\text{sparsity},t}\ri
 \end{split}
 \end{align}
 
-This means that we want that we want the reward to be higher than the Critic's expectation. 
+This means that we want the reward to be higher than the Critic's expectation. 
 
-The Actor outputs a probability distribution at timestep $t$, which is sampled to determine the number of packets that should be skipped. It aims to change the distribution so that actions which result in a higher reward are chosen more frequently, maximizing the utility function. However, this strategy could lead to the Actor getting stuck with what it considers the best decision and never try alternatives even though they might result in a higher reward. Thus, the Actor not only tries to change the distribution so that the actions become more optimal but at the same time also aims to maximize the entropy of the distribution so that alternative choices are still explored reasonably often. 
+The Actor outputs a probability distribution at timestep $t$, which is sampled to determine the number of packets that should be skipped. It aims to change the distribution so that actions which result in a higher reward are chosen more frequently, maximizing the utility function. However, this strategy could lead to the Actor getting stuck with what it considers the best decision and never try alternatives even though they might result in a higher reward (local maxima). Thus, the Actor not only tries to change the distribution so that the actions become more optimal (higher reward) but at the same time also aims to maximize the entropy of the distribution so that alternative choices are still explored reasonably often. 
 
-Specifically, at timestep $t$, given the current state $s_t$ (which consists of the current input as well as the LSTM state) and the neural network weights of the Actor $\theta_a$ the Actor outputs a probability distribution $\pi \left( a_t \given s_t ; \theta_\text{a} \right)$ from which the action $a_t$, the number of packets to be skipped, is sampled. Besides wanting to make actions which result in a high reward more likely, the actor also seeks to optimize the entropy $H(\cdot)$ of the probability distribution so that it keeps exploring and doesn't get stuck with a suboptimal policy. 
+Specifically, at timestep $t$, given the current state $s_t$ (which consists of the current input as well as the LSTM state) and the neural network weights of the Actor $\theta_a$ the Actor outputs a probability distribution $\pi \left( a_t \given s_t ; \theta_\text{a} \right)$ from which the action $a_t$ (the number of packets to be skipped) is sampled. Besides wanting to make actions which result in a high reward more likely, the actor also seeks to optimize the entropy $H(\cdot)$ of the probability distribution so that it keeps exploring and doesn't get stuck with a suboptimal policy. 
 
 Combining these objectives, the actor network aims to minimize the loss function
 \begin{align}
 \begin{split}
-l_{\text{a},t} =& -\log \left( \pi \left( a_t \given s_t ; \theta_\text{a} \right) \right) U_t \\ 
-&- \beta H\left( \pi\left( s_t; \theta_a \right)\right)
+l_{\text{a},t} =& \underbrace{ -\log \left( \pi \left( a_t \given s_t ; \theta_\text{a} \right) \right) U_t}_{\text{Policy Loss}} \\ 
+&- \beta \underbrace{H\left( \pi\left( s_t; \theta_a \right)\right) }_{\text{Enthropy}}
 \end{split}\label{eq:actor}
 \end{align}
 
 %The Critic network evaluates the behavior of the Actor network and computes the classification performance and sparsity that it thinks is going to be achieved.% using the computed value function and gives it feedback based on the performance obtained by the LSTM classifier. 
 %The number of packets to skip is taken from the Actor's output distribution and fed into the packet parser, which is responsible for counting the packets and selecting the appropriate one.
 
-In related work regarding \gls{rl}-based sampling for sequences, only discrete actions were evaluated so far: The actor would output a categorical probability distribution with a fixed maximum number of bins $k$. A drawback of this approach is that only a predefined maximum number of packets can be skipped and that that for a very large number of $k$, it can take a long time to converge to an optimum policy as there are $k$ different options to explore at each timestep $t$. Besides discrete actions, we thus also experiment with continuous actions, which allow to skip arbitrarily many packets. 
+In related work regarding \gls{rl}-based sampling for sequences, only discrete actions were evaluated so far: The actor would output a categorical probability distribution with a fixed maximum number of bins $k$. A drawback of this approach is that only a predefined maximum number of packets can be skipped and that for a very large number of $k$, it can take a long time to converge to an optimum policy as there are $k$ different options to explore at each timestep $t$. Besides discrete actions, we thus also experiment with continuous actions, which allow to skip arbitrarily many packets. 
 
 \begin{figure}
 \centering
@@ -278,28 +291,30 @@ In related work regarding \gls{rl}-based sampling for sequences, only discrete a
   \label{fig:neuralNetworkArchitecture}
 \end{figure}
 
+\note{blue}{Fares: can be moved one section above\\}
 An overview of the neural networks of the classifier, actor and critic that we use in this work is given in \autoref{fig:neuralNetworkArchitecture}.
 
 \begin{figure}
 \centering
-  \includegraphics[width=\columnwidth]{img/rnn-sampling.pdf}
+  \includegraphics[width=0.8\columnwidth]{img/rnn-sampling.pdf}
   \caption{SparseIDS framework. Three deep networks are shown: an LSTM classifier, An Actor network and a Critic network. The Actor takes actions based on the feedback from the the Critic network and the classifier. The Critic network tracks the Actor actions based on the classifier confidence and finally, the packets selector parses packets based on the decision of the Actor network.}
   \label{fig:sampling}
 \end{figure}
 
+\note{blue}{Fares: can be removed, it was already mentioned.\\}
 A schematic overview over the \gls{rl} for sampling is given in \autoref{fig:sampling}. 
 
 \subsection{Continuous Actions}
 
 For performing continious actions we need a probability distribution which can be parametrized to have the mean between 0 and positive infinity. Furthermore it must have at least two parameters so that the standard deviation, which is required for the entropy (\autoref{eq:actor}), can be changed independent of the mean. For example, the Exponential distribution can be parametrized to have its mean anywhere between 0 and positive infinity, however, it has only one parameter and thus the mean and the standard deviation cannot be independently changed. Conversely, a simple distribution which fits our requirements is the Log-normal distribution, which is defined as a normal distribution whose output is exponentiated:
 
-Let $Z$ be standard normally distributed and $\mu_{\text{normal}}$ and $\sigma_{\text{normal}} > 0$ be two real numbers. Then 
+Let $Z$ be a random variable from a standard normal distribution $\mathcal{N}(0, 1)$ and let $\mu_{\text{normal}}$ and $\sigma_{\text{normal}} > 0$ be two real numbers. Then 
 \begin{align}
 X = e^{\mu_{\text{normal}}+\sigma_{\text{normal}} Z}
 \end{align}
-is log-normally distributed. 
+is log-normally distributed variable from $\mathcal{LN}(\mu, \sigma^2)$. 
 
-The actor network (\autoref{fig:neuralNetworkArchitecture}) shows that the actor network has two outputs: $\mu$ and $\sigma$. These encode the mean and standard deviation of a log-normal distribution. Since the mean and the standard deviation of a log-normal distribution can never be smaller or equal to zero, we always apply the softplus function to them, so that the actor can only output $\mu$ and $\sigma$ that are larger than 0: 
+The architecture in \autoref{fig:neuralNetworkArchitecture} shows that the actor network has two outputs: $\mu$ and $\sigma$. These encode the mean and standard deviation of a log-normal distribution and can never be smaller or equal to zero hence, we always apply a rectifier i.e. a softplus function at the output:
 \begin{align}
 \text{softplus}(x) = \log\left(1 + e^x \right)
 \end{align}
@@ -313,15 +328,17 @@ To parametrize the normal distribution that underlies the log-normal distributio
 \sigma_{\text{normal}} = \sqrt{\log\left(\frac{\mu^2 + \sigma^2}{\mu^2}\right)}
 \end{align}
 
+\section{Experimentation}
+\todo{Fares: add intro}
+
 \subsection{Rule-based Sampling Strategies}
-Traditionally, network packet sampling is performed on backbone infrastructures where, due to large bandwidths, not every packet can be analyzed. Sampling consequently helps experts understand the behavior of their network without the need to capture each and every packet. Assuming that the behavior of the network follows a predefined underlying process, sampling is therefore not detrimental on average to statistical analysis or measurement. Although the dataset in this work does not come from a backbone network, sampling reduces the high computational effort due to additional processing  required by the complex \gls{ml} based \gls{ids}. As a consequence, several intuitive but efficient sampling techniques can be applied in practice. In this study, we compare a few techniques to our sparseIDS approach. 
+In order to evaluate the performance of \ours, we compare it with few techniques used in practice. 
 We opt for three rule-based sampling families that are widely used in practice, such rule-based approaches do not require feedback from higher layers (i.e. sampling rates are constant and not correlated with subsequent analysis). The strategy of each family is summarized as follows:
 
 \subsubsection{Random Sampling}
-%Given the fraction $\alpha$ of packets to be selected in a set of $N$ packets, such techniques take exactly $n = \alpha \times N$ samples that are randomly sampled from a given probability mass function, such as a uniform distribution that keeps the pick-up probability similar for all packets.
-%Practically, these techniques work properly if the candidate packets have similar properties (redundancy) and therefore the probability of skipping important information is low. 
 
-Given the fraction $\alpha$ of packets to be selected in a sequence of $N$ packets, these techniques can sequentially sample or skip a packet with a probability of $p_{sample}=\alpha$ and $p_{skip}=1-\alpha$ respectively. If the sequence is large enough, $n$ packets will be randomly sampled from a uniform distribution whereby $n= \alpha \times N$. Practically, these techniques work properly if the candidate packets have similar properties (redundancy) and therefore the probability of skipping important information is minimal.
+
+Given the fraction $\alpha$ of packets to be selected in a sequence of $T$ packets, these techniques can sequentially sample or skip a packet with a probability of $p_{sample}=\alpha$ and $p_{skip}=1-\alpha$ respectively. If the sequence is large enough, $n$ packets will be randomly sampled from a uniform distribution whereby $n= \alpha \times T$. Practically, these techniques work properly (the effect on subsequent analysis is minimal) if the candidate packets have similar properties (redundancy) and therefore the probability of skipping important information is minimal.
 
 \subsubsection{(Equal) First 'n' Sampling}
 As its name suggests, this technique only samples the first $n$ packets and ignores the rest of the flow. Nevertheless, there are two variants of this technique: (a) taking the first $n$ packets, where $n$ is the same for all flows, and (b) taking the first ``Equal'' proportion of packets from each flow (e.g. half of the flow, regardless of its length). In the first example, the size of the entire flow is not necessary and the capture can be stopped once enough packets are captured. In the second scenario, however, the length of each flow needs to be known. Again, similar techniques work properly if the important information is present in the first few packets of a flow, i.e. a large data transfer in which the initial packets represent a hand-shake after which the majority of packets contain the raw data and are blind to non-\gls{dpi} systems. 
@@ -331,7 +348,7 @@ Last but not least, a periodic sampling technique that takes a sample each $i= 1
 
 To begin with, the first packet of each flow is always taken for which a record is created in memory and after which the sampling routine is used. 
 
-In each of the above techniques, the sequence of selected packets is then fed to the classifier discussed in \autoref{sec:classifier}, where features are extracted and a decision is made after each packet. Finally, the overall accuracy is calculated after the last packet in the sequence is received.
+In each of the above techniques, the sequence of selected packets is then fed to the classifier discussed in \autoref{subsec:classifier}, where features are extracted and a decision is made after each packet. Finally, the overall accuracy is calculated after the last packet in the sequence is received.
 
 There exist many more rule-based sampling techniques e.g., temporal, adaptive etc. However, studying their behaviors is out of the scope of this paper.
 
@@ -406,7 +423,6 @@ Heartbleed	&	$<$0.01\%	\\
 %\end{tabular}
 %}{}
 \end{table}
-
 
 
 
