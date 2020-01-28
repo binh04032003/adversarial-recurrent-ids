@@ -216,17 +216,24 @@ Given enough training instances, \gls{rl} algorithms have been shown to perform 
 
 For a flow of length $T$ at each timestep $t$ we have two reward metrics which we compute in a fashion that is known from \textit{R-learning} \cite{schwartz_reinforcement_1993}:
 
-\begin{figure}
+%\begin{figure}
+%\centering
+%  \includegraphics[width=\columnwidth]{img/rewards.pdf}
+%  \caption{The computation of the rewards for a sample flow: Gray packets are skipped while white ones are chosen. At the top row the resulting rewards for classification for each chosen packet are depicted and in the bottom row the ones for sparsity. Numbers are rounded to two digits after the decimal point.}
+%  \label{fig:rewards}
+%\end{figure}
+
+\begin{figure*}
 \centering
-  \includegraphics[width=\columnwidth]{img/rewards.pdf}
-  \caption{The computation of the rewards for a sample flow: Gray packets are skipped while white ones are chosen. At the top row the resulting rewards for classification for each chosen packet are depicted and in the bottom row the ones for sparsity. Numbers are rounded to two digits after the decimal point.}
+  \includegraphics[width=0.8\textwidth]{img/rewards_calc_example.pdf}
+  \caption{The computation of the rewards for a sample malicious flow: Gray packets (0) are skipped while black ones (1) are chosen. ``\#Left\//\#Total'' and ``Confidence'' are the underlying parameters for rewards calculations (see \autoref{eq:R_classification} and \autoref{eq:R_sparsity}). Numbers are rounded to two digits after the decimal point.}
   \label{fig:rewards}
-\end{figure}
+\end{figure*}
 
 The classification reward metric (\autoref{eq:R_classification}) captures how correct the classifier is on average for all future packets of a flow. The label of each packet in a flow has a value of 0 for non-attack traffic and 1 for attack traffic with one flow being only attack or non-attack but not mixed. The confidence is the sigmoided $\left(\frac{e^x}{1+e^x}\right)$ output of the classifier, yielding a value between 0 and 1, where 0 is absolute confidence for a flow being benign and 1 is absolute confidence for a flow being an attack.
 \begin{align}
 \begin{split}
-R_{\text{classification},t} = \frac{1}{T-t} \sum_{i=t+1}^{T} |\text{label}_i - \text{confidence}_i|
+R_{\text{classification},t} = \frac{1}{T-t} \sum_{i=t+1}^{T} |1 - \text{label}_i - \text{confidence}_i|
 \end{split}
 \label{eq:R_classification}
 \end{align}
@@ -328,22 +335,20 @@ To parametrize the normal distribution that underlies the log-normal distributio
 \sigma_{\text{normal}} = \sqrt{\log\left(\frac{\mu^2 + \sigma^2}{\mu^2}\right)}
 \end{align}
 
-\section{Experimentation}
-\todo{Fares: add intro}
 
-\subsection{Rule-based Sampling Strategies}
-In order to evaluate the performance of \ours, we compare it with few techniques used in practice.
-We opt for three rule-based sampling families that are widely used in practice, such rule-based approaches do not require feedback from higher layers (i.e. sampling rates are constant and not correlated with subsequent analysis). The strategy of each family is summarized as follows:
+\section{Comparative Study}
+In order to evaluate the performance of \ours, we compare it with few rule-based sampling techniques widely used in practice.
+We opt for three sampling families that do not require feedback from higher layers (i.e. sampling rates are constant and not correlated with subsequent analysis). The underlying principal of each family is summarized as follows:
 
-\subsubsection{Random Sampling}
+\subsection{Random Sampling}
 
 
 Given the fraction $\alpha$ of packets to be selected in a sequence of $T$ packets, these techniques can sequentially sample or skip a packet with a probability of $p_{sample}=\alpha$ and $p_{skip}=1-\alpha$ respectively. If the sequence is large enough, $n$ packets will be randomly sampled from a uniform distribution whereby $n= \alpha \times T$. Practically, these techniques work properly (the effect on subsequent analysis is minimal) if the candidate packets have similar properties (redundancy) and therefore the probability of skipping important information is minimal.
 
-\subsubsection{(Equal) First 'n' Sampling}
+\subsection{(Equal) First 'n' Sampling}
 As its name suggests, this technique only samples the first $n$ packets and ignores the rest of the flow. Nevertheless, there are two variants of this technique: (a) taking the first $n$ packets, where $n$ is the same for all flows, and (b) taking the first ``Equal'' proportion of packets from each flow (e.g. half of the flow, regardless of its length). In the first example, the size of the entire flow is not necessary and the capture can be stopped once enough packets are captured. In the second scenario, however, the length of each flow needs to be known. Again, similar techniques work properly if the important information is present in the first few packets of a flow, i.e. a large data transfer in which the initial packets represent a hand-shake after which the majority of packets contain the raw data and are blind to non-\gls{dpi} systems.
 
-\subsubsection{Every 'i'th Sampling}
+\subsection{Every 'i'th Sampling}
 Last but not least, a periodic sampling technique that takes a sample each $i= 1/ \alpha$ packet. Similar to the last technique, the length of the flow is not needed in this case. In practice, this technique is best suited to keep the behavioral distribution of the sampled set similar to the original distribution, thus suited for scenarios where information is heterogeneously distributed between packets.
 
 To begin with, the first packet of each flow is always taken for which a record is created in memory and after which the sampling routine is used.
@@ -351,6 +356,10 @@ To begin with, the first packet of each flow is always taken for which a record 
 In each of the above techniques, the sequence of selected packets is then fed to the classifier discussed in \autoref{subsec:classifier}, where features are extracted and a decision is made after each packet. Finally, the overall accuracy is calculated after the last packet in the sequence is received.
 
 There exist many more rule-based sampling techniques e.g., temporal, adaptive etc. However, studying their behaviors is out of the scope of this paper.
+
+
+
+\section{Results and Discussion}
 
 \subsection{Dataset}
 % \begin{table}[b]
@@ -451,8 +460,6 @@ The distribution of different attacks in the datasets are shown in \autoref{tab:
 %\bottomrule
 %\end{tabular}
 %\end{table}
-
-\section{Results and Discussion}
 
 \section{Conclusion}
 
