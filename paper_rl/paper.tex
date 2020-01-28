@@ -233,7 +233,7 @@ For a flow of length $T$ at each timestep $t$ we have two reward metrics which w
 The classification reward metric (\autoref{eq:R_classification}) captures how correct the classifier is on average for all future packets of a flow. The label of each packet in a flow has a value of 0 for non-attack traffic and 1 for attack traffic with one flow being only attack or non-attack but not mixed. The confidence is the sigmoided $\left(\frac{e^x}{1+e^x}\right)$ output of the classifier, yielding a value between 0 and 1, where 0 is absolute confidence for a flow being benign and 1 is absolute confidence for a flow being an attack.
 \begin{align}
 \begin{split}
-R_{\text{classification},t} = \frac{1}{T-t} \sum_{i=t+1}^{T} |1 - \text{label}_i - \text{confidence}_i|
+R_{\text{classification},t} = \frac{1}{T-t} \sum_{i=t+1}^{T} |1 - \left(\text{label}_i - \text{confidence}_i\right)|
 \end{split}
 \label{eq:R_classification}
 \end{align}
@@ -241,9 +241,10 @@ R_{\text{classification},t} = \frac{1}{T-t} \sum_{i=t+1}^{T} |1 - \text{label}_i
 The sparsity reward metric (\autoref{eq:R_sparsity}) captures how much sparsity is achieved on average for all future packets of a flow. E.g. for a flow of length 10 if after timestep 5, 3 packets are chosen and 2 are skipped from what is left, the sparsity reward metric at timestep 5 is $\frac{2}{2+3}=\frac{2}{5}$.
 \note{blue}{Fares: This equation can be shortened by diving by the total count of packets left.\\
 Fares: If the length of the flow is not known, how do we estimate T}.
+\note{red}{Max: It's only relevant during training when you know the lengths of the flows. In deployment, you don't need the rewards anymore...}
 \begin{align}
 \begin{split}
-R_{\text{sparsity},t} = \frac{\sum_{i=t+1}^{T} 1_{\text{skipped},i}}{\sum_{i=t+1}^{T} 1_{\text{chosen},i}+\sum_{i=t+1}^{T} 1_{\text{skipped},i}}
+R_{\text{sparsity},t} = \frac{\sum_{i=t+1}^{T} 1_{\text{skipped},i}}{T-t-1}
 \end{split}
 \label{eq:R_sparsity}
 \end{align}
@@ -276,7 +277,7 @@ This means that we want the reward to be higher than the Critic's expectation.
 
 The Actor outputs a probability distribution at timestep $t$, which is sampled to determine the number of packets that should be skipped. It aims to change the distribution so that actions which result in a higher reward are chosen more frequently, maximizing the utility function. However, this strategy could lead to the Actor getting stuck with what it considers the best decision and never try alternatives even though they might result in a higher reward (local maxima). Thus, the Actor not only tries to change the distribution so that the actions become more optimal (higher reward) but at the same time also aims to maximize the entropy of the distribution so that alternative choices are still explored reasonably often.
 
-Specifically, at timestep $t$, given the current state $s_t$ (which consists of the current input as well as the LSTM state) and the neural network weights of the Actor $\theta_a$ the Actor outputs a probability distribution $\pi \left( a_t \given s_t ; \theta_\text{a} \right)$ from which the action $a_t$ (the number of packets to be skipped) is sampled. Besides wanting to make actions which result in a high reward more likely, the actor also seeks to optimize the entropy $H(\cdot)$ of the probability distribution so that it keeps exploring and doesn't get stuck with a suboptimal policy.
+Specifically, at timestep $t$, given the current state $s_t$ (which consists of the current input as well as the LSTM state) and the neural network weights of the Actor $\theta_a$ the Actor outputs a probability distribution $\pi \left( a_t \given s_t ; \theta_\text{a} \right)$ from which the action $a_t \ge 1$ is sampled. $a_t=1$ means that the next packet is inspected next, while, for example, $a_t=2$ means that one packet is skipped until the next that is chosen and so forth. Besides wanting to make actions which result in a high reward more likely, the actor also seeks to optimize the entropy $H(\cdot)$ of the probability distribution so that it keeps exploring and doesn't get stuck with a suboptimal policy.
 
 Combining these objectives, the actor network aims to minimize the loss function
 \begin{align}
@@ -321,7 +322,7 @@ X = e^{\mu_{\text{normal}}+\sigma_{\text{normal}} Z}
 \end{align}
 is log-normally distributed variable from $\mathcal{LN}(\mu, \sigma^2)$.
 
-The architecture in \autoref{fig:neuralNetworkArchitecture} shows that the actor network has two outputs: $\mu$ and $\sigma$. These encode the mean and standard deviation of a log-normal distribution and can never be smaller or equal to zero hence, we always apply a rectifier i.e. a softplus function at the output:
+The architecture in \autoref{fig:neuralNetworkArchitecture} shows that the actor network has two outputs: $\mu$ and $\sigma$. These encode the mean and standard deviation of a log-normal distribution and can never be smaller or equal to zero hence, we always apply a rectifier function at the output. We choose the softplus, which is a smooth rectifier function:
 \begin{align}
 \text{softplus}(x) = \log\left(1 + e^x \right)
 \end{align}
@@ -335,6 +336,16 @@ To parametrize the normal distribution that underlies the log-normal distributio
 \sigma_{\text{normal}} = \sqrt{\log\left(\frac{\mu^2 + \sigma^2}{\mu^2}\right)}
 \end{align}
 
+When experimenting with continuous actions, we encountered one practical problem: At the beginning of training, the classifier would still perform badly and not give a useful reward to the actor. Thus the actor would only focus on the sparsity and maximize sparsity, as the classification reward would always be equally bad no matter how many packets are chosen. Thus the actor would learn to let $\mu$ go to infinity as this would increase the reward at the beginning when the interaction between the three components or our \gls{rl} system is still fragile. As a solution, we add a penalty when the actor jumps far behind the last packet of a flow. It only applies to the last chosen packet and penalizes the actor jumping more than one packet behind the last packet. For this, we modify the formula of the sparsity reward (\autoref{eq:R_sparsity}) for the last packet as follows, where \textit{last} refers to the index of the last chosen packet in the flow: 
+
+\begin{align}
+\begin{split}
+R_{\text{sparsity},\textit{last}} = \frac{\left(\sum_{i=\textit{last}+1}^{T} 1_{\text{skipped},i}\right) - \left(\textit{last}+a_{\textit{last}} - T - 1\right)}{T-\textit{last}-1}
+\end{split}
+\label{eq:R_sparsity_last}
+\end{align}
+
+Specifically, it adds the term $\left(\textit{last}+a_{\textit{last}} - T - 1\right)$ to the numerator which penalizes the actor jumping more than one packet behind the flow. Jumping just right after the flow does not get penalized because if the actor considers the rest of the flow as irrelevant, ignoring the rest of the flow and jumping to the first packet behind the flow is a useful action. 
 
 \section{Comparative Study}
 In order to evaluate the performance of \ours, we compare it with few rule-based sampling techniques widely used in practice.
@@ -345,10 +356,10 @@ We opt for three sampling families that do not require feedback from higher laye
 
 Given the fraction $\alpha$ of packets to be selected in a sequence of $T$ packets, these techniques can sequentially sample or skip a packet with a probability of $p_{sample}=\alpha$ and $p_{skip}=1-\alpha$ respectively. If the sequence is large enough, $n$ packets will be randomly sampled from a uniform distribution whereby $n= \alpha \times T$. Practically, these techniques work properly (the effect on subsequent analysis is minimal) if the candidate packets have similar properties (redundancy) and therefore the probability of skipping important information is minimal.
 
-\subsection{(Equal) First 'n' Sampling}
-As its name suggests, this technique only samples the first $n$ packets and ignores the rest of the flow. Nevertheless, there are two variants of this technique: (a) taking the first $n$ packets, where $n$ is the same for all flows, and (b) taking the first ``Equal'' proportion of packets from each flow (e.g. half of the flow, regardless of its length). In the first example, the size of the entire flow is not necessary and the capture can be stopped once enough packets are captured. In the second scenario, however, the length of each flow needs to be known. Again, similar techniques work properly if the important information is present in the first few packets of a flow, i.e. a large data transfer in which the initial packets represent a hand-shake after which the majority of packets contain the raw data and are blind to non-\gls{dpi} systems.
+\subsection{(Equal) First \emph{n} Sampling}
+As its name suggests, this technique only samples the first $n$ packets and ignores the rest of the flow. Nevertheless, there are two variants of this technique: (a) taking the first $n$ packets, where $n$ is the same for all flows, and (b) taking the first ``equal'' proportion of packets from each flow (e.g. half of the flow, regardless of its length). In the first technique, the size of the entire flow is not necessary and the capture can be stopped once enough packets are captured. In the second scenario, however, the length of each flow needs to be known. Again, similar techniques work properly if the important information is present in the first few packets of a flow, i.e. a large data transfer in which the initial packets represent a hand-shake after which the majority of packets contain the raw data and are blind to non-\gls{dpi} systems.
 
-\subsection{Every 'i'th Sampling}
+\subsection{Every \emph{i}th Sampling}
 Last but not least, a periodic sampling technique that takes a sample each $i= 1/ \alpha$ packet. Similar to the last technique, the length of the flow is not needed in this case. In practice, this technique is best suited to keep the behavioral distribution of the sampled set similar to the original distribution, thus suited for scenarios where information is heterogeneously distributed between packets.
 
 To begin with, the first packet of each flow is always taken for which a record is created in memory and after which the sampling routine is used.
@@ -463,12 +474,7 @@ The distribution of different attacks in the datasets are shown in \autoref{tab:
 
 \section{Conclusion}
 
-We have implemented a recurrent classifier based on LSTMs to detect network attacks, %While attack detection performance is not necessarily better than that of non-recurrent approaches,
-which can already detect attacks before they are over. Furthermore, the recurrent approach allows us to inspect the influence of single packets on the detection performance and shows which packets are \textit{characteristic} for attacks.
-Even though the interpretation of \glspl{rnn} poses several difficulties, we have demonstrated methods for gaining insights into the model's functioning.
 
-We showed that even though our use case is very different from computer vision, adversarial samples can be found efficiently, even if only ostensibly unimportant features can be modified. We proposed the \gls{ars} for quantifying and comparing the adversarial threat for \glspl{ids}.
-Deploying an adversarial training procedure, we could significantly reduce the adversarial threat.
 
 \section*{Acknowledgements}
 The Titan Xp used for this research was donated by the NVIDIA Corporation.

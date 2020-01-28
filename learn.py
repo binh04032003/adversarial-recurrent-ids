@@ -362,11 +362,13 @@ def custom_collate(seqs, things=(True, True, True)):
 		if opt.variableTradeoff:
 			masks_catted = torch.cat(masks)
 			empirical_sparsity = float(torch.sum(masks_catted==0).item())/len(masks_catted)
+			sparsities.append(empirical_sparsity)
 			print("opt.global_tradeoff", opt.global_tradeoff, "empirical_sparsity", empirical_sparsity)
-			if empirical_sparsity > opt.steering_target_sparsity:
-				opt.global_tradeoff -= opt.steering_step_size
-			elif empirical_sparsity < opt.steering_target_sparsity:
+			if empirical_sparsity < opt.steering_target_sparsity:
 				opt.global_tradeoff += opt.steering_step_size
+			elif empirical_sparsity > opt.steering_target_sparsity:
+				opt.global_tradeoff -= opt.steering_step_size
+			opt.global_tradeoff = min(max(opt.global_tradeoff, 0.0), 1.0)
 
 	assert len(seqs) == len(labels) == len(categories)
 	return [collate_things(item, index==0, sampling_masks=masks if opt.sampling!="" else None) for index, (item, thing) in enumerate(zip((seqs, labels, categories), things)) if thing]
@@ -863,6 +865,8 @@ def train_rl():
 					torch.save(lstm_module_rl_actor.state_dict(), '%s/%s' % (writer.log_dir, filename_rl_actor))
 					torch.save(lstm_module_rl_critic.state_dict(), '%s/%s' % (writer.log_dir, filename_rl_critic))
 
+
+sparsities = []
 
 @torch.no_grad()
 def test():
@@ -2161,9 +2165,9 @@ if __name__=="__main__":
 	parser.add_argument('--sampling', type=str, default="", help='technique employed to sample packets of flows; blank if no sampling is applied')
 	parser.add_argument('--samplingProbability', type=float, default=0.5, help='desired probability of choosing a packet when sampling; the first packet of a flow is always chosen')
 	parser.add_argument('--variableTradeoff', action='store_true', help='whether the tradeoff between accuracy and sparsity for RL should be randomly chosen for each flow')
-	parser.add_argument('--global_tradeoff', type=float, default=0.0, help='the initial tradeoff to use when using the control loop')
+	parser.add_argument('--global_tradeoff', type=float, default=1.0, help='the initial tradeoff to use when using the control loop')
 	parser.add_argument('--steering_step_size', type=float, default=0.01, help='step size for steering')
-	parser.add_argument('--steering_target_sparsity', type=float, default=0.9, help='target sparsity for steering')
+	parser.add_argument('--steering_target_sparsity', type=float, default=0.8, help='target sparsity for steering')
 
 	# parser.add_argument('--nSamples', type=int, default=1, help='number of items to sample for the feature importance metric')
 
