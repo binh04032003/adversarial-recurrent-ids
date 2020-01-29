@@ -21,7 +21,7 @@ tradeoffs_sampling_rl = np.array(tradeoffs_sampling_rl)
 
 assert len(chosen_packets_per_epoch_sampling_rl) == len(all_packets_per_epoch_sampling_rl) == len(tradeoffs_sampling_rl)
 
-print("Epochs", len(chosen_packets_per_epoch_sampling_rl))
+# print("Epochs", len(chosen_packets_per_epoch_sampling_rl))
 
 x = list(range(1,len(chosen_packets_per_epoch_sampling_rl)+1))
 
@@ -30,7 +30,7 @@ x = list(range(1,len(chosen_packets_per_epoch_sampling_rl)+1))
 plt.figure(figsize=(5,2))
 lines = []
 lines += plt.plot(x, 100*chosen_packets_per_epoch_sampling_rl/all_packets_per_epoch_sampling_rl, color=colors[0])
-plt.xlabel("Epochs")
+plt.xlabel("Time steps")
 plt.ylabel('Sparsity (%)')
 
 plt.twinx()
