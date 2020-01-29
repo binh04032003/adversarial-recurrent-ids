@@ -162,6 +162,12 @@ def get_one_hot_vector(class_indices, num_classes, batch_size):
 	y_onehot.zero_()
 	return y_onehot.scatter_(1, class_indices.unsqueeze(1), 1)
 
+chosen_packets_per_epoch_sampling_rl = [[]]
+all_packets_per_epoch_sampling_rl = [[]]
+batch_counter_sampling_rl = 0
+tradeoffs_sampling_rl = []
+initial_global_tradeoff = None
+
 def custom_collate(seqs, things=(True, True, True)):
 	seqs, labels, categories = zip(*seqs)
 	assert not opt.sampling!="" or opt.rl
@@ -360,15 +366,37 @@ def custom_collate(seqs, things=(True, True, True)):
 
 		assert len(masks[-1]) == current_seq_len
 		if opt.variableTradeoff:
+			global initial_global_tradeoff, batch_counter_sampling_rl
+			if batch_counter_sampling_rl == 0:
+				initial_global_tradeoff = opt.global_tradeoff
 			masks_catted = torch.cat(masks)
-			empirical_sparsity = float(torch.sum(masks_catted==0).item())/len(masks_catted)
-			sparsities.append(empirical_sparsity)
-			print("opt.global_tradeoff", opt.global_tradeoff, "empirical_sparsity", empirical_sparsity)
-			if empirical_sparsity < opt.steering_target_sparsity:
-				opt.global_tradeoff += opt.steering_step_size
-			elif empirical_sparsity > opt.steering_target_sparsity:
-				opt.global_tradeoff -= opt.steering_step_size
-			opt.global_tradeoff = min(max(opt.global_tradeoff, 0.0), 1.0)
+			all_chosen_packets = int(torch.sum(masks_catted==0).item())
+			all_current_packtes = len(masks_catted)
+
+			chosen_packets_per_epoch_sampling_rl[-1].append(all_chosen_packets)
+			all_packets_per_epoch_sampling_rl[-1].append(all_current_packtes)
+			batch_counter_sampling_rl += 1
+
+			if batch_counter_sampling_rl > 0 and batch_counter_sampling_rl % opt.batches_to_consider_for_steering == 0:
+				chosen_packets_per_epoch_sampling_rl[-1] = sum(chosen_packets_per_epoch_sampling_rl[-1])
+				all_packets_per_epoch_sampling_rl[-1] = sum(all_packets_per_epoch_sampling_rl[-1])
+				empirical_sparsity = float(chosen_packets_per_epoch_sampling_rl[-1]/all_packets_per_epoch_sampling_rl[-1])
+				chosen_packets_per_epoch_sampling_rl.append([])
+				all_packets_per_epoch_sampling_rl.append([])
+
+				tradeoffs_sampling_rl.append(opt.global_tradeoff)
+
+				print("opt.global_tradeoff", opt.global_tradeoff, "empirical_sparsity", empirical_sparsity)
+
+				new_file_name = f"{opt.net.split('/')[-1]}_global_tradeoff_{initial_global_tradeoff}_steering_step_size_{opt.steering_step_size}_steering_target_sparsity_{opt.steering_target_sparsity}_batches_to_consider_for_steering_{opt.batches_to_consider_for_steering}_sampling_rl.json"
+				f = open(new_file_name, "w")
+				f.write(json.dumps([chosen_packets_per_epoch_sampling_rl, all_packets_per_epoch_sampling_rl, tradeoffs_sampling_rl]))
+				f.close()
+				if empirical_sparsity < opt.steering_target_sparsity:
+					opt.global_tradeoff += opt.steering_step_size
+				elif empirical_sparsity > opt.steering_target_sparsity:
+					opt.global_tradeoff -= opt.steering_step_size
+				opt.global_tradeoff = min(max(opt.global_tradeoff, 0.0), 1.0)
 
 	assert len(seqs) == len(labels) == len(categories)
 	return [collate_things(item, index==0, sampling_masks=masks if opt.sampling!="" else None) for index, (item, thing) in enumerate(zip((seqs, labels, categories), things)) if thing]
@@ -816,7 +844,7 @@ def train_rl():
 
 				actual_actions = torch.floor(effective_output_rl_actor_decisions.float())+1
 				writer.add_scalar("action_mean", torch.mean(actual_actions).item(), samples)
-				writer.add_scalar("action_std", torch.mean(actual_actions).item(), samples)
+				writer.add_scalar("action_std", torch.std(actual_actions).item(), samples)
 
 				if opt.continuous:
 					writer.add_scalar("log_normal_mean", torch.mean(effective_output_rl_actor[:,0]).item(), samples)
@@ -864,9 +892,6 @@ def train_rl():
 				if not opt.shareNet:
 					torch.save(lstm_module_rl_actor.state_dict(), '%s/%s' % (writer.log_dir, filename_rl_actor))
 					torch.save(lstm_module_rl_critic.state_dict(), '%s/%s' % (writer.log_dir, filename_rl_critic))
-
-
-sparsities = []
 
 @torch.no_grad()
 def test():
@@ -2167,7 +2192,8 @@ if __name__=="__main__":
 	parser.add_argument('--variableTradeoff', action='store_true', help='whether the tradeoff between accuracy and sparsity for RL should be randomly chosen for each flow')
 	parser.add_argument('--global_tradeoff', type=float, default=1.0, help='the initial tradeoff to use when using the control loop')
 	parser.add_argument('--steering_step_size', type=float, default=0.01, help='step size for steering')
-	parser.add_argument('--steering_target_sparsity', type=float, default=0.8, help='target sparsity for steering')
+	parser.add_argument('--steering_target_sparsity', type=float, default=0.5, help='target sparsity for steering')
+	parser.add_argument('--batches_to_consider_for_steering', type=int, default=100)
 
 	# parser.add_argument('--nSamples', type=int, default=1, help='number of items to sample for the feature importance metric')
 
