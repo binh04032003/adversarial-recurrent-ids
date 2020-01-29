@@ -190,6 +190,55 @@ These proposed techniques focus their evaluation on text and hence do not fulfil
 %\section{Setup}
 %%ci
 
+\section{Dataset}
+
+\begin{table}[h]
+\caption{Flow occurrence frequency of attack types.}
+\label{tab:occurrence}
+\centering
+\subfloat[CIC-IDS-2017\label{fig:cicids17proportions}
+]{
+\begin{tabular}{l r}
+\toprule
+Attack type & \hspace*{-4mm}Proportion \\ \midrule
+DoS Hulk	&	10.10\%	\\
+PortScan, Firewall	&	6.90\%	\\
+DDoS LOIT	&	4.08\%	\\
+Infiltration	&	3.30\%	\\
+DoS GoldenEye	&	0.32\%	\\
+DoS SlowHTTPTest	&	0.18\%	\\
+DoS Slowloris	&	0.17\%	\\
+Brute-force SSH	&	0.11\%	\\
+Botnet ARES	&	0.03\%	\\
+XSS attack	&	0.03\%	\\
+PortScan, no Fw.	&	0.02\%	\\
+Brute-force FTP	&	0.01\%	\\
+SQL injection	&	$<$0.01\%	\\
+Heartbleed	&	$<$0.01\%	\\
+\bottomrule
+\end{tabular}
+}{}
+\subfloat[UNSW-NB15\label{fig:unswnb15proportions}
+]{
+\begin{tabular}{l r}
+\toprule
+Attack type & \hspace*{-4mm}Proportion \\ \midrule
+Exploits	&	1.42\%	\\
+Fuzzers	&	1.01\%	\\
+Reconnaissance	&	0.58\%	\\
+Generic	&	0.21\%	\\
+DoS	&	0.19\%	\\
+Shellcode	&	0.08\%	\\
+Analysis	&	0.03\%	\\
+Backdoors	&	0.02\%	\\
+Worms	&	0.01\%	\\
+\bottomrule
+\end{tabular}
+}{}
+\end{table}
+
+For evaluation, we use the \textit{CIC-IDS-2017} \cite{sharafaldin_toward_2018} and \textit{UNSW-NB15} \cite{moustafa_unsw-nb15:_2015} datasets which each include more than 2 million flows of network data, containing both benign traffic and a large number of different attacks. The distribution of different attacks in the datasets are shown in \autoref{tab:occurrence}.
+
 \section{\ours{}}
 
 Traditionally, network packet sampling is performed on backbone infrastructures where, due to large bandwidths, not every packet can be analyzed. Sampling consequently helps experts understand the behavior of their network without the need to capture each and every packet. Assuming that the behavior of the network follows a predefined underlying process, sampling is therefore not detrimental on average to statistical analysis or measurement. Although the dataset in this work does not come from a backbone network, sampling reduces the high computational effort due to additional processing required by the complex \gls{ml}-based \glspl{ids}. As a consequence, several intuitive but efficient sampling techniques can be applied in practice. In this Section, we discuss the architecture of our proposed sampling framework \ours.
@@ -371,87 +420,6 @@ There exist many more rule-based sampling techniques e.g., temporal, adaptive et
 
 
 \section{Results and Discussion}
-
-\subsection{Dataset}
-% \begin{table}[b]
-% \caption{occurrence frequency of attack types.} \label{tab:occurrence}
-% \centering
-% \begin{tabular}{l r} \toprule
-% Attack type & Proportion \\
-% \midrule
-% Normal                                                         & $0.747468$ \\
-% DoS / DDoS:DoS Hulk                                            & $0.101014$ \\
-% PortScan:PortScan - Firewall off                               & $0.069020$ \\
-% DDoS:LOIT                                                      & $0.040784$ \\
-% Infiltration:Dropbox download                                  & $0.032982$ \\
-% DoS / DDoS:DoS GoldenEye                                       & $0.003224$ \\
-% DoS / DDoS:DoS Slowhttptest                                    & $0.001819$ \\
-% DoS / DDoS:DoS slowloris                                       & $0.001680$ \\
-% Brute Force:SSH-Patator                                        & $0.001107$ \\
-% Botnet:ARES                                                    & $0.000327$ \\
-% Web Attack:XSS                                                 & $0.000293$ \\
-% PortScan:PortScan - Firewall on                                & $0.000165$ \\
-% Brute Force:FTP-Patator                                        & $0.000110$ \\
-% Web Attack:Sql Injection                                       & $0.000006$ \\
-% DoS / DDoS:Heartbleed                                          & $0.000001$ \\
-% \bottomrule
-% \end{tabular}
-% \label{tab:occurrence}
-% \end{table}
-
-\begin{table}[b]
-\caption{Flow occurrence frequency of attack types.}
-\label{tab:occurrence}
-\centering
-%\subfloat[CIC-IDS-2017\label{fig:cicids17proportions}
-%]{
-\begin{tabular}{l r}
-\toprule
-Attack type & \hspace*{-4mm}Proportion \\ \midrule
-DoS Hulk	&	10.10\%	\\
-PortScan, Firewall	&	6.90\%	\\
-DDoS LOIT	&	4.08\%	\\
-Infiltration	&	3.30\%	\\
-DoS GoldenEye	&	0.32\%	\\
-DoS SlowHTTPTest	&	0.18\%	\\
-DoS Slowloris	&	0.17\%	\\
-Brute-force SSH	&	0.11\%	\\
-Botnet ARES	&	0.03\%	\\
-XSS attack	&	0.03\%	\\
-PortScan, no Fw.	&	0.02\%	\\
-Brute-force FTP	&	0.01\%	\\
-SQL injection	&	$<$0.01\%	\\
-Heartbleed	&	$<$0.01\%	\\
-\bottomrule
-\end{tabular}
-%}{}
-%\subfloat[UNSW-NB15\label{fig:unswnb15proportions}
-%]{
-%\begin{tabular}{l r}
-%\toprule
-%Attack type & \hspace*{-4mm}Proportion \\ \midrule
-%Exploits	&	1.42\%	\\
-%Fuzzers	&	1.01\%	\\
-%Reconnaissance	&	0.58\%	\\
-%Generic	&	0.21\%	\\
-%DoS	&	0.19\%	\\
-%Shellcode	&	0.08\%	\\
-%Analysis	&	0.03\%	\\
-%Backdoors	&	0.02\%	\\
-%Worms	&	0.01\%	\\
-%\bottomrule
-%\end{tabular}
-%}{}
-\end{table}
-
-
-
-
-
-%For evaluation, we use the \textit{CIC-IDS-2017} \cite{sharafaldin_toward_2018} and \textit{UNSW-NB15} \cite{moustafa_unsw-nb15:_2015} datasets which each include more than 2 million flows of network data, containing both benign traffic and a large number of different attacks.
-For evaluation, we use the \textit{CIC-IDS-2017} \cite{sharafaldin_toward_2018} dataset which includes more than 2 million flows of network data, containing both benign traffic and a large number of different attacks.
-
-The distribution of different attacks in the datasets are shown in \autoref{tab:occurrence}.
 
 %\begin{table}
 %% Evaluated using
