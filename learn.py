@@ -341,6 +341,7 @@ def custom_collate(seqs, things=(True, True, True)):
 			else:
 				current_slice_action_probs = torch.nn.functional.softplus(current_slice_action_probs)
 				decisions = current_slice_action_probs[:,:,0]
+				# print("decisions", decisions, "stds", current_slice_action_probs[:,:,1])
 
 			if not opt.continuous:
 				increment = decisions.view(-1)+1
@@ -352,6 +353,8 @@ def custom_collate(seqs, things=(True, True, True)):
 			chosen_indices.append(seq_index)
 			remaining_seq_lens = torch.max(orig_seq_lens - seq_index, torch.zeros_like(orig_seq_lens))
 
+		# chosen_indices_stacked = torch.stack(chosen_indices)
+		# print("chosen_indices_stacked", chosen_indices_stacked.transpose(1,0))
 		masks = []
 		for seq_index in range(batch_size):
 			current_seq_len = len(seqs[seq_index])
@@ -439,6 +442,8 @@ def collate_things(seqs, is_seqs=False, sampling_masks=None):
 		skipped = []
 		if is_seqs:
 			for mask in sampling_masks:
+				# print("mask", mask)
+				# assert not len(mask) > 1 or not mask[1]
 				seq_range = torch.arange(len(mask))[mask]
 				skipped.append(torch.cat((torch.tensor([0]), seq_range[1:]-seq_range[:-1]-1)))
 				assert (skipped[-1] >= 0).all()
@@ -915,6 +920,7 @@ def test():
 	results_by_attack_number = [list() for _ in range(min(attack_numbers), max(attack_numbers)+1)]
 	label_by_attack_number = [list() for _ in range(min(attack_numbers), max(attack_numbers)+1)]
 	sample_indices_by_attack_number = [list() for _ in range(min(attack_numbers), max(attack_numbers)+1)]
+	orig_lens = [list() for _ in range(min(attack_numbers), max(attack_numbers)+1)]
 
 	for input_data, labels, categories in tqdm(test_loader):
 
@@ -958,10 +964,11 @@ def test():
 			results_by_attack_number[flow_category].append(np.concatenate((flow_input, flow_output), axis=-1))
 			label_by_attack_number[flow_category] = flow_label
 			sample_indices_by_attack_number[flow_category].append(test_indices[samples])
+			orig_lens[flow_category].append(len(test_data[samples][0]))
 
 			samples += 1
 
-	file_name = opt.dataroot[:-7]+"_prediction_outcomes_{}_{}.pickle".format(opt.fold, opt.nFold)
+	file_name = opt.dataroot[:-7]+"_{}_prediction_outcomes_{}_{}.pickle".format("_".join(opt.net.split("/")[-2:]), opt.fold, opt.nFold)
 
 	all_results_concatenated = [(np.concatenate(item, axis=0) if len(item) > 0 else []) for item in results_by_attack_number]
 	attack_by_attack_number = [[label_by_attack_number[index]]*len(item) for index, item in enumerate(all_results_concatenated)]
@@ -986,7 +993,7 @@ def test():
 		print("global_chosen_packets", global_chosen_packets, "global_skipped_packets", global_skipped_packets, "global_total", global_total, "ratio", global_chosen_packets/(global_skipped_packets+global_chosen_packets), "average_packets_per_flow", (global_skipped_packets+global_chosen_packets)/len(test_indices), "average_chosen_per_flow", global_chosen_packets/len(test_indices))
 
 	with open(file_name, "wb") as f:
-		pickle.dump({"results_by_attack_number": results_by_attack_number, "sample_indices_by_attack_number": sample_indices_by_attack_number}, f)
+		pickle.dump({"results_by_attack_number": results_by_attack_number, "sample_indices_by_attack_number": sample_indices_by_attack_number, "orig_lens": orig_lens}, f)
 
 # This function takes a model that was trained with feature dropout and can compute features that are contain overlapping information (currently it looks at all combinations of features).
 def dropout_feature_correlation():

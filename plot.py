@@ -48,12 +48,12 @@ for attack_type, seqs in enumerate(results_by_attack_number):
 	else:
 		all_seqs.extend(seqs)
 		all_attacks.extend(seqs)
-	
+
 reverse_mapping[len(results_by_attack_number)] = 'All samples'
 results_by_attack_number.append(all_seqs)
 reverse_mapping[len(results_by_attack_number)] = 'All attacks'
 results_by_attack_number.append(all_attacks)
-	
+
 for attack_type, seqs in enumerate(results_by_attack_number):
 	print (attack_type, reverse_mapping[attack_type], len(seqs))
 	if len(seqs) <= 0:
@@ -72,7 +72,7 @@ for attack_type, seqs in enumerate(results_by_attack_number):
 		for seq in seqs:
 			if len(seq) < i+1:
 				break
-				
+
 			if len(seq.shape) == 1:
 				seq = seq[:,None]
 
@@ -137,13 +137,13 @@ for attack_type, seqs in enumerate(results_by_attack_number):
 	all_labels = [item.get_label() for item in all_legends]
 	ax1.legend(all_legends, all_labels, loc='upper right', bbox_to_anchor=(1,0.95))
 	#  plt.ylim((min(first_quartiles), max(third_quartiles)))
-	
+
 	ax2.set_ylabel_legend(all_legends[0])
 	ax1.set_ylabel_legend(Rectangle((0,0), 1, 1, fc='gray', alpha=0.2), handlelength=0.7, handletextpad=0.4)
 
 	ticks = plt.xticks()
 	plt.xticks([ tick for tick in ticks[0][1:-1] if tick.is_integer() ])
-	
+
 	if SHOW_TITLE:
 		plt.title(reverse_mapping[attack_type])
 	# plt.legend(all_legends)
