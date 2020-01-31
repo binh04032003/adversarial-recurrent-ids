@@ -88,7 +88,7 @@ for attack_type, (seqs, lens) in enumerate(zip(results_by_attack_number, orig_se
 	filled_in_confidences = []
 	for seq, l in zip(seqs, lens):
 		skip_pattern = seq[:,-2]
-		print("skip_pattern", skip_pattern)
+		# print("skip_pattern", skip_pattern)
 		# print("skip_pattern", skip_pattern)
 		assert (np.round(skip_pattern) == skip_pattern).all(), skip_pattern
 		confidence = seq[:,-1]

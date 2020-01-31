@@ -29,7 +29,7 @@
     \path (#2.north -| #2.east)+(+0.5,+0.5) node (a2) {};%
     \path[rounded corners, draw=black!50]%
       (a1) rectangle (a2);%
-    \path (a1.east |- a1.south)+(2.5,0.25) node (u1)[anchor=south west]%
+    \path (a1.east |- a2.north)+(2.5,-0.75) node (u1)[anchor=south west]%
       {\textit{#3}};%
   \end{pgfonlayer}}%
 \newcommand{\backgroundnclass}[3]{%%
@@ -50,7 +50,7 @@
   			  fill=black!20,minimum size=4mm]%
 \begin{tikzpicture}[every label/.append style={font=\tiny}, node distance=\nodedistance cm, >=stealth',bend angle=45]
 \begin{scope}
-\node [input place] (s1) [label={[align=center]left: Sample (16)}] {};
+\node [input place] (s1) [label={[align=center]below right: Sample (16)}] {};
 \node [place] (s2) [above right of=s1, label={[align=center]above: Linear}] {};
 \path[->] (s1) edge node {} (s2);
 \node [lstm place] (s3) [right of=s2, label={[align=center]below: LSTM (\numUnits{})}] {};
@@ -71,7 +71,7 @@
 \node [output place] (s6) [right of=s5, label={[align=center]above: $\mu$ (1)}] {};        
 \backgroundna{s2}{s6}{Actor network}
 \path[->] (s5) edge node {} (s6);        
-\node [place] (s10) [below right of=s1, label={[align=center]below: Linear}] {};
+\node [place] (s10) at (\shortside,-\shortside-\nodedistance) [label={[align=center]below: Linear}] {};
 \path[->] (s1) edge node {} (s10);    
 \node [lstm place] (s11) [right of=s10, label={[align=center]above: LSTM (\numUnits{})}] {};
 \path[->] (s10) edge node {} (s11);
@@ -81,15 +81,15 @@
 \path[->] (s12) edge [loop below] node {} (s12);    
 \node [lstm place] (s21) [right of=s12, label={[align=center]above: LSTM (\numUnits{})}] {};
 \path[->] (s12) edge node {} (s21);
-\path[->] (s21) edge [loop below] node {} (s21);    
-\node [place] (s13) [right of=s21, label={[align=center]above: Linear}] {};
-\path[->] (s21) edge node {} (s13);
-\node [output place] (s17) [right of=s13, label={[align=center]above: $v_\text{classification}$ (1)}] {};
-\path[->] (s13) edge node {} (s17);
-\node [place] (s16) [below of=s13, label={[align=center]below: Linear}] {};
+\path[->] (s21) edge [loop below] node {} (s21);
+\node [place] (s16) [right of=s21, label={[align=center]below: Linear}] {};
 \path[->] (s21) edge node {} (s16);    
 \node [output place] (s20) [right of=s16, label={[align=center]below: $v_\text{sparsity}$ (1)}] {};    
 \path[->] (s16) edge node {} (s20);
+\node [place] (s13) [above of=s16, label={[align=center]above: Linear}] {};
+\path[->] (s21) edge node {} (s13);
+\node [output place] (s17) [right of=s13, label={[align=center]above: $v_\text{classification}$ (1)}] {};
+\path[->] (s13) edge node {} (s17);
 \backgroundnc{s20}{s17}{Critic network}{s10}
 \node [place] (s30) at (\shortside,-3*\shortside-\nodedistance) [label={[align=center]below: Linear}] {};
 \path[->] (s1) edge node {} (s30);
