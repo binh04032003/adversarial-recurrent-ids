@@ -135,31 +135,31 @@ firstname.lastname@tuwien.ac.at}}
 \section{Introduction}
 \label{sec:introduction}
 
-There is a significant body of scientific work focusing on the detection of unwanted behavior in networks. In the past, a viable way of performing intrusion detection was to inspect the content of packets themselves and detect if a packet delivers potentially harmful content. More recently, with the increasing deployment of encryption, the focus now lies on features that are always available to network monitoring equipment like port numbers, protocol flags or packet sizes when encrypting above the transport layer.
+%There is a significant body of scientific work focusing on the detection of unwanted behavior in networks. In the past, a viable way of performing intrusion detection was to inspect the content of packets themselves and detect if a packet delivers potentially harmful content. More recently, with the increasing deployment of encryption, the focus now lies on features that are always available to network monitoring equipment like port numbers, protocol flags or packet sizes when encrypting above the transport layer.
 
 % Fares:
-%As the need for security mechanisms in today's infrastructure communication networks grows, a substantial body of scientific work focuses on developing reliable, explainable frameworks for the identification of unwanted behaviors. In the past, a viable way to detect intrusion was to analyze the contents of the packets themselves and determine, for example, whether a packet contains potentially harmful content by matching patterns. More recently, with the increasing deployment of encryption, the focus is now on features that are always available for network monitoring devices such as port numbers, protocol flags, packet sizes when encrypting above the transport layer.
+As the need for security mechanisms in today's infrastructure communication networks grows, a substantial body of scientific work focuses on developing reliable, explainable frameworks for the identification of unwanted behaviors. In the past, a viable way to detect intrusion was to analyze the contents of the packets themselves and determine, for example, whether a packet contains potentially harmful content by matching patterns. More recently, with the increasing deployment of encryption, the focus is now on features that are always available for network monitoring devices such as port numbers, protocol flags and packet sizes when encrypting above the transport layer.
 
-Network communication is usually aggregated into \textit{flows}, which are commonly defined as a sequence of packets sharing certain properties. When analyzing flows, not only the aforementioned features are available but also features related to the timing of the individual packets. Various approaches have been proposed to extract features from flows and then perform anomaly detection with the extracted flows \cite{meghdouri_analysis_2018}.
-While these approaches frequently work well, it is problematic that the whole flow has to be received first and only afterwards anomaly detection is applied, revealing attack flows. Thus, we design a network \gls{ids} that operates on a per-packet basis and decides if a packet is anomalous based on features that are available even for traffic that is encrypted above the transport layer, like for example TLS or QUIC.
-At the same time, an \gls{rnn}-based \gls{ids} has the benefit of avoiding tedious feature engineering procedures, which derive statistical measures from the sequence of packet features, but providing any available information to the classifier.
-\cite{hartl_explainability_2019} showed that such a system has similar performance to other flow-based anomaly detection systems but can detect anomalies \textit{before} the flow terminates and analyzed its security with respect to adversaries extensively.
-
-% Fares:
-%A network communication is typically aggregated into \textit{flows}, which are commonly defined as a sequence of packets that share certain properties. When analyzing flows, not only the aforementioned features are available but also features representing the temporal behavior of the individual packets. Various approaches have been proposed to extract flows features after which anomaly detection can be performed, in \cite{meghdouri_analysis_2018} Meghdouri et al. compare such approaches.
-%While these approaches often work well, it is troublesome because, in the worst case, the whole flow must be received first and only then anomaly detection can be applied; revealing malicious flows. Thus, we design a network \gls{ids} that operates on a per-packet basis and determines whether packet is anomalous based on features that are available even for traffic that is encrypted above the transport layer, like for example TLS or QUIC.
+%Network communication is usually aggregated into \textit{flows}, which are commonly defined as a sequence of packets sharing certain properties. When analyzing flows, not only the aforementioned features are available but also features related to the timing of the individual packets. Various approaches have been proposed to extract features from flows and then perform anomaly detection with the extracted flows \cite{meghdouri_analysis_2018}.
+%While these approaches frequently work well, it is problematic that the whole flow has to be received first and only afterwards anomaly detection is applied, revealing attack flows. Thus, we design a network \gls{ids} that operates on a per-packet basis and decides if a packet is anomalous based on features that are available even for traffic that is encrypted above the transport layer, like for example TLS or QUIC.
 %At the same time, an \gls{rnn}-based \gls{ids} has the benefit of avoiding tedious feature engineering procedures, which derive statistical measures from the sequence of packet features, but providing any available information to the classifier.
-%In \cite{hartl_explainability_2019}, Hartl et al. show that such an architecture has similar performance to other flow-based anomaly detection systems, but can still detect anomalies \textit{before} the flow ends and analyzed its robustness with respect to adversaries extensively.
-
-However, for practical use, not only classification accuracy and security are important but also computational efficiency. This follows from the fact that a rationally-acting company will only deploy an \gls{ids} if the cost that is saved by avoiding security breaches is higher than the cost of the \gls{ids} itself. The cost of the \gls{ids} can be split in the cost of purchase/installation, the cost of operating it and the cost of maintaining it. The goal we pursue here is to develop sampling strategies that do not significantly degrade classification performance while being able to only process a small fraction of the original data. Specifically, the sampling technique should
+%\cite{hartl_explainability_2019} showed that such a system has similar performance to other flow-based anomaly detection systems but can detect anomalies \textit{before} the flow terminates and analyzed its security with respect to adversaries extensively.
 
 % Fares:
-%Nevertheless, not only the accuracy and reliability of classification, but also the computational efficiency, are critical for practical use. This follows from the fact that a rationally-acting organization will only implement an \gls{ids} if the cost saved by preventing security breaches is higher than the cost of the \gls{ids} itself. Noteworthy that the cost of an \gls{ids} can be divided into (a) the cost of purchase/installation, (b) the cost of operation and (c) the cost of maintenance.  The goal we pursue here is to develop autonomous sampling strategies that do not significantly degrade classification performance while being able to only process a small fraction of the original data. Specifically, the sampling technique should:
+A network communication is typically aggregated into \textit{flows}, which are commonly defined as a sequence of packets that share certain properties. When analyzing flows, not only the aforementioned features are available but also features representing the temporal behavior of the individual packets. Various approaches have been proposed to extract flows features after which anomaly detection can be performed, in \cite{meghdouri_analysis_2018} authors compare such approaches.
+While these approaches often work well, it is troublesome because, in the worst case, the whole flow must be received first and only then anomaly detection can be applied; revealing malicious flows. Thus, we design a network \gls{ids} that operates on a per-packet basis and determines whether packet is anomalous based on features that are available even for traffic that is encrypted above the transport layer, like for example TLS or QUIC.
+At the same time, an \gls{rnn}-based \gls{ids} has the benefit of avoiding tedious feature engineering procedures, which derive statistical measures from the sequence of packet features, but providing any available information to the classifier.
+In \cite{hartl_explainability_2019}, authors show that such an architecture has similar performance to other flow-based anomaly detection systems, but can still detect anomalies \textit{before} the flow ends and analyzed its robustness with respect to adversaries extensively.
+
+%However, for practical use, not only classification accuracy and security are important but also computational efficiency. This follows from the fact that a rationally-acting company will only deploy an \gls{ids} if the cost that is saved by avoiding security breaches is higher than the cost of the \gls{ids} itself. The cost of the \gls{ids} can be split in the cost of purchase/installation, the cost of operating it and the cost of maintaining it. The goal we pursue here is to develop sampling strategies that do not significantly degrade classification performance while being able to only process a small fraction of the original data. Specifically, the sampling technique should
+
+% Fares:
+Nevertheless, not only the accuracy and reliability of classification, but also the computational efficiency, are critical for practical use. This follows from the fact that a rationally-acting organization will only implement an \gls{ids} if the cost saved by preventing security breaches is higher than the cost of the \gls{ids} itself. Noteworthy that the cost of an \gls{ids} can be divided into (a) the cost of purchase/installation, (b) the cost of operation and (c) the cost of maintenance.  The goal we pursue here is to develop autonomous sampling strategies that do not significantly degrade classification performance while being able to only process a small fraction of the original data. Specifically, the sampling technique should:
 
 \begin{enumerate}
-\item \textbf{choose optimally}, taking only the data that contain the most information and skip the less relevant ones.
+%\item \textbf{choose optimally}, taking only the data that contain the most information and skip the less relevant ones.
 % Fares:
-%\item \textbf{choose optimally}, taking only samples that contain the most information and skip the less relevant ones.
+\item \textbf{choose optimally}, taking only samples that contain the most information and skip the less relevant ones.
 \item have a parameter that allows to \textbf{trade off} classification performance for sparsity.
 \item be \textbf{independent of the classifier} so that any classifier can be used and that the classifier doesn't have to be aware of the sampling strategy.
 \item be \textbf{retrainable} so that the sampling can be continuously adapted depending on the current threat landscape.
@@ -167,18 +167,18 @@ However, for practical use, not only classification accuracy and security are im
 \end{enumerate}
 
 
-For this purpose, we develop the \gls{rl}-based \gls{ids} \textit{\ours{}} fulfills the above properties. We show that a significant number of packets can be skipped while accuracy doesn't drop significantly. Compared to other common sampling strategies, \ours{} performs better when being trained on the same number of packets.
+%For this purpose, we develop the \gls{rl}-based \gls{ids} \textit{\ours{}} fulfills the above properties. We show that a significant number of packets can be skipped while accuracy doesn't drop significantly. Compared to other common sampling strategies, \ours{} performs better when being trained on the same number of packets.
 
 % Fares:
-%For this purpose we develop a \gls{rl}-based \gls{ids}: \textit{\ours{}} that fulfills the above properties. We show that a significant number of packets can be skipped while the accuracy does not drop
-%considerably. Compared to other common sampling techniques, \ours{} performs better when being trained on the same number of packets.
+For this purpose we develop a \gls{rl}-based \gls{ids}: \textit{\ours{}} that fulfills the above properties. We show that a significant number of packets can be skipped while the accuracy does not drop
+considerably. Compared to other common sampling techniques, \ours{} performs better when being trained on the same number of packets.
 
-As \ours{} uses a parameter to trade-off accuracy for sparsity, the resulting accuracy and sparsity are determined by this parameter. However, since it also might be desired to specify the sparsity itself, we propose a steering system which takes a desired sparsity as its input and modifies the parameter of the reinforcement learning in a control loop until the specified sparsity is reached.
+%As \ours{} uses a parameter to trade-off accuracy for sparsity, the resulting accuracy and sparsity are determined by this parameter. However, since it also might be desired to specify the sparsity itself, we propose a steering system which takes a desired sparsity as its input and modifies the parameter of the reinforcement learning in a control loop until the specified sparsity is reached.
 
 % Fares:
-%The accuracy-sparsity trade-off of \ours{} can be regulated by a reinforcement learning parameter that directly affects both later quantities. However, in certain situations, a certain sparsity is to be achieved, hence we further develop and propose a steering system that fluctuates such a trade-off parameter in order to obtain a coveted sparsity in a closed control loop.
+The accuracy-sparsity trade-off of \ours{} can be regulated by a reinforcement learning parameter that directly affects both later quantities. However, in certain situations, a certain sparsity is to be achieved, hence we further develop and propose a steering system that fluctuates such a trade-off parameter in order to obtain a coveted sparsity in a closed control loop.
 
-To encourage reproducibility and facilitate experimentation, we publicly release the source code, the data and the figures of this work at \url{https://github.com/CN-TU/adversarial-recurrent-ids/tree/rl}
+To encourage reproducibility and facilitate experimentation, we publicly release the source code, the data and the figures of this work\footnote{\url{https://github.com/CN-TU/adversarial-recurrent-ids/tree/rl}}.
 
 \section{Related Work}
 
@@ -199,8 +199,10 @@ These proposed techniques focus their evaluation on text and hence do not fulfil
 
 \section{Dataset}
 
+\note{blue}{Fares: if we submit to CNS (page limit is 9), we can remove this sections as it is not relevant and statistics can be found online}
+
 \begin{table}[h]
-\caption{Flow occurrence frequency of attack types.}
+\caption{Occurrence frequency of the attack flows.}
 \label{tab:occurrence}
 \centering
 \subfloat[CIC-IDS-2017\label{fig:cicids17proportions}
@@ -244,7 +246,7 @@ Worms	&	0.01\%	\\
 }{}
 \end{table}
 
-For evaluation, we use the \textit{CIC-IDS-2017} \cite{sharafaldin_toward_2018} and \textit{UNSW-NB15} \cite{moustafa_unsw-nb15:_2015} datasets which each include more than 2 million flows of network data, containing both benign traffic and a large number of different attacks. The distribution of different attacks in the datasets are shown in \autoref{tab:occurrence}.
+For evaluation, we use the \textit{CIC-IDS-2017} \cite{sharafaldin_toward_2018} and \textit{UNSW-NB15} \cite{moustafa_unsw-nb15_2015} datasets, each includes more than 2 million flows of network data, containing both benign traffic and a large number of different attacks. The distribution of different attacks in the datasets are shown in \autoref{tab:occurrence}.
 
 \section{\ours{}}
 
@@ -294,13 +296,13 @@ R_{\text{classification},t} = \frac{1}{T-t} \sum_{i=t+1}^{T} |1 - \left(\text{la
 \label{eq:R_classification}
 \end{align}
 
-The sparsity reward metric (\autoref{eq:R_sparsity}) captures how much sparsity is achieved on average for all future packets of a flow. E.g. for a flow of length 10 if after timestep 5, 3 packets are chosen and 2 are skipped from what is left, the sparsity reward metric at timestep 5 is $\frac{2}{2+3}=\frac{2}{5}$.
-\note{blue}{Fares: This equation can be shortened by diving by the total count of packets left.\\
-Fares: If the length of the flow is not known, how do we estimate T}.
-\note{red}{Max: It's only relevant during training when you know the lengths of the flows. In deployment, you don't need the rewards anymore...}
+The sparsity reward metric (\autoref{eq:R_sparsity}) captures how much sparsity is achieved on average for all future packets of a flow. E.g. for a flow of length 10 if after timestep 5, 3 packets are chosen and 2 are skipped from what is left, the sparsity reward metric at timestep 5 is $\frac{2}{10-(4+1)}=\frac{2}{5}$.
+%\note{blue}{Fares: This equation can be shortened by diving by the total count of packets left.\\
+%Fares: If the length of the flow is not known, how do we estimate T}.
+%\note{red}{Max: It's only relevant during training when you know the lengths of the flows. In deployment, you don't need the rewards anymore...}
 \begin{align}
 \begin{split}
-R_{\text{sparsity},t} = \frac{\sum_{i=t+1}^{T} 1_{\text{skipped},i}}{T-t-1}
+R_{\text{sparsity},t} = \frac{\sum_{i=t+1}^{T} 1_{\text{skipped},i}}{T-(t+1)}
 \end{split}
 \label{eq:R_sparsity}
 \end{align}
@@ -309,7 +311,7 @@ R_{\text{sparsity},t} = \frac{\sum_{i=t+1}^{T} 1_{\text{skipped},i}}{T-t-1}
 
 We opt for an \emph{\gls{ac}} approach (as shown in \autoref{fig:sampling}) modeled after \cite{mnih_asynchronous_2016} because we consider it being more interpretable than a Deep \gls{rl} approach based on a \textit{Deep Q Network} like \cite{mnih_playing_2013} for reasons we explain later \todo{Max: Add ref to the section where we explain this}.
 
-Our proposed framework consists of three independent neural networks: the classifier, the critic and the actor.
+Our proposed framework (see \autoref{fig:neuralNetworkArchitecture}) consists of three independent neural networks: the classifier, the critic and the actor.
 
 The classifier's goal is to guess correctly if a flow is an attack or not. For this, it outputs its confidence for non-attack/attack after reading a packet. As stated in \autoref{subsec:classifier}, we choose an LSTM-based supervised classifier for this work, but our framework can work together with any classifier as long as it outputs a confidence for non-attack/attack at each timestep and can handle skipped packets. For instance it would also be possible to replace the LSTM with an unsupervised autoencoder like in \cite{mirsky_kitsune_2018}.
 
@@ -355,8 +357,8 @@ In related work regarding \gls{rl}-based sampling for sequences, only discrete a
   \label{fig:neuralNetworkArchitecture}
 \end{figure}
 
-\note{blue}{Fares: can be moved one section above\\}
-An overview of the neural networks of the classifier, actor and critic that we use in this work is given in \autoref{fig:neuralNetworkArchitecture}.
+%\note{blue}{Fares: can be moved one section above\\}
+%An overview of the neural networks of the classifier, actor and critic that we use in this work is given in \autoref{fig:neuralNetworkArchitecture}.
 
 \begin{figure}
 \centering
@@ -365,8 +367,8 @@ An overview of the neural networks of the classifier, actor and critic that we u
   \label{fig:sampling}
 \end{figure}
 
-\note{blue}{Fares: can be removed, it was already mentioned.\\}
-A schematic overview over the \gls{rl} for sampling is given in \autoref{fig:sampling}.
+%\note{blue}{Fares: can be removed, it was already mentioned.\\}
+%A schematic overview over the \gls{rl} for sampling is given in \autoref{fig:sampling}.
 
 \subsection{Continuous Actions}
 
@@ -392,11 +394,11 @@ To parametrize the normal distribution that underlies the log-normal distributio
 \sigma_{\text{normal}} = \sqrt{\log\left(\frac{\mu^2 + \sigma^2}{\mu^2}\right)}
 \end{align}
 
-When experimenting with continuous actions, we encountered one practical problem: At the beginning of training, the classifier would still perform badly and not give a useful reward to the actor. Thus the actor would only focus on the sparsity and maximize sparsity, as the classification reward would always be equally bad no matter how many packets are chosen. Thus the actor would learn to let $\mu$ go to infinity as this would increase the reward at the beginning when the interaction between the three components or our \gls{rl} system is still fragile. As a solution, we add a penalty when the actor jumps far behind the last packet of a flow. It only applies to the last chosen packet and penalizes the actor jumping more than one packet behind the last packet. For this, we modify the formula of the sparsity reward (\autoref{eq:R_sparsity}) for the last packet as follows, where \textit{last} refers to the index of the last chosen packet in the flow: 
+When experimenting with continuous actions, we encountered one practical problem: At the beginning of training, the classifier would still perform badly and would not give the actor a useful reward. As a result, the actor would only focus on and maximize sparsity, as the classification reward would always be equally bad no matter how many packets are chosen. Thus, the actor would learn to let $\mu$ go to infinity as this would increase the reward at the beginning when the interaction between the three components of our \gls{rl} system is still fragile. As a solution, we add a penalty to the reward calculation when the actor jumps far behind the last flow packet.The modified reward applies only to the last chosen packet and penalizes the actor jumping more than one packet behind the last packet. The sparsity reward formula (\autoref{eq:R_sparsity}) of the last packet is modified as follows, where \textit{last} refers to the index of the last chosen packet in the flow: 
 
 \begin{align}
 \begin{split}
-R_{\text{sparsity},\textit{last}} = \frac{\left(\sum_{i=\textit{last}+1}^{T} 1_{\text{skipped},i}\right) - \left(\textit{last}+a_{\textit{last}} - T - 1\right)}{T-\textit{last}-1}
+R_{\text{sparsity},\textit{last}} = \frac{\left(\sum_{i=\textit{last}+1}^{T} 1_{\text{skipped},i}\right) - \left(\textit{last}+a_{\textit{last}} - T - 1\right)}{T- (\textit{last}+1)}
 \end{split}
 \label{eq:R_sparsity_last}
 \end{align}
@@ -432,6 +434,8 @@ After applying the sampling techniques, the sequence of selected packets is then
 
 \section{Results}
 
+The results of the sampling part are discussed in this section. We study the sparsity-accuracy tradeoff first, then we evaluate both discrete and continuous actions and, finally, we compare our results with other sampling techniques. Overall, sampling based on \gls{rl} reveals that a high number of packets can be skipped while maintaining high performance.
+
 \begin{table}
 % Evaluated using
 % ./python learn.py --dataroot flows.pickle --net runs/Oct26_00-03-50_gpu/lstm_module_1284.pth --function test --batchSize 512
@@ -439,69 +443,80 @@ After applying the sampling techniques, the sequence of selected packets is then
 % on Dec. 4th
 \caption{Comparing classification metrics per flow with different tradeoffs for both CIC-IDS-2017 and UNSW-NB15.} \label{tab:results_tradeoff}
 \centering
-\begin{tabular}{>{\rowmac}l>{\rowmac}r>{\rowmac}r>{\rowmac}r>{\rowmac}r>{\rowmac}r>{\rowmac}r<{\clearrow}} \toprule
+\begin{tabular*}{\columnwidth}{>{\rowmac}l @{\extracolsep{\fill}} >{\rowmac}c>{\rowmac}c>{\rowmac}c>{\rowmac}c>{\rowmac}c>{\rowmac}c<{\clearrow}} \toprule
 & \multicolumn{3}{c}{CIC-IDS-2017} & \multicolumn{3}{c}{UNSW-NB15} \\
 Tradeoff & 0.0 & 0.1 & 0.5 & 0.0 & 0.1 & 0.5 \\	\midrule
+\setrow{\bfseries}Sparsity & 0\% & 76.3\% & 76.5\% & 0\% & 83.5\% & 84.5\% \\ \midrule
 \setrow{\bfseries}Accuracy & 99.5\% & 99.4\% & 99.3\% & 98.9\% & 98.4\% & 98.5\% \\
 Precision & 99.4\% & 98.5\% & 98.7\% & 81.1\% & 69.5\% & 70.8\% \\
 Recall & 98.5\% & 99.0\% & 98.6\% & 84.0\% & 89.9\% & 89.6\% \\
 F1 & 99.0\% & 98.7\% & 98.6\% & 82.5\% & 78.4\% & 79.1\% \\
 Youden & 98.4\% & 98.5\% & 98.2\% & 83.3\% & 88.6\% & 88.4\% \\ 
-\setrow{\bfseries}Sparsity & 0\% & 76.3\% & 76.5\% & 0\% & 83.5\% & 84.5\% \\
 \bottomrule
-\end{tabular}
+\end{tabular*}
 \end{table}
 
 \subsection{Influence of the tradeoff}
 
-\autoref{tab:results_tradeoff} shows the influence of the tradeoff parameter $\alpha$ for both datasets. For the columns with a tradeoff of 0.0, we train the classifier regularly with all packets without using \gls{rl}. For tradeoffs 0.1 and 0.5 we train \ours{} using \gls{rl} with continuous actions and keep the tradeoff fixed for the whole training. We train for 8 epochs ($>10$ million flows for both datasets) and then evaluate the resulting neural networks on the test dataset. Results show that the higher the tradeoff, the fewer packets are sampled and also the lower accuracy. The only exception for this is that for tradeoffs $0.1$ and $0.5$ for UNSW-NB15, the accuracy is almost the same or even a little bit higher for the larger tradeoff, which is counterintuitive. We consider this to be coincidence that can happen due to the stochasticity of the training process. 
+\autoref{tab:results_tradeoff} shows the influence of the tradeoff parameter $\alpha$ for both datasets. For columns with a tradeoff of 0.0, we train the classifier regularly with all packets without using \gls{rl}. For tradeoffs 0.1 and 0.5 we train \ours{} using \gls{rl} with continuous actions and keep the tradeoff constant for the whole training. We train for 8 epochs ($>10$ million flows for both datasets) and then evaluate the resulting neural networks on the test dataset.\par
+Results show that the higher the tradeoff, the less packets are sampled and the lower the accuracy. The only exception to this is that for tradeoffs of $0.1$ and $0.5$ for UNSW-NB15, the accuracy is almost the same or even slightly higher for the larger tradeoff, which is counter-intuitive. We consider this to be a coincidence that can happen because of the stochasticity of the training process.
 
-\todo{Write that the sparsity is higher for UNSW-NB15 because it contains longer flows}
+\note{blue}{Fares: my suggestion: 
+The only exception to this is that for tradeoffs of $0.1$ and $0.5$ for UNSW-NB15, the accuracy is almost the same or even slightly higher for the larger tradeoff, which is counter-intuitive. We assume that due to the nature of the UNSW-NB15 data set (which is highly heterogeneous), fewer packets yield better information (and therefore the memory of the LSTM classifier is cleaner) and hence better classification decision and higher accuracy. 
+}
+
+Furthermore, due to the fact that UNSW-NB15 contains more packets per flow, its sparsity is higher. This, on the other hand, holds since almost the same number of packets is sampled from each flow for both datasets (see \autoref{sec:conclusion}).
+
+%\todo{Write that the sparsity is higher for UNSW-NB15 because it contains longer flows}
+
 
 \subsection{Discrete vs.~Continuous actions}
 
 \begin{table}
 \caption{Comparing classification metrics per flow with either discrete (20 different actions) or continuous actions for both CIC-IDS-2017 and UNSW-NB15. The tradeoff is always $0.1$.} \label{tab:results_disc_cont}
 \centering
-\begin{tabular}{>{\rowmac}l>{\rowmac}r>{\rowmac}r>{\rowmac}r>{\rowmac}r<{\clearrow}} \toprule
+\begin{tabular*}{\columnwidth}{>{\rowmac}l @{\extracolsep{\fill}} >{\rowmac}c>{\rowmac}c>{\rowmac}c>{\rowmac}c<{\clearrow}} \toprule
 & \multicolumn{2}{c}{CIC-IDS-2017} & \multicolumn{2}{c}{UNSW-NB15} \\
 Actions & cont. & disc. & cont. & disc. \\	\midrule
+\setrow{\bfseries}Sparsity & 76.3\% & 73.6\% & 83.5\% & 86.6\% \\ \midrule
 \setrow{\bfseries}Accuracy & 99.4\% & 99.2\% & 98.4\% & 98.4\% \\
 Precision & 98.5\% & 98.7\% & 69.5\% & 68.0\% \\
 Recall & 99.0\% & 98.3\% & 89.9\% & 94.6\% \\
 F1 & 99.7\% & 98.5\% & 78.4\% & 79.2\% \\
 Youden & 98.5\% & 97.8\% & 88.6\% & 93.2\% \\ 
-\setrow{\bfseries}Sparsity & 76.3\% & 73.6\% & 83.5\% & 86.6\% \\
 \bottomrule
-\end{tabular}
+\end{tabular*}
 \end{table}
 
-\autoref{tab:results_disc_cont} compares continuous and discrete (20 different) actions shows that for CIC-IDS-2017 continuous actions result in a higher accuracy with fewer samples being chosen. Conversely, for UNSW-NB-15, accuracy is the same for both continuous and discrete actions. However, with discrete actions, fewer packets are chosen, which leads to the conclusion that in this case, discrete actions perform better. This leads to the conclusion, that at least for our use case and the two datasets that we consider, there is no consistent difference in performance for continuous and discrete actions. Generally, the advantage of discrete actions is that they are theoretically more powerful as they can compare each of the possible actions with each other, while for continuous actions the only possibility is to increase or decrease the mean of the log-normal distribution, which can results in worse performance. On the other side, with discrete actions, the maximum number of samples to skip is fixed, which we consider a major drawback. Furthermore, training time is potentially higher since, for example, for a discrete action space of 20, all 20 different actions are treated as being completely different while actually there is not a large difference between skipping 18 or 19 packets while there is a big difference between skipping 0 packets compared to skipping 19 packets. This means that for discrete actions, all actions are viewed as being completely independent, which is not true as the reward function considers sparsity, which increases gradually the more packets are skipped and for which similar actions result in similar rewards. 
+\autoref{tab:results_disc_cont} compares continuous and discrete (20 different) actions and shows that for CIC-IDS-2017 continuous actions result in a higher accuracy with fewer samples being selected. Conversely, for UNSW-NB-15, accuracy is the same for both continuous and discrete actions. However, with discrete actions, fewer packets are chosen, which leads to the conclusion that in this case, discrete actions perform better. This leads to the conclusion, that at least for our use case and the two datasets that we consider, there is no consistent difference in performance for continuous and discrete actions. Generally, the advantage of discrete actions is that they are theoretically more powerful as they can compare each of the possible actions with each other, while the only possibility for continuous actions is to increase or decrease the mean log-normal distribution, which can lead to worse performance. On the other hand, with discrete actions, the maximum number of samples to skip is fixed, which we consider to be a major drawback. Furthermore, training time is potentially higher since, for example, for a discrete space of 20 actions, each option is treated as being completely different while actually there is not a large difference between skipping 18 or 19 packets, there is a big difference between skipping 0 packets compared to skipping 19 packets. This means that for discrete actions, all actions are perceived as being completely independent, which is not true as the reward function considers sparsity, which increases gradually as more packets are skipped and for which similar actions result in similar rewards. 
 
 \subsection{Comparing with other sampling methods}
 
 \begin{table}
 \caption{Comparing classification metrics per flow between \gls{rl}-based sampling with continuous actions (tradeoff $0.1$) and alternative strategies for CIC-IDS-2017.} \label{tab:results_others}
 \centering
-\begin{tabular}{>{\rowmac}l>{\rowmac}r>{\rowmac}r>{\rowmac}r>{\rowmac}r>{\rowmac}r<{\clearrow}} \toprule
+\begin{tabular*}{\columnwidth}{>{\rowmac}l @{\extracolsep{\fill}} >{\rowmac}c>{\rowmac}c>{\rowmac}c>{\rowmac}c>{\rowmac}c<{\clearrow}} \toprule
 & \gls{rl} & random & every $i$th & first $n$ & first $n$ equal \\	\midrule
+\setrow{\bfseries}Sampled & 76.3\% & 76.3\% & 76.3\% & 76.3\% & 76.3\% \\ \midrule
 \setrow{\bfseries}Accuracy & 99.4\% & 96.9\% & 97.8\% & 97.3\% & 98.3\% \\
 Precision & 98.5\% & 92.4\% & 95.8\% & 93.8\% & 95.6\% \\
 Recall & 99.0\% & 95.6\% & 95.4\% & 95.5\% & 97.9\% \\
 F1 & 99.7\% & 94.0\% & 95.6\% & 94.7\% & 96.7\% \\
 Youden & 98.5\% & 93.0\% & 93.9\% & 93.4\% & 96.4\% \\
-\setrow{\bfseries}Sampled & 76.3\% & 76.3\% & 76.3\% & 76.3\% & 76.3\% \\
 \bottomrule
-\end{tabular}
+\end{tabular*}
 \end{table}
 
-Next we compared the \gls{rl} technique usedy by \ours{} with several intuitive sampling strategies we proposed in \autoref{sec:other_sampling_techniques}. 
-\autoref{tab:results_others} shows that with the same sparsity, \ours{} achieves the highest accuracy. Not surprisingly, random sampling performs the worst, as it is possible, that a flow is ``unlucky'' and doesn't get enough packets sampled while another one might get more packets than necessary. The best strategy besides the \gls{rl} approach seems to be ``first $n$ equal'' sampling, which matches the conclusion from \cite{hartl_explainability_2019} that the first couple of packets are the most important ones for determining maliciousness of a flow. ``first $n$ equal'' performs better than ``first $n$'' because for ``first $n$'', longer flows will have more packets sampled from them. Conversely, very short flows will get few packets. But since the first packets of a flow determine its maliciousness, the short flows get misclassified because they don't get enough packets sampled. 
+Next we compared the \gls{rl} technique usedy by \ours{} with several intuitive sampling strategies suggested in \autoref{sec:other_sampling_techniques}. 
+\autoref{tab:results_others} reveals that \ours{} achieves the highest accuracy with the same sparsity. Not surprisingly, random sampling performs the worst, as it is likely that a flow is either ``misfortune'' and doesn't get enough packets sampled while another  one gets more or, the random packets chosen carry less useful information. The best strategy besides the \gls{rl} approach seems to be ``first $n$ equal'' sampling, which matches the conclusion from \cite{hartl_explainability_2019} that the first couple of packets are the most important ones for determining maliciousness of a flow. 
+\note{blue}{Fares: The next sentence is a bit confusing.}
+``first $n$ equal'' performs better than ``first $n$'' because for ``first $n$'', longer flows will have more packets sampled from them. Conversely, very short flows will get few packets. But since the first packets of a flow determine its maliciousness, the short flows get misclassified because they don't get enough packets sampled. 
+
 
 \section{Steering}
 
-So far we have always trained \ours{} with a fixed tradeoff parameter $\alpha$. However, there is also the important use case in which an operator wants a certain minimum sparsity, for example 50\%, to limit the required computation power and thus limit cost. 
-We thus propose a method that enables steering the tradeoff to achieve a certain wanted sparsity.
+So far, we have always trained \ours{} with a fixed tradeoff parameter $\alpha$. Nevertheless, there is also an important use case in which an operator wants a certain minimum sparsity, for example 50\%, to limit the necessary computation power and thus reduce costs. 
+We thus propose a method that enables steering the tradeoff to achieve a certain desired sparsity.
 \begin{enumerate}
 \item A model is trained where the tradeoff is randomly chosen for each flow during training. We set the probability distribution to be a uniform distribution between 0 and 1. We add a new feature to each packet which indicates the tradeoff chosen for this flow so that it can adapt its sampling strategy in anticipation of the tradeoff that will determine the reward.
 \item During deployment, the tradeoff is set to the maximum that was used during training (1 in our case), which results in maximum sparsity. Then, the tradeoff is continuously incremented if the current sparsity is still under the specified minimum. It is important that the tradeoff can never fall below 0 since this is a case that was not encountered during training and which can lead to anomalous behavior. 
@@ -518,7 +533,10 @@ We thus propose a method that enables steering the tradeoff to achieve a certain
 
 \autoref{fig:steering} shows the steering in action. It stops when the tradeoff reaches 0 and the specified minimum sparsity of 50\% has not been reached yet. It might seem surprising that even with a parameter of 0, which means that only classification matters and sparsity not at all, still a sparsity of 73.5\% is achieved. We attribute this to the fact that \ours{} learns that some flows contain may contain packets that do not contain any useful information about determining maliciousness. Thus they are even skipped when there is no reward for skipping them because they do not increase the classification score at all. 
 
+
+
 \section{Conclusion}
+\label{sec:conclusion}
 
 We saw that the \gls{rl}-based approach with a tradeoff between classification accuracy and sparsity works as expected and that higher tradeoffs resulted in higher sparsity and potentially lower classification performance. Surprisingly, we saw that our solution \ours{} chooses very few packets: Typically $\approx \frac{1}{4}$ for CIC-IDS-2017 and $\approx \frac{1}{5}$ for UNSW-NB-15. 
 
