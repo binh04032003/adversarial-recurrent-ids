@@ -434,6 +434,13 @@ After applying the sampling techniques, the sequence of selected packets is then
 
 \section{Results}
 
+\begin{figure}
+\centering
+  \includegraphics[width=\columnwidth]{{"img/events.out.tfevents.1579352256.gpu"}.pdf}
+  \caption{Training with a tradeoff of 0.1 with continuous actions for the CIC-IDS-2017 dataset. Training accuracy increases sharply in the beginning while becoming slower the longer training lasts. Sparsity increases sharply in the beginning and then slower. As the classifier gets better, the \gls{rl} starts skipping more packets.}
+  \label{fig:training}
+\end{figure}
+
 The results of the sampling part are discussed in this section. We study the sparsity-accuracy tradeoff first, then we evaluate both discrete and continuous actions and, finally, we compare our results with other sampling techniques. Overall, sampling based on \gls{rl} reveals that a high number of packets can be skipped while maintaining high performance.
 
 \begin{table}
@@ -519,11 +526,9 @@ So far, we have always trained \ours{} with a fixed tradeoff parameter $\alpha$.
 We thus propose a method that enables steering the tradeoff to achieve a certain desired sparsity.
 \begin{enumerate}
 \item A model is trained where the tradeoff is randomly chosen for each flow during training. We set the probability distribution to be a uniform distribution between 0 and 1. We add a new feature to each packet which indicates the tradeoff chosen for this flow so that it can adapt its sampling strategy in anticipation of the tradeoff that will determine the reward.
-\item During deployment, the tradeoff is set to the maximum that was used during training (1 in our case), which results in maximum sparsity. Then, the tradeoff is continuously incremented if the current sparsity is still under the specified minimum. It is important that the tradeoff can never fall below 0 since this is a case that was not encountered during training and which can lead to anomalous behavior. 
+\item During deployment, the tradeoff is set to the maximum that was used during training (1 in our case), which results in maximum sparsity. Then, the tradeoff is continuously decremented if the current sparsity is still under the specified minimum. It is important that the tradeoff can never fall below 0 since this is a case that was not encountered during training and which can lead to anomalous behavior. 
 \end{enumerate}
 
-
-%{{"../plots/plot/flows_pred_plots2_outcomes_0_3.pickle_5_DoS - DDoS-DoS Hulk"}
 \begin{figure}
 \centering
   \includegraphics[width=\columnwidth]{{"img/lstm_module_8.pth_global_tradeoff_1.0_steering_step_size_0.05_steering_target_sparsity_0.5_batches_to_consider_for_steering_500_sampling_rl"}.pdf}
