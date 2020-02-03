@@ -173,7 +173,7 @@ for attack_type, (seqs, lens) in enumerate(zip(results_by_attack_number, orig_se
 	all_legends.append(ret3)
 
 	all_labels = [item.get_label() for item in all_legends]
-	ax1.legend(all_legends, all_labels, loc='upper right', bbox_to_anchor=(1,0.95))
+	plt.legend(all_legends, all_labels, loc='upper right', bbox_to_anchor=(1,0.95))
 
 	ax2.set_ylabel_legend(all_legends[0])
 	# ax1.set_ylabel_legend(Rectangle((0,0), 1, 1, fc='gray', alpha=0.2), handlelength=0.7, handletextpad=0.4)

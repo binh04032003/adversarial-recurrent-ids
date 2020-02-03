@@ -441,7 +441,9 @@ After applying the sampling techniques, the sequence of selected packets is then
   \label{fig:training}
 \end{figure}
 
-The results of the sampling part are discussed in this section. We study the sparsity-accuracy tradeoff first, then we evaluate both discrete and continuous actions and, finally, we compare our results with other sampling techniques. Overall, sampling based on \gls{rl} reveals that a high number of packets can be skipped while maintaining high performance.
+The results of the sampling part are discussed in this section. We study the sparsity-accuracy tradeoff first, then we evaluate both discrete and continuous actions and, finally, we compare our results with other sampling techniques. Overall, sampling based on \gls{rl} reveals that a high number of packets can be skipped while maintaining high performance. Then, we inspect how the \gls{rl} chooses packets and if some patterns can be spotted. 
+
+For all our experiments we train for at least 8 epochs ($>10$ million flows for both datasets) and then evaluate the resulting neural networks on the test dataset. \autoref{fig:training} shows how during training, accuracy increases quickly in the beginning and then gradually afterwards. At the same time, sparsity gets higher as the \gls{rl} learns which packets can be skipped since they do not influence classification performance. 
 
 \begin{table}
 % Evaluated using
@@ -465,7 +467,8 @@ Youden & 98.4\% & 98.5\% & 98.2\% & 83.3\% & 88.6\% & 88.4\% \\
 
 \subsection{Influence of the tradeoff}
 
-\autoref{tab:results_tradeoff} shows the influence of the tradeoff parameter $\alpha$ for both datasets. For columns with a tradeoff of 0.0, we train the classifier regularly with all packets without using \gls{rl}. For tradeoffs 0.1 and 0.5 we train \ours{} using \gls{rl} with continuous actions and keep the tradeoff constant for the whole training. We train for 8 epochs ($>10$ million flows for both datasets) and then evaluate the resulting neural networks on the test dataset.\par
+\autoref{tab:results_tradeoff} shows the influence of the tradeoff parameter $\alpha$ for both datasets. For columns with a tradeoff of 0.0, we train the classifier regularly with all packets without using \gls{rl}. For tradeoffs 0.1 and 0.5 we train \ours{} using \gls{rl} with continuous actions and keep the tradeoff constant for the whole training.
+
 Results show that the higher the tradeoff, the less packets are sampled and the lower the accuracy. The only exception to this is that for tradeoffs of $0.1$ and $0.5$ for UNSW-NB15, the accuracy is almost the same or even slightly higher for the larger tradeoff, which is counter-intuitive. We consider this to be a coincidence that can happen because of the stochasticity of the training process.
 
 \note{blue}{Fares: my suggestion:
@@ -519,6 +522,32 @@ Next we compared the \gls{rl} technique usedy by \ours{} with several intuitive 
 \note{blue}{Fares: The next sentence is a bit confusing.}
 ``first $n$ equal'' performs better than ``first $n$'' because for ``first $n$'', longer flows will have more packets sampled from them. Conversely, very short flows will get few packets. But since the first packets of a flow determine its maliciousness, the short flows get misclassified because they don't get enough packets sampled.
 
+\subsection{Inspecting the \gls{rl}'s behavior}
+\label{subsec:inspecting}
+
+\begin{figure*}[h]
+\centering
+\subfloat[Benign Traffic\label{fig:inspectingNormal}
+]{
+\includegraphics[width=0.98\columnwidth]{{"../plots/plot_rl/flows_Jan18_14-06-48_gpu_lstm_module_8.pth_prediction_outcomes_0_3.pickle_10_Normal"}.pdf}
+}{}
+\subfloat[SSH Patator\label{fig:inspectingPatator}
+]{
+\includegraphics[width=0.98\columnwidth]{{"../plots/plot_rl/flows_Jan18_14-06-48_gpu_lstm_module_8.pth_prediction_outcomes_0_3.pickle_2_Brute Force-SSH-Patator"}.pdf}
+}{}
+\subfloat[DDoS Slowloris\label{fig:inspectingSlowloris}
+]{
+\includegraphics[width=0.98\columnwidth]{{"../plots/plot_rl/flows_Jan18_14-06-48_gpu_lstm_module_8.pth_prediction_outcomes_0_3.pickle_7_DoS - DDoS-DoS slowloris"}.pdf}
+}{}
+\subfloat[All samples\label{fig:inspectingAll}
+]{
+\includegraphics[width=0.98\columnwidth]{{"../plots/plot_rl/flows_Jan18_14-06-48_gpu_lstm_module_8.pth_prediction_outcomes_0_3.pickle_15_All samples"}.pdf}
+}{}
+\caption{Inspecting the sampling strategy of \ours{} for various attack types. The blue line shows the confidence. The gray bars show how many samples had this number of packets. For example, the gray bar in Figure \ref{fig:inspectingNormal} at position 19 with height 10000 signifies that 10000 flows of benign traffic had a length of at least 20 packets (since we say that the first packet is at position 0). The first packet is always chosen for each flow by design.}
+\label{fig:inspecting}
+\end{figure*}
+
+\autoref{fig:inspecting} shows the sampling strategy for different attack types. Figure \ref{fig:inspectingNormal} shows that for benign traffic, the sampling strategy is quite heterogeneous: Not specific packets get always chosen, but different packets get chosen, depending on the flow. This contrasts with SSH Patator (Figure \ref{fig:inspectingPatator}), where the 0th, the 3rd, the 13th and the 15th packet are always chosen, since they appear to be especially indicative of an attack. Also, the flows seems to contain no useful information between the 3rd and the 13th packet, so that this part is always skipped altogether. Slowloris (Figure \ref{fig:inspectingSlowloris}) is more similar to what we saw for benign traffic: The sampling strategy varies a lot for different flows and not always the same pattern is used. When looking at all flows (Figure \ref{fig:inspectingAll}) it becomes apparent that the second packet (index 1) is almost never chosen, and the third is also chosen quite rarely. We attribute this to the fact that most communication flows are TCP and use handshakes, meaning that the second packet is simply a reply a part of the handshake, revealing no important information. In general, we see that the sampling strategy varies significantly between different attack types and for some attack types even for different flows within the same attack type, showing that \ours{} learns to choose the packets effectively, which reveal the malicious nature of a flow. 
 
 \section{Steering}
 
@@ -543,18 +572,18 @@ We thus propose a method that enables steering the tradeoff to achieve a certain
 
 \section{Conclusion}
 \label{sec:conclusion}
- In this paper we try to solve the practical problem of accurate network traffic classification with less effort. To this end, we propose \ours{} which is a framework for packet sampling based on \gls{rl}.
+In this paper we try to solve the practical problem of accurate network traffic classification with less computational power. To this end, we propose \ours{} which is a framework for packet sampling based on \gls{rl}.
 
-We prove that the \gls{rl}-based approach with a tradeoff between classification accuracy and sparsity works as expected and that higher tradeoffs resulted in higher sparsity and potentially lower classification performance. Surprisingly, we saw that our solution \ours{} on average chooses very few packets per flow: Typically $\approx \frac{1}{4}th$ for CIC-IDS-2017 and $\approx \frac{1}{5}th$ for UNSW-NB-15. Furthermore, our results showed that \gls{rl}-based sampling can intelligently choose relevant packets for intrusion detection and outperform non-smart sampling techniques.
+% Max: 1/4 is already pronounced one fourth
+We prove that the \gls{rl}-based approach with a tradeoff between classification accuracy and sparsity works as expected and that higher tradeoffs resulted in higher sparsity and potentially lower classification performance. Surprisingly, we saw that our solution \ours{} on average chooses very few packets per flow: Typically $\approx \frac{1}{4}$ for CIC-IDS-2017 and $\approx \frac{1}{5}$ for UNSW-NB-15. Furthermore, our results showed that \gls{rl}-based sampling can intelligently choose relevant packets for intrusion detection and outperform non-smart sampling techniques.
 
-A naive implementation would not work as the training is too fragile in the beginning and the \gls{rl} system suprisingly learned to maximize only one of the rewards (sparsity), this was solved by adding a penalty for jumping behind the end of the sequence which was proved effective.
+Besides discrete actions for our \gls{rl} system we also implemented continuous ones. We showed that a naive implementation would not work as the training is too fragile in the beginning and the \gls{rl} system learned to maximize only one of the rewards (sparsity) in the beginning. This was solved by adding a penalty for jumping behind the end of the sequence which was proved effective. Comparing with discrete actions, continuous actions seem to perform on par. This is still an advantage, as for continuous actions the neural network only needs to have two outputs (mean and standard deviation) while for discrete ones it needs many outputs as there are actions. The continuous action framework is thus more lightweight.
 
-Besides discrete actions for our \gls{rl} system we also implemented continuous ones. Comparing with discrete actions, continuous actions seemed to perform on par. This is still an advantage, as for continuous actions the neural network only needs to have two outputs (mean and standard deviation) while for discrete ones it needs many outputs as there are actions. The continuous action framework is thus more lightweight.
+Inspecting the decisions of our \gls{rl} framework showed that the sampling strategy is clearly different for different attack strategies and also within some attack families, indicating that \ours{} indeed adopts different sampling strategies for different conversation flows.  
 
-\note{blue}{Fares: add steering...}
+Finally, we implement a steering method with which a certain sparsity threshold can be specified which limits the computational expenses of an operator. 
 
-
-
+In general, we think that \gls{rl}-based packet sampling is not only applicable to \gls{ids} but we are optimistic that other domains of networking can benefit from similar solutions to save computational power. 
 
 \section*{Acknowledgements}
 The Titan Xp used for this research was donated by the NVIDIA Corporation.
