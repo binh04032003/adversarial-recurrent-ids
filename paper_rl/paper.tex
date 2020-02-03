@@ -394,7 +394,7 @@ To parametrize the normal distribution that underlies the log-normal distributio
 \sigma_{\text{normal}} = \sqrt{\log\left(\frac{\mu^2 + \sigma^2}{\mu^2}\right)}
 \end{align}
 
-When experimenting with continuous actions, we encountered one practical problem: At the beginning of training, the classifier would still perform badly and would not give the actor a useful reward. As a result, the actor would only focus on and maximize sparsity, as the classification reward would always be equally bad no matter how many packets are chosen. Thus, the actor would learn to let $\mu$ go to infinity as this would increase the reward at the beginning when the interaction between the three components of our \gls{rl} system is still fragile. As a solution, we add a penalty to the reward calculation when the actor jumps far behind the last flow packet.The modified reward applies only to the last chosen packet and penalizes the actor jumping more than one packet behind the last packet. The sparsity reward formula (\autoref{eq:R_sparsity}) of the last packet is modified as follows, where \textit{last} refers to the index of the last chosen packet in the flow: 
+When experimenting with continuous actions, we encountered one practical problem: At the beginning of training, the classifier would still perform badly and would not give the actor a useful reward. As a result, the actor would only focus on and maximize sparsity, as the classification reward would always be equally bad no matter how many packets are chosen. Thus, the actor would learn to let $\mu$ go to infinity as this would increase the reward at the beginning when the interaction between the three components of our \gls{rl} system is still fragile. As a solution, we add a penalty to the reward calculation when the actor jumps far behind the last flow packet.The modified reward applies only to the last chosen packet and penalizes the actor jumping more than one packet behind the last packet. The sparsity reward formula (\autoref{eq:R_sparsity}) of the last packet is modified as follows, where \textit{last} refers to the index of the last chosen packet in the flow ($t=last$): 
 
 \begin{align}
 \begin{split}
@@ -516,10 +516,10 @@ Next we compared the \gls{rl} technique usedy by \ours{} with several intuitive 
 \section{Steering}
 
 So far, we have always trained \ours{} with a fixed tradeoff parameter $\alpha$. Nevertheless, there is also an important use case in which an operator wants a certain minimum sparsity, for example 50\%, to limit the necessary computation power and thus reduce costs. 
-We thus propose a method that enables steering the tradeoff to achieve a certain desired sparsity.
+We thus propose a method that enables steering the tradeoff to achieve a certain desired sparsity. The steering algorithm works as follows:
 \begin{enumerate}
-\item A model is trained where the tradeoff is randomly chosen for each flow during training. We set the probability distribution to be a uniform distribution between 0 and 1. We add a new feature to each packet which indicates the tradeoff chosen for this flow so that it can adapt its sampling strategy in anticipation of the tradeoff that will determine the reward.
-\item During deployment, the tradeoff is set to the maximum that was used during training (1 in our case), which results in maximum sparsity. Then, the tradeoff is continuously incremented if the current sparsity is still under the specified minimum. It is important that the tradeoff can never fall below 0 since this is a case that was not encountered during training and which can lead to anomalous behavior. 
+\item A model is trained where the trade-off is chosen randomly for each flow during training from a uniform distribution yielding values between 0 and 1. We add a new feature to each packet that indicates the tradeoff chosen for the respective flow so that it can adjust its sampling strategy in anticipation of the tradeoff that will determine the reward.
+\item During deployment, the tradeoff is set to the maximum that was used during training (1 in our case), which results in maximum sparsity. The tradeoff is then continuously decremented if the current sparsity is still above the specified minimum. It is important that the tradeoff can never fall below 0 because this is a case that has not been encountered during training and can lead to abnormal behavior. 
 \end{enumerate}
 
 
@@ -531,17 +531,25 @@ We thus propose a method that enables steering the tradeoff to achieve a certain
   \label{fig:steering}
 \end{figure}
 
-\autoref{fig:steering} shows the steering in action. It stops when the tradeoff reaches 0 and the specified minimum sparsity of 50\% has not been reached yet. It might seem surprising that even with a parameter of 0, which means that only classification matters and sparsity not at all, still a sparsity of 73.5\% is achieved. We attribute this to the fact that \ours{} learns that some flows contain may contain packets that do not contain any useful information about determining maliciousness. Thus they are even skipped when there is no reward for skipping them because they do not increase the classification score at all. 
+%\autoref{fig:steering} shows the steering in action. It stops when the tradeoff reaches 0 and the specified minimum sparsity of 50\% has not been reached yet. It might seem surprising that even with a parameter of 0, which means that only classification matters and sparsity not at all, still a sparsity of 73.5\% is achieved. We attribute this to the fact that \ours{} learns that some flows contain may contain packets that do not contain any useful information about determining maliciousness. Thus they are even skipped when there is no reward for skipping them because they do not increase the classification score at all. 
 
+\autoref{fig:steering} shows the steering in action. We start with a maximum sparsity of ~74.4\% and try to reach 50\%. In order to do so, the steering system start decreasing the tradoff parameter until it reaches 0. It might seem surprising that even with such value, which means that only classification matters and not sparsity at all, a sparsity of 73.5\% is still achieved. We attribute this (1) to the fact that \ours{} learns that some flows may contain packets that do not contribute in determining maliciousness and are skipped since they do not affect the accuracy and (2) the actor still in any case attempts to maximize the entropy of the output which induces skipping packets for fat-tailed distributions. %Nothworthy is the fact that the goal sparsity (50\%) is not reached due to the previous assumptions, however, a decreasing slope is clearly shown in figure 4
 
 
 \section{Conclusion}
 \label{sec:conclusion}
+ In this paper we try to solve the practical problem of accurate network traffic classification with less effort. To this end, we propose \ours{} which is a framework for packet sampling based on \gls{rl}.
+ 
+We prove that the \gls{rl}-based approach with a tradeoff between classification accuracy and sparsity works as expected and that higher tradeoffs resulted in higher sparsity and potentially lower classification performance. Surprisingly, we saw that our solution \ours{} on average chooses very few packets per flow: Typically $\approx \frac{1}{4}th$ for CIC-IDS-2017 and $\approx \frac{1}{5}th$ for UNSW-NB-15. Furthermore, our results showed that \gls{rl}-based sampling can intelligently choose relevant packets for intrusion detection and outperform non-smart sampling techniques.
 
-We saw that the \gls{rl}-based approach with a tradeoff between classification accuracy and sparsity works as expected and that higher tradeoffs resulted in higher sparsity and potentially lower classification performance. Surprisingly, we saw that our solution \ours{} chooses very few packets: Typically $\approx \frac{1}{4}$ for CIC-IDS-2017 and $\approx \frac{1}{5}$ for UNSW-NB-15. 
+A naive implementation would not work as the training is too fragile in the beginning and the \gls{rl} system suprisingly learned to maximize only one of the rewards (sparsity), this was solved by adding a penalty for jumping behind the end of the sequence which was proved effective.
 
-Furthermore, our results showed that \gls{rl}-based sampling can intelligently choose relevant packets for intrusion detection and outperform non-smart sampling techniques. 
-Besides discrete actions for our \gls{rl} system we also implemented continuous ones. A naive implementation did not work as the training was too fragile in the beginning and the \gls{rl} system would diverge and the number of skipped packets would go to infinity. Adding a penalty for jumping behind the end of the sequence proved effective. Comparing with discrete actions, continuous actions seemed to perform on par. This is still an advantage, as for continuous actions the neural network only needs to have two outputs (mean and standard deviation) while for discrete ones it needs many outputs as there are actions. The continuous action framework is thus more lightweight. 
+Besides discrete actions for our \gls{rl} system we also implemented continuous ones. Comparing with discrete actions, continuous actions seemed to perform on par. This is still an advantage, as for continuous actions the neural network only needs to have two outputs (mean and standard deviation) while for discrete ones it needs many outputs as there are actions. The continuous action framework is thus more lightweight.
+
+\note{blue}{Fares: add steering...}
+
+
+
 
 \section*{Acknowledgements}
 The Titan Xp used for this research was donated by the NVIDIA Corporation.
