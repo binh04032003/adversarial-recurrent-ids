@@ -88,8 +88,6 @@ for attack_type, (seqs, lens) in enumerate(zip(results_by_attack_number, orig_se
 	filled_in_confidences = []
 	for seq, l in zip(seqs, lens):
 		skip_pattern = seq[:,-2]
-		# print("skip_pattern", skip_pattern)
-		# print("skip_pattern", skip_pattern)
 		assert (np.round(skip_pattern) == skip_pattern).all(), skip_pattern
 		confidence = seq[:,-1]
 		# print("confidence", confidence)
@@ -118,9 +116,9 @@ for attack_type, (seqs, lens) in enumerate(zip(results_by_attack_number, orig_se
 	assert len(lens) == len(filled_ins) == len(filled_in_confidences)
 
 	lens = lens_to_plot
-	lens /= len(seqs)
+	# lens /= len(seqs)
 	print("lens", lens)
-	assert lens[0] == 1, lens[0]
+	# assert lens[0] == 1, lens[0]
 
 	filled_ins_equal_lengths = [np.concatenate((item, np.zeros(max_length-len(item)))) for item in filled_ins]
 	filled_ins_equal_lengths_stacked = np.stack(filled_ins_equal_lengths)
@@ -128,7 +126,7 @@ for attack_type, (seqs, lens) in enumerate(zip(results_by_attack_number, orig_se
 	summed_chosen_packets = np.sum(filled_ins_equal_lengths_stacked, axis=0)
 	fraction_of_chosen_packets_by_flows = summed_chosen_packets/len(seqs)
 	print("fraction_of_chosen_packets_by_flows", fraction_of_chosen_packets_by_flows)
-	assert fraction_of_chosen_packets_by_flows[0] == 1, fraction_of_chosen_packets_by_flows[0]
+	# assert fraction_of_chosen_packets_by_flows[0] == 1, fraction_of_chosen_packets_by_flows[0]
 	assert len(fraction_of_chosen_packets_by_flows) == max_length
 
 	values_by_length = [list() for _ in range(max_length)]
@@ -150,12 +148,14 @@ for attack_type, (seqs, lens) in enumerate(zip(results_by_attack_number, orig_se
 	fig, ax1 = plt.subplots(figsize=(5,3))
 	x_values = list(range(min(len(lens), MAX_X)))
 	ret = ax1.bar(x_values, lens[:MAX_X], width=1, color="gray", alpha=0.2, label="fraction of samples")
-	ret4 = ax1.bar(x_values, fraction_of_chosen_packets_by_flows[:MAX_X], width=1, color="red", alpha=0.2, label="fraction of chosen samples")
+	# ret4 = ax1.bar(x_values, fraction_of_chosen_packets_by_flows[:MAX_X], width=1, color="red", alpha=0.2, label="fraction of chosen samples")
+	ret4 = ax1.bar(x_values, summed_chosen_packets[:MAX_X], width=1, color="red", alpha=0.2, label="fraction of chosen samples")
+
 
 	ax2 = ax1.twinx()
 
 	ax2.set_ylabel('Confidence')
-	ax1.set_ylabel("Fraction of samples")
+	ax1.set_ylabel("Flows with given length (gray)\nChosen packets (red)")
 
 	ax1.yaxis.tick_right()
 	ax1.yaxis.set_label_position("right")
@@ -176,7 +176,7 @@ for attack_type, (seqs, lens) in enumerate(zip(results_by_attack_number, orig_se
 	ax1.legend(all_legends, all_labels, loc='upper right', bbox_to_anchor=(1,0.95))
 
 	ax2.set_ylabel_legend(all_legends[0])
-	ax1.set_ylabel_legend(Rectangle((0,0), 1, 1, fc='gray', alpha=0.2), handlelength=0.7, handletextpad=0.4)
+	# ax1.set_ylabel_legend(Rectangle((0,0), 1, 1, fc='gray', alpha=0.2), handlelength=0.7, handletextpad=0.4)
 
 	ticks = plt.xticks()
 	plt.xticks([ tick for tick in ticks[0][1:-1] if tick.is_integer() ])
