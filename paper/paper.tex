@@ -92,8 +92,10 @@ With the rise of ubiquitous \gls{ml} systems, malicious actors have been catchin
 
 We show that despite these completely different characteristics, adversarial samples can be  generated reliably for \glspl{rnn}.
 To understand a classifier's potential for misclassification, we extend existing explainability techniques and propose new ones, suitable particularly % specifically crafted %AH most can also be used for non-sequential models, so lets not restrict applicability too much
-for sequential data. Applying them shows that already the first packets of a communication flow are of crucial importance and are likely to be targeted by attackers. Feature importance methods show that even relatively unimportant features can be effectively abused to generate adversarial samples.
-Since traditional evaluation metrics such as accuracy are not sufficient for quantifying the adversarial threat, we propose the \gls{ars} for comparing \glspl{ids}, capturing a common notion of adversarial robustness, and show that an adversarial training procedure can significantly and successfully reduce the attack surface.% and improve \gls{ars}. %as a countermeasure. % AH. the score alone is not yet a countermeasure
+for sequential data. Applying them shows that already the first packets of a communication flow are of crucial importance and are likely to be targeted by attackers. Feature importance methods show that even relatively unimportant features can be effectively abused to generate adversarial samples. We thus introduce the concept of \textit{feature sensitivity} which quantifies how much potential a feature has to cause misclassification. 
+
+Since traditional evaluation metrics such as accuracy are not sufficient for quantifying the adversarial threat, we propose the \gls{ars} for comparing \glspl{ids} %, capturing a common notion of adversarial robustness, 
+and show that an adversarial training procedure can significantly and successfully reduce the attack surface.% and improve \gls{ars}. %as a countermeasure. % AH. the score alone is not yet a countermeasure
 %As a countermeasure, we develop an easy-to-use adversarial training procedure %and can confirm that it
 %which significantly and successfully reduces the attack surface and improves \gls{ars}.
 
@@ -141,6 +143,7 @@ Astonishingly, feature importance methods reveal that
 features, which are manipulated for successful adversarial flows,
 %the that are manipulable features, that are left for modification by adversaries
 are not even particularly important for the \gls{rnn}'s classification outcome. %Especially the first packets of a flow are critical for determining the decision of a recurrent \gls{ids}.
+Thus, we propose \textit{feature sensitivity} methods, which show how prone a feature is to cause misclassification. 
 
 %Since common explainability methods are designed to work with images or tabular data but not sequences, we extend existing explainability methods such as \glspl{pdp} \cite{friedman_greedy_2001} for sequential data. These show the varying characteristics of different attacks and they aid with visualizing potentially vulnerable features for adversaries.
 
@@ -262,7 +265,7 @@ F1	&	97.4\%	&	99.4\%	&	99.5\%	&	85.5\%	&	75.5\%	&	83.7\%	\\
 Youden	&	97.2\%	&	99.0\%	&	99.1\%	&	87.3\%	&	71.9\%	&	82.3\%	\\
 \bottomrule
 \end{tabular}
-\vspace*{-.3mm}
+%\vspace*{-0.3cm}
 \end{table}
 
 \section{Adversarial Attacks}
@@ -658,10 +661,10 @@ Other attack families similarly show characteristic patterns.
 \section{Defenses}
 We now investigate two approaches to increase robustness of the \glspl{rnn} against adversarial attacks.
 \subsection{Reducing Features}
-The most obvious defense, which is only possible because of the nature of the dataset, is to simply omit features an attacker can manipulate. We try two different approaches:
+The most obvious defense is to simply omit features an attacker can manipulate. We try two different approaches:
 \begin{itemize}[topsep=0pt,wide,labelwidth=!,labelindent=0pt]
 \item Leaving out all manipulable features: packet size and \gls{iat}
-\item Leaving out manipulable features only when the attacker can manipulate them, i.e. only in the direction from the attacker to the victim. This, however, does not prevent adversarial samples for botnets, for which both sides are malicious.
+\item Leaving them out only in the direction from the attacker to the victim. This, however, does not prevent adversarial samples for botnets, for which the attacker has control over both sides.
 \end{itemize}
 
 Both approaches lead to complete resistance to adversarial samples, except for botnets, which can still operate when only leaving out manipulable features in one direction. The results show that -- surprisingly -- there is only a small difference in classification performance when looking at flow accuracy: It is slightly lower at 99.3\% compared to 99.7\% originally for CIC-IDS-2017. However, packet accuracy is only 98\% when leaving out the features in one direction and 96.7\% when leaving them out in both directions. Thus, apparently the \gls{iat} and packet size are especially important for determining whether a flow is malicious in the first packets of a flow.
@@ -670,7 +673,7 @@ Both approaches lead to complete resistance to adversarial samples, except for b
 As alternative to omitting manipulable features, we attempted to make the classifier more robust against adversarial samples by augmenting the training set by adversarial flows generated using  \gls{cw}, labeled as additional attacks.
 For this purpose, we added one adversarial sample per attack sample to the training set. Since \gls{cw} is deterministic, this is the maximum number of adversarial samples possible. With this augmented training set we then alternated retraining of the neural network and optimization of the adversarial samples. % using gradient descent.
 
-A question which occurs in this process, is how many CPU cycles to spend on network training and adversarial sample optimization. As a natural approach, we decided to use as many backpropagation steps for neural network training as we use for adversarial sample optimization.  For each adversarial sample optimization step, we performed 10 iterations of gradient descent. Hence, all adversarial samples were optimized each 10 epochs of neural network training.
+A question which occurs in this process, is how many CPU cycles to spend on network training and adversarial sample optimization. We decided to use as many backpropagation steps for training as we use for adversarial sample optimization.  For each adversarial sample optimization step, we performed 10 iterations of gradient descent. Hence, all adversarial samples were optimized each 10 epochs of neural network training.
 
 \autoref{fig:avdistance} shows the \gls{ars} throughout  adversarial training  for several attack categories and clearly indicates that adversarial training is effective, as the distance gradually increases. Hence, an attacker would have to modify attack samples more and more, eventually rendering the attack unpractical.
 
@@ -733,7 +736,7 @@ We have implemented a recurrent classifier based on LSTMs to detect network atta
 which can already detect attacks before they are over. Furthermore, the recurrent approach allows us to inspect the influence of single packets on the detection performance and shows which packets are \textit{characteristic} for attacks.
 Even though the interpretation of \glspl{rnn} poses several difficulties, we have demonstrated methods for gaining insights into the model's functioning.
 
-We showed that even though our use case is very different from computer vision, adversarial samples can be found efficiently, even if only ostensibly unimportant features can be modified. We proposed the \gls{ars} for quantifying and comparing the adversarial threat for \glspl{ids}.
+We showed that even though our use case is very different from computer vision, adversarial samples can be found efficiently, even if only ostensibly unimportant features can be modified. Newly developed \textit{Feature sensitivity} methods can show which features can easily be manipulated by an adversary. We proposed the \gls{ars} for quantifying and comparing the adversarial threat for \glspl{ids}.
 Deploying an adversarial training procedure, we could significantly reduce the adversarial threat.
 
 \section*{Acknowledgements}
