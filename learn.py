@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score,recall_score, precision_score, f1_score, balanced_accuracy_score
 
 ADVERSARIAL_THRESH = 50
-CLAMPING_CONSTANT = math.log(1e-20)
+CLAMPING_CONSTANT = math.log(1e-10)
 
 def output_scores(y_true, y_pred):
 	accuracy = accuracy_score(y_true, y_pred)
