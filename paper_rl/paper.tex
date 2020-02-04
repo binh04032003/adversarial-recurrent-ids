@@ -441,9 +441,9 @@ After applying the sampling techniques, the sequence of selected packets is then
   \label{fig:training}
 \end{figure}
 
-The results of the sampling part are discussed in this section. We study the sparsity-accuracy tradeoff first, then we evaluate both discrete and continuous actions and, finally, we compare our results with other sampling techniques. Overall, sampling based on \gls{rl} reveals that a high number of packets can be skipped while maintaining high performance. Then, we inspect how the \gls{rl} chooses packets and if some patterns can be spotted. 
+The results of the sampling part are discussed in this section. We study the sparsity-accuracy tradeoff first, then we evaluate both discrete and continuous actions and, finally, we compare our results with other sampling techniques. Overall, sampling based on \gls{rl} reveals that a high number of packets can be skipped while maintaining high performance. To this end, we inspect how the \gls{rl} chooses packets and if some patterns can be noticed
 
-For all our experiments we train for at least 8 epochs ($>10$ million flows for both datasets) and then evaluate the resulting neural networks on the test dataset. \autoref{fig:training} shows how during training, accuracy increases quickly in the beginning and then gradually afterwards. At the same time, sparsity gets higher as the \gls{rl} learns which packets can be skipped since they do not influence classification performance. 
+For all our experiments we train our networks for at least 8 epochs ($>10$ million flows for both datasets) and then evaluate the resulting neural networks on the test dataset. \autoref{fig:training} shows how, during training, accuracy increases quickly at the beginning and then gradually afterwards. At the same time, sparsity gets higher as the \gls{rl} learns which packets can be skipped since they do not influence classification performance. 
 
 \begin{table}
 % Evaluated using
@@ -543,7 +543,7 @@ Next we compared the \gls{rl} technique usedy by \ours{} with several intuitive 
 ]{
 \includegraphics[width=0.98\columnwidth]{{"../plots/plot_rl/flows_Jan18_14-06-48_gpu_lstm_module_8.pth_prediction_outcomes_0_3.pickle_15_All samples"}.pdf}
 }{}
-\caption{Inspecting the sampling strategy of \ours{} for various attack types. The blue line shows the confidence. The gray bars show how many samples had this number of packets. For example, the gray bar in Figure \ref{fig:inspectingNormal} at position 19 with height 10000 signifies that 10000 flows of benign traffic had a length of at least 20 packets (since we say that the first packet is at position 0). The first packet is always chosen for each flow by design.}
+\caption{Inspecting the sampling strategy of \ours{} for various attack types. The blue line shows the confidence. The gray bars show how many samples had this number of packets. For example, the gray bar in Figure \ref{fig:inspectingNormal} at position 19 with height 10000 signifies that 10000 flows of benign traffic had a length of at least 20 packets (since we say that the first packet is at position 0). The red bars represent the count of packets sampled at this position for all flows. The first packet is always chosen for each flow by design.}
 \label{fig:inspecting}
 \end{figure*}
 
@@ -582,6 +582,8 @@ Besides discrete actions for our \gls{rl} system we also implemented continuous 
 Inspecting the decisions of our \gls{rl} framework showed that the sampling strategy is clearly different for different attack strategies and also within some attack families, indicating that \ours{} indeed adopts different sampling strategies for different conversation flows.  
 
 Finally, we implement a steering method with which a certain sparsity threshold can be specified which limits the computational expenses of an operator. 
+
+Eventually, we implement a steering method to help achieving a certain sparsity threshold. The steering mechanism can be used to limit the computational expenses of an operator.
 
 In general, we think that \gls{rl}-based packet sampling is not only applicable to \gls{ids} but we are optimistic that other domains of networking can benefit from similar solutions to save computational power. 
 
