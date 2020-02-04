@@ -116,14 +116,14 @@ Since traditional evaluation metrics such as accuracy are not sufficient for qua
 \section{Introduction}
 
 There is a significant body of scientific work focusing on the detection of unwanted behavior in networks. In the past, a viable way of performing intrusion detection was to inspect the content of packets themselves and detect if a packet delivers potentially harmful content. More recently, with the increasing deployment of encryption, %available features have changed. Since payload is no longer available,
-the focus now lies on features that are always available to network monitoring equipment like port numbers, protocol flags or packet sizes when encrypting above the transport layer.
+the focus now lies on features that are always available to network monitoring equipment like packet sizes, protocol flags or port numbers when encrypting above the transport layer.
 
 Network communication is usually aggregated into \textit{flows}, which are commonly defined as a sequence of packets sharing certain properties. %, between two applications potentially being located at different physical locations.
 When analyzing flows, not only the aforementioned features are available but also features related to the timing of the individual packets. % as well as their size. %AH: don't see why pkt size is not available without flows
 %For example, a specific attack might require the attacker to send three small packets and the victim to reply with two large packets followed by a small one to the attacker.
 Various approaches have been proposed to extract features from flows and then perform anomaly detection with the extracted flows \cite{meghdouri_analysis_2018}.
 While these approaches frequently work well, it is problematic that the whole flow has to be received first and only afterwards anomaly detection is applied, revealing attack flows. Thus, we design a network \gls{ids} that operates on a per-packet basis and decides if a packet is anomalous based on features that are available even for traffic that is encrypted above the transport layer, like for example TLS or QUIC.
-At the same time, an \gls{rnn}-based \gls{ids} has the benefit of avoiding tedious feature engineering procedures, which derive statistical measures from the sequence of packet features, but providing any available information to the classifier.
+At the same time, an \gls{rnn}-based \gls{ids} has the benefit of providing any available information to the classifier while avoiding tedious feature engineering procedures, which derive statistical measures from the sequence of packet features.
 We show that our system has similar performance to other flow-based anomaly detection systems but can detect anomalies \textit{before} the flow terminates.
 
 However, for practical use, high detection accuracy is not enough. With the recent rise of interest in \gls{aml} techniques, also \gls{aml} for \glspl{ids} has been investigated. For example, \cite{bachl_walling_2019} investigates remedies for poisoning attacks on \glspl{ids} and \cite{hashemi_towards_2019} investigate adversarial robustness of common network \glspl{ids}.
@@ -250,18 +250,19 @@ For evaluation, we use the \textit{CIC-IDS-2017} \cite{sharafaldin_toward_2018} 
 % ./python learn.py --dataroot flows.pickle --net runs/Oct26_00-03-50_gpu/lstm_module_1284.pth --function test --batchSize 512
 % ./python learn.py --dataroot flows15.pickle --net runs/Oct28_15-41-46_gpu/lstm_module_997.pth --function test --batchSize 512
 % on Dec. 4th
-\caption{Performance metrics per packet and per flow.} \label{tab:performance_results}
+\caption{Performance metrics per packet and per flow. MLP values from \cite{bachl_walling_2019} are presented for comparison.} \label{tab:performance_results}
 \centering
-\begin{tabular}{l r r r r} \toprule
-& \multicolumn{2}{c}{CIC-IDS-2017} & \multicolumn{2}{c}{UNSW-NB15} \\
-	&	Packet	&	Flow	&	Packet	&	Flow	\\	\midrule
-Accuracy	&	99.1\%	&	99.7\%	&	99.5\%	&	98.3\%	\\
-Precision	&	97.0\%	&	99.7\%	&	83.4\%	&	78.6\%	\\
-Recall	&	97.8\%	&	99.1\%	&	87.6\%	&	72.6\%	\\
-F1	&	97.4\%	&	99.4\%	&	85.5\%	&	75.5\%	\\
-Youden	&	97.2\%	&	99.0\%	&	87.3\%	&	71.9\%	\\
+\begin{tabular}{l r r r r r r} \toprule
+& \multicolumn{3}{c}{CIC-IDS-2017} & \multicolumn{3}{c}{UNSW-NB15} \\
+	&	Packet	&	Flow	& MLP &	Packet	&	Flow & MLP	\\	\midrule
+Accuracy	&	99.1\%	&	99.7\%	&	99.8\%	&	99.5\%	&	98.3\%	&	98.9\%	\\
+Precision	&	97.0\%	&	99.7\%	&	99.9\%	&	83.4\%	&	78.6\%	&	84.5\%	\\
+Recall	&	97.8\%	&	99.1\%	&	99.2\%	&	87.6\%	&	72.6\%	&	82.9\%	\\
+F1	&	97.4\%	&	99.4\%	&	99.5\%	&	85.5\%	&	75.5\%	&	83.7\%	\\
+Youden	&	97.2\%	&	99.0\%	&	99.1\%	&	87.3\%	&	71.9\%	&	82.3\%	\\
 \bottomrule
 \end{tabular}
+\vspace*{-.3mm}
 \end{table}
 
 \section{Adversarial Attacks}
@@ -347,7 +348,7 @@ However, when using a large $\kappa$ in \autoref{eq:carliniWagner}, to avoid ove
 \label{fig:adv_cw}
 \end{figure}
 
-\section{Adversarial Robustness Metric}
+\section{Evaluating Adversarial Robustness}
 
 As \autoref{fig:adv_per_family} shows, for most attack types, most samples can be modified by an adversary to be classified as benign by using \gls{cw}. High recall for a particular attack type does not imply that adversarial samples are hard to find  %are  likely to fail
 for these attacks. Thus we argue that beside the classical metrics such as accuracy, false positives etc., a metric is needed, which quantifies how easily an \gls{ids} classifier can be fooled.
@@ -657,7 +658,7 @@ Other attack families similarly show characteristic patterns.
 \section{Defenses}
 We now investigate two approaches to increase robustness of the \glspl{rnn} against adversarial attacks.
 \subsection{Reducing Features}
-The most obvious defense, which is only possible because of the nature of the dataset, is to simply omitting features an attacker can manipulate. We try two different approaches:
+The most obvious defense, which is only possible because of the nature of the dataset, is to simply omit features an attacker can manipulate. We try two different approaches:
 \begin{itemize}[topsep=0pt,wide,labelwidth=!,labelindent=0pt]
 \item Leaving out all manipulable features: packet size and \gls{iat}
 \item Leaving out manipulable features only when the attacker can manipulate them, i.e. only in the direction from the attacker to the victim. This, however, does not prevent adversarial samples for botnets, for which both sides are malicious.
