@@ -264,7 +264,7 @@ Our proposed framework (see \autoref{fig:neuralNetworkArchitecture}) consists of
 
 The classifier's goal is to guess correctly if a flow is an attack or not. For this, it outputs its confidence for non-attack/attack after reading a packet. As stated in \autoref{subsec:classifier}, we choose an LSTM-based supervised classifier for this work, but our framework can work together with any classifier as long as it outputs a confidence for non-attack/attack at each timestep and can handle skipped packets. For instance it would also be possible to replace the LSTM with an unsupervised autoencoder like in \cite{mirsky_kitsune_2018}.
 
-The Critic aims to estimate the future expected average classification performance and the future expected average sparsity that can be achieved at a timestep $t$. For this it outputs $v_{\text{classification},t}$ and $v_{\text{sparsity},t}$ at each timestep $t$. It aims to predict the classification performance and sparsity correctly for each timestep by minimizing the following value loss function:
+The critic aims to estimate the future expected average classification performance and the future expected average sparsity that can be achieved at a timestep $t$. For this it outputs $v_{\text{classification},t}$ and $v_{\text{sparsity},t}$ at each timestep $t$. It aims to predict the classification performance and sparsity correctly for each timestep by minimizing the following value loss function:
 \begin{align}
 \begin{split}
 l_{\text{v},t} =& \left(R_{\text{classification},t} - v_{\text{classification},t}\right)^2 \\
@@ -272,7 +272,7 @@ l_{\text{v},t} =& \left(R_{\text{classification},t} - v_{\text{classification},t
 \end{split}
 \end{align}
 
-Now that the reward metrics and the Critic's outputs are defined, we can define the overall utility $U$ that we want to maximize at each timestep $t$ as follows:
+Now that the reward metrics and the critic's outputs are defined, we can define the overall utility $U$ that we want to maximize at each timestep $t$ as follows:
 \begin{align}
 \begin{split}
 U_t =& \left(R_{\text{classification},t} + \alpha \cdot R_{\text{sparsity},t}\right) \\
@@ -280,11 +280,11 @@ U_t =& \left(R_{\text{classification},t} + \alpha \cdot R_{\text{sparsity},t}\ri
 \end{split}
 \end{align}
 
-This means that we want the reward to be higher than the Critic's expectation. Note that it would be also possible to unify both reward metrics in one and have the Critic have only one output, but we consider it to be more interpretable to have two separate outputs, which can be inspected by an operator.
+This means that we want the reward to be higher than the critic's expectation. Note that it would be also possible to unify both reward metrics in one and have the critic have only one output, but we consider it to be more interpretable to have two separate outputs, which can be inspected by an operator.
 
-The Actor outputs a probability distribution at timestep $t$, which is sampled to determine the number of packets that should be skipped. It aims to change the distribution so that actions which result in a higher reward are chosen more frequently, maximizing the utility function. However, this strategy could lead to the Actor getting stuck with what it considers the best decision and never try alternatives even though they might result in a higher reward. This would be equivalent to the Actor being stuck in a local maximum. Thus, the Actor not only tries to change the distribution so that the actions become more optimal (higher reward) but at the same time also aims to maximize the entropy of the distribution so that alternative choices are still explored reasonably often.
+The actor outputs a probability distribution at timestep $t$, which is sampled to determine the number of packets that should be skipped. It aims to change the distribution so that actions which result in a higher reward are chosen more frequently, maximizing the utility function. However, this strategy could lead to the actor getting stuck with what it considers the best decision and never try alternatives even though they might result in a higher reward. This would be equivalent to the actor being stuck in a local maximum. Thus, the actor not only tries to change the distribution so that the actions become more optimal (higher reward) but at the same time also aims to maximize the entropy of the distribution so that alternative choices are still explored reasonably often.
 
-Specifically, at packet $t$ of a network flow, given the current state $s_t$ (which consists of the current input as well as the LSTM state) and the neural network weights of the Actor $\theta_a$ the Actor outputs a probability distribution $\pi \left( a_t \given s_t ; \theta_\text{a} \right)$ from which the action $a_t \ge 1$ is sampled. $a_t=1$ means that the next packet is inspected next, while, for example, $a_t=2$ means that one packet is skipped until the next that is chosen, $a_t = 3$ means that two are skipped and so forth. Besides wanting to make actions which result in a high reward more likely, the actor also seeks to optimize the entropy $H(\cdot)$ of the probability distribution so that it keeps exploring and doesn't get stuck with a suboptimal policy.
+Specifically, at packet $t$ of a network flow, given the current state $s_t$ (which consists of the current input as well as the LSTM state) and the neural network weights of the actor $\theta_a$ the actor outputs a probability distribution $\pi \left( a_t \given s_t ; \theta_\text{a} \right)$ from which the action $a_t \ge 1$ is sampled. $a_t=1$ means that the next packet is inspected next, while, for example, $a_t=2$ means that one packet is skipped until the next that is chosen, $a_t = 3$ means that two are skipped and so forth. Besides wanting to make actions which result in a high reward more likely, the actor also seeks to optimize the entropy $H(\cdot)$ of the probability distribution so that it keeps exploring and doesn't get stuck with a suboptimal policy.
 
 Combining these objectives, the actor network aims to minimize the loss function
 \begin{align}
@@ -312,7 +312,7 @@ In related work regarding \gls{rl}-based sampling for sequences, only discrete a
 \begin{figure}
 \centering
   \includegraphics[width=0.8\columnwidth]{img/rnn-sampling.pdf}
-  \caption{SparseIDS framework. Three deep networks are shown: an LSTM classifier, An Actor network and a Critic network. The Actor takes actions based on the feedback from the the Critic network and the classifier. The Critic network tracks the Actor actions based on the classifier confidence and finally, the packets selector parses packets based on the decision of the Actor network.}
+  \caption{SparseIDS framework. Three deep networks are shown: an LSTM classifier, An actor network and a critic network. The actor takes actions based on the feedback from the the critic network and the classifier. The critic network tracks the actor actions based on the classifier confidence and finally, the packets selector parses packets based on the decision of the actor network.}
   \label{fig:sampling}
 \end{figure}
 
@@ -446,9 +446,9 @@ We use Z-score normalization and a train/test split of 2:1 for both datasets. To
 %The results of the sampling part are discussed in this section.
 We study the effect of the sparsity-accuracy tradeoff first, then we evaluate both discrete and continuous actions and, finally, we compare our results with other sampling techniques. Overall, sampling based on \gls{rl} reveals that a high number of packets can be skipped while maintaining good accuracy. Then, we inspect how the \gls{rl} chooses packets and if some patterns can be spotted.
 
-For all our experiments we train our networks for at least 8 epochs ($>10$ million flows for both datasets) and then evaluate the resulting neural networks on the test dataset. \autoref{fig:training} shows how, during training, accuracy increases quickly at the beginning and then gradually afterwards. At the same time, sparsity gets higher as the \gls{rl} learns which packets can be skipped since they do not influence classification performance. An important implementation detail is that we always start with the first packet of a flow, meaning that it cannot be skipped. Also, we set the entropy parameter to $0.01$.
+For all our experiments we train our networks for at least 8 epochs ($>10$ million flows for both datasets) and then evaluate the resulting neural networks on the test dataset. \autoref{fig:training} shows how, during training, accuracy increases quickly at the beginning and then gradually afterwards. At the same time, sparsity gets higher as the \gls{rl} learns which packets can be skipped since they do not influence classification performance. An important implementation detail is that we always start with the first packet of a flow, meaning that it cannot be skipped. Also, we set the entropy parameter to $0.01$. 
 
-Opposed to the behavior during training, we do not randomly sample from the probability distribution of the actor during testing but instead take the mean of the distribution for the continuous case and the mode for the discrete one. This is reasonable and best practice \cite{mnih_asynchronous_2016} since during testing we do not aim to explore the possible choices anymore since they were already learned during training: Only the optimal choice, which was learned, should be applied and no exploration is necessary since the actor does not train anymore.
+Opposed to the behavior during training, we do not randomly sample from the probability distribution of the actor during testing but instead take the mean of the distribution for the continuous case and the mode for the discrete one. This is reasonable and best practice \cite{mnih_asynchronous_2016} since during testing we do not aim to explore the possible choices anymore since they were already learned during training: Only the optimal choice, which was learned, should be applied and no exploration is necessary since the actor does not train anymore. Furthermore, the critic is only necessary during training for the reward of the actor. During testing, it can be disabled, saving computational power. 
 
 \begin{table}
 % Evaluated using
