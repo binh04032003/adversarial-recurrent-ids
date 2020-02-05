@@ -3,10 +3,16 @@ Contact: Alexander Hartl, Maximilian Bachl.
 
 This repository contains the code and the figures for the [upcoming paper](https://arxiv.org/abs/1912.09855) dealing with Explainability and Adversarial Robustness for RNNs. We perform our study in the context of Intrusion Detection Systems.
 
-Unfortunately, due to size constraints, the datasets are missing. We'll look into ways of adding them or providing instructions for retrieving the datasets. 
+# Datasets
+We use two datasets in the paper: CIC-IDS-2017 and UNSW-NB-15. The repository contains a preprocessed version of the datast (refer to the paper for more information). 
 
-Trained models
---------------
+```flows.pickle``` is for CIC-IDS-2017 while ```flows15.pickle``` is for UNSW-NB-15. Due to size constraints on GitHub they had to split. Restore ```flows.pickle``` as follows:
+* Concatenate the parts: ```cat flows.pickle.gz.part-* > flows.pickle.gz```
+* Unzip them: ```gzip -d flows.pickle.gz```
+
+Proceed analogously for ```flows15.pickle```.
+
+# Trained models
 Models in the [runs](runs) folder have been trained with the following configuration:
 * Oct26_00-03-50_gpu: CIC-IDS-2017
 * Oct28_15-41-46_gpu: UNSW-NB-15
