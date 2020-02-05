@@ -23,7 +23,6 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score,recall_score, precision_score, f1_score, balanced_accuracy_score
 
 ADVERSARIAL_THRESH = 50
-CLAMPING_CONSTANT = math.log(1e-10)
 
 def output_scores(y_true, y_pred):
 	accuracy = accuracy_score(y_true, y_pred)
@@ -666,7 +665,24 @@ def train_rl():
 				else:
 					current_slice_action_probs = torch.nn.functional.softplus(current_slice_action_probs)
 					locs, scales = compute_normal_distribution_from_log_normal(current_slice_action_probs[:,:,0], current_slice_action_probs[:,:,1])
+
+					if (scales < CLAMPING_CONSTANT).any():
+						print("scales underflowed!")
+						print("current_slice_action_probs[:,:,0]", current_slice_action_probs[:,:,0])
+						print("current_slice_action_probs[:,:,1]", current_slice_action_probs[:,:,1])
+						print("locs", locs)
+						print("scales", scales)
+						scales = torch.max(scales, CLAMPING_CONSTANT)
+
 					current_slice_action_dists = torch.distributions.log_normal.LogNormal(locs, scales, validate_args=True)
+					# try:
+					# 	current_slice_action_dists = torch.distributions.log_normal.LogNormal(locs, scales, validate_args=True)
+					# except ValueError as e:
+					# 	print("current_slice_action_probs[:,:,0]", current_slice_action_probs[:,:,0])
+					# 	print("current_slice_action_probs[:,:,1]", current_slice_action_probs[:,:,1])
+					# 	print("locs", locs)
+					# 	print("scales", scales)
+					# 	raise e
 				outputs_rl_actor.append(current_slice_action_probs)
 				decisions = current_slice_action_dists.sample()
 				outputs_rl_actor_decisions.append(decisions)
@@ -829,10 +845,9 @@ def train_rl():
 			effective_output_rl_critic_added = output_rl_critic_added[mask_rl_first].view(-1)
 			# assert (effective_output_rl_critic_added.shape == effective_rewards_sparsity.shape)
 			current_entropy = effective_rl_actor_dists.entropy()
-			log_prob = torch.clamp(effective_rl_actor_dists.log_prob(effective_output_rl_actor_decisions), CLAMPING_CONSTANT, float("inf"))
+			log_prob = effective_rl_actor_dists.log_prob(effective_output_rl_actor_decisions)
 			assert effective_output_rl_critic_added.shape == log_prob.shape == current_entropy.shape == effective_rewards_sparsity_with_tradeoff.shape == effective_rewards_classification.shape
 			loss_rl_actor = torch.mean(- log_prob*((effective_rewards_sparsity_with_tradeoff + effective_rewards_classification) - effective_output_rl_critic_added) - opt.entropyRegularizationMultiplier*current_entropy)
-
 
 			total_loss = loss + loss_rl_critic + loss_rl_actor
 			total_loss.backward()
@@ -2296,4 +2311,5 @@ if __name__=="__main__":
 
 			lstm_module_rl_critic.load_state_dict(torch.load(opt.net_critic, map_location=device))
 
+	CLAMPING_CONSTANT = torch.FloatTensor([torch.finfo(torch.float32).tiny]).to(device)
 	globals()[opt.function]()
