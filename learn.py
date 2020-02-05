@@ -675,14 +675,7 @@ def train_rl():
 						scales = torch.max(scales, CLAMPING_CONSTANT)
 
 					current_slice_action_dists = torch.distributions.log_normal.LogNormal(locs, scales, validate_args=True)
-					# try:
-					# 	current_slice_action_dists = torch.distributions.log_normal.LogNormal(locs, scales, validate_args=True)
-					# except ValueError as e:
-					# 	print("current_slice_action_probs[:,:,0]", current_slice_action_probs[:,:,0])
-					# 	print("current_slice_action_probs[:,:,1]", current_slice_action_probs[:,:,1])
-					# 	print("locs", locs)
-					# 	print("scales", scales)
-					# 	raise e
+
 				outputs_rl_actor.append(current_slice_action_probs)
 				decisions = current_slice_action_dists.sample()
 				outputs_rl_actor_decisions.append(decisions)
@@ -829,6 +822,15 @@ def train_rl():
 				effective_rl_actor_dists = torch.distributions.categorical.Categorical(logits=effective_output_rl_actor, validate_args=True)
 			else:
 				locs, scales = compute_normal_distribution_from_log_normal(effective_output_rl_actor[:,0], effective_output_rl_actor[:,1])
+
+				if (scales < CLAMPING_CONSTANT).any():
+					print("scales underflowed!")
+					print("current_slice_action_probs[:,:,0]", current_slice_action_probs[:,:,0])
+					print("current_slice_action_probs[:,:,1]", current_slice_action_probs[:,:,1])
+					print("locs", locs)
+					print("scales", scales)
+					scales = torch.max(scales, CLAMPING_CONSTANT)
+
 				effective_rl_actor_dists = torch.distributions.log_normal.LogNormal(locs, scales, validate_args=True)
 
 			effective_rewards_sparsity = rewards_sparsity_catted.detach()[mask_rl_first].view(-1)
