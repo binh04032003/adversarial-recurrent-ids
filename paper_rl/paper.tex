@@ -114,7 +114,7 @@ firstname.lastname@tuwien.ac.at}}
 
 \begin{abstract}
 
-\glspl{rnn} have been shown to be valuable for constructing \glspl{ids} for network data. They already allow determining if a flow is malicious or not before it is over, making it possible to take action immediately. However, considering the large number of packets that have to be inspected, the question of computational efficiency arises. We show that by using a novel \gls{rl}-based approach called \textit{\ours{}}, we can reduce the number of consumed packets by more than three fourths while keeping classification accuracy high. Comparing to various other sampling techniques, \ours{} consistently achieves higher classification accuracy with the same number of sampled packets. A major novelty of our \gls{rl}-based approach is that it can not only skip up to a predefined maximum number of samples like other approaches proposed in the domain of Natural Language Processing but can possibly skip arbitrarily many packets in one step, saving even more computational resources for long sequences. Inspecting \ours{}'s behavior of choosing packets shows that it adopts different sampling strategies for different attack types and network flows. Finally we build an automatic steering mechanism that can guide \ours{} in deployment to achieve a desired level of sparsity.
+\glspl{rnn} have been shown to be valuable for constructing \glspl{ids} for network data. They allow determining if a flow is malicious or not before it is over in a streaming fashion, making it possible to take action immediately. However, considering the large number of packets that have to be inspected, the question of computational efficiency arises. We show that by using a novel \gls{rl}-based approach called \textit{\ours{}}, we can reduce the number of consumed packets by more than three fourths while keeping classification accuracy high. Comparing to various other sampling techniques, \ours{} consistently achieves higher classification accuracy by learning to sample only relevant packets. A major novelty of our \gls{rl}-based approach is that it can not only skip up to a predefined maximum number of samples like other approaches proposed in the domain of Natural Language Processing but can even skip arbitrarily many packets in one step, saving even more computational resources for long sequences. Inspecting \ours{}'s behavior of choosing packets shows that it adopts different sampling strategies for different attack types and network flows. Finally we build an automatic steering mechanism that can guide \ours{} in deployment to achieve a desired level of sparsity.
 
 \end{abstract}
 
@@ -134,7 +134,7 @@ firstname.lastname@tuwien.ac.at}}
 
 \section{Introduction}
 \label{sec:introduction}
-\note{blue}{Fares: I fixed the paper based on Tanja's comments. still  (1) the abstract is not touched yet (2) figures with axes (time step) need to be changed... We need to be carefull with the 9 pages limit}
+%\note{blue}{Fares: I fixed the paper based on Tanja's comments. still  (1) the abstract is not touched yet (2) figures with axes (time step) need to be changed... We need to be carefull with the 9 pages limit}
 
 %There is a significant body of scientific work focusing on the detection of unwanted behavior in networks. In the past, a viable way of performing intrusion detection was to inspect the content of packets themselves and detect if a packet delivers potentially harmful content. More recently, with the increasing deployment of encryption, the focus now lies on features that are always available to network monitoring equipment like port numbers, protocol flags or packet sizes when encrypting above the transport layer.
 
@@ -275,7 +275,7 @@ We opt for an \emph{\gls{ac}} approach (as shown in \autoref{fig:sampling}) mode
 
 Our proposed framework (see \autoref{fig:neuralNetworkArchitecture}) consists of three independent neural networks: the classifier, the critic and the actor.
 
-The classifier's goal is to guess correctly if a flow is an attack or not. For this, it outputs its confidence for non-attack/attack after reading a packet. As stated in \autoref{subsec:classifier}, we choose an LSTM-based supervised classifier for this work, but our framework can work together with any classifier as long as it outputs a confidence for non-attack/attack at each packet and can handle skipped packets. For instance it would also be possible to replace the LSTM with an unsupervised autoencoder akin to \cite{mirsky_kitsune_2018}.
+The classifier's goal is to guess correctly if a flow is an attack or not. For this, it outputs its confidence for non-attack/attack after reading a packet. As stated in \autoref{subsec:classifier}, we choose an LSTM-based supervised classifier for this work, but our framework can work together with any classifier as long as it outputs a confidence for non-attack/attack at each packet and can handle skipped packets. For instance, it would also be possible to replace the LSTM with an unsupervised autoencoder akin to \cite{mirsky_kitsune_2018}.
 
 The critic aims to estimate the future expected average classification performance and the future expected average sparsity that can be achieved at a packet $n$. For this, given the current input vector and the state of the LSTM cells $s_n$ and the neural network weights of the critic $\theta_v$, it outputs the value functions $v_{\text{classification},n}$ and $v_{\text{sparsity},n}$ at each packet $n$. It aims to predict the classification performance and sparsity correctly for each packet by minimizing the following loss function:
 \begin{align}
@@ -513,7 +513,7 @@ Youden & 98.4\% & 98.5\% & 98.2\% \\
 
 \subsection{Influence of the tradeoff}
 
-\autoref{tab:results_tradeoff} shows the influence of the tradeoff parameter $\alpha$ for both datasets. For columns with a tradeoff of 0.0, we train the classifier regularly with all packets without using \gls{rl}. For tradeoffs 0.1 and 0.5 we train \ours{} using \gls{rl} with continuous actions and keep the tradeoff constant for the whole training. Results show that the higher the tradeoff, the less packets are sampled and the lower the accuracy.
+\autoref{tab:results_tradeoff} shows the influence of the tradeoff parameter $\alpha$ for both datasets. For columns with a tradeoff of 0.0, we train the classifier regularly with all packets without using \gls{rl}. For tradeoffs 0.1 and 0.5 we train \ours{} using \gls{rl} with continuous actions and keep the tradeoff constant for the whole training. Results show that the higher the tradeoff, the fewer packets are sampled and the lower the accuracy.
 
 \subsection{Discrete vs.~Continuous actions}
 
@@ -556,7 +556,7 @@ Youden & 98.5\% & 97.8\% \\
 \caption{Comparing classification metrics per flow between \gls{rl}-based sampling with continuous actions (tradeoff $0.1$) and alternative strategies.} \label{tab:results_others}
 \centering
 \begin{tabular}{>{\rowmac}l >{\rowmac}r>{\rowmac}r>{\rowmac}r>{\rowmac}r>{\rowmac}r<{\clearrow}} \toprule
-& \gls{rl} & random & every $i$th & first $n$ & first $n$ equal \\	\midrule
+& \gls{rl} & random & every $i$th & relative first \emph{m} & first \emph{m} \\	\midrule
 \setrow{\bfseries}Sampled & 76.3\% & 76.3\% & 76.3\% & 76.3\% & 76.3\% \\ \midrule
 \setrow{\bfseries}Accuracy & 99.4\% & 96.9\% & 97.8\% & 97.3\% & 98.3\% \\
 Precision & 98.5\% & 92.4\% & 95.8\% & 93.8\% & 95.6\% \\
@@ -568,8 +568,8 @@ Youden & 98.5\% & 93.0\% & 93.9\% & 93.4\% & 96.4\% \\
 \end{table}
 
 Next we compared the \gls{rl} technique used by \ours{} with several intuitive sampling strategies suggested in \autoref{sec:other_sampling_techniques}.
-\autoref{tab:results_others} reveals that \ours{} achieves the highest accuracy with the same sparsity. Not surprisingly, random sampling performs the worst, as it is likely that a flow is ``unfortunate'' and doesn't get enough packets sampled while another one gets more packets or the packets that carry more useful information. The best strategy besides the \gls{rl} approach seems to be ``first $n$ equal'' sampling, which matches the conclusion from \cite{hartl_explainability_2019} that the first couple of packets are the most important ones for determining maliciousness of a flow.
-``first $n$ equal'' performs better than ``first $n$'' because for ``first $n$'', longer flows will have more packets sampled from them. Conversely, very short flows will get few packets. For example, with $p=0.2$, a flow of length 20 will get 4 packets while one with 4 packets will get only 1. However, with `first $n$ equal'', the short and the long flow will get the same number of packets. Apparently it is better if all flows get the same number of packets than if long flows get more packets. 
+\autoref{tab:results_others} reveals that \ours{} achieves the highest accuracy with the same sparsity. Not surprisingly, random sampling performs the worst, as it is likely that a flow is ``unfortunate'' and doesn't get enough packets sampled while another one gets more packets or the packets that carry more useful information. The best strategy besides the \gls{rl} approach seems to be ``first $m$'' sampling, which matches the conclusion from \cite{hartl_explainability_2019} that the first couple of packets are the most important ones for determining maliciousness of a flow.
+``first $m$'' performs better than ``relative first $m$'' because for ``relative first $m$'', longer flows will have more packets sampled from them. Conversely, very short flows will get few packets. For example, with $p=0.2$, a flow of length 20 will get 4 packets while one with 4 packets will get only 1. However, with `first $m$'', the short and the long flow will get the same number of packets. Apparently it is better if all flows get the same number of packets than if long flows get more packets. 
 
 \subsection{Inspecting the \gls{rl}'s behavior}
 \label{subsec:inspecting}
