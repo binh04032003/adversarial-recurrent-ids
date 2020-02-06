@@ -1,28 +1,4 @@
 
-@article{fang_learning_2017,
-	title = {Learning how to {Active} {Learn}: {A} {Deep} {Reinforcement} {Learning} {Approach}},
-	shorttitle = {Learning how to {Active} {Learn}},
-	url = {http://arxiv.org/abs/1708.02383},
-	abstract = {Active learning aims to select a small subset of data for annotation such that a classiﬁer learned on the data is highly accurate. This is usually done using heuristic selection methods, however the effectiveness of such methods is limited and moreover, the performance of heuristics varies between datasets. To address these shortcomings, we introduce a novel formulation by reframing the active learning as a reinforcement learning problem and explicitly learning a data selection policy, where the policy takes the role of the active learning heuristic. Importantly, our method allows the selection policy learned using simulation on one language to be transferred to other languages. We demonstrate our method using cross-lingual named entity recognition, observing uniform improvements over traditional active learning.},
-	language = {en},
-	urldate = {2020-01-14},
-	journal = {arXiv:1708.02383 [cs]},
-	author = {Fang, Meng and Li, Yuan and Cohn, Trevor},
-	month = aug,
-	year = {2017},
-	note = {arXiv: 1708.02383},
-	keywords = {Computer Science - Artificial Intelligence, Computer Science - Machine Learning, Computer Science - Computation and Language},
-	annote = {Comment: To appear in EMNLP 2017},
-	file = {Fang et al. - 2017 - Learning how to Active Learn A Deep Reinforcement.pdf:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/2X43X5UN/Fang et al. - 2017 - Learning how to Active Learn A Deep Reinforcement.pdf:application/pdf}
-}
-
-@misc{noauthor_active_nodate,
-	title = {Active learning (machine learning) - {Wikipedia}},
-	url = {https://en.wikipedia.org/wiki/Active_learning_(machine_learning)},
-	urldate = {2020-01-14},
-	file = {Active learning (machine learning) - Wikipedia:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/L6D29GB4/Active_learning_(machine_learning).html:text/html}
-}
-
 @article{mnih_asynchronous_2016,
 	title = {Asynchronous {Methods} for {Deep} {Reinforcement} {Learning}},
 	url = {http://arxiv.org/abs/1602.01783},
@@ -35,26 +11,6 @@
 	note = {arXiv: 1602.01783},
 	keywords = {Computer Science - Machine Learning},
 	file = {arXiv Fulltext PDF:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/ZYPU4IR5/Mnih et al. - 2016 - Asynchronous Methods for Deep Reinforcement Learni.pdf:application/pdf;arXiv.org Snapshot:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/27VWHXNW/1602.html:text/html}
-}
-
-@article{wassermann_ral_2019,
-	title = {{RAL} - {Improving} {Stream}-{Based} {Active} {Learning} by {Reinforcement} {Learning}},
-	abstract = {One of the main challenges associated with supervised learning under dynamic scenarios is that of periodically getting access to labels of fresh, previously unseen samples. Labeling new data is usually an expensive and cumbersome process, while not all data points are equally valuable. Active learning aims at labeling only the most informative samples to reduce cost. In this paradigm, a learner can choose from which new samples it wants to learn, and can obtain the ground truth by asking an oracle for the corresponding labels. We introduce RAL – Reinforced stream-based Active Learning –, a new active-learning approach, coupling stream-based active learning with reinforcement-learning concepts. In particular, we model active learning as a contextual-bandit problem, in which rewards are based on the usefulness of the system’s querying behavior. Empirical evaluations on multiple datasets conﬁrm that RAL outperforms the state of the art, both by improving learning accuracy and by reducing the number of requested labels. As an additional contribution, we release RAL as an open-source Python package to the machine-learning community.},
-	language = {en},
-	author = {Wassermann, Sarah and Cuvelier, Thibaut and Casas, Pedro},
-	year = {2019},
-	pages = {17},
-	file = {Wassermann et al. - RAL - Improving Stream-Based Active Learning by Re.pdf:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/HJDHMIFA/Wassermann et al. - RAL - Improving Stream-Based Active Learning by Re.pdf:application/pdf}
-}
-
-@article{wassermann_adam_2019,
-	title = {{ADAM} \& {RAL}: {Adaptive} {Memory} {Learning} and {Reinforcement} {Active} {Learning} for {Network} {Monitoring}},
-	abstract = {Network-trafﬁc data commonly arrives in the form of fast data streams; online network-monitoring systems continuously analyze these kinds of streams, sequentially collecting measurements over time. Continuous and dynamic learning is an effective learning strategy when operating in these fast and dynamic environments, where concept drifts constantly occur. In this paper, we propose different approaches for stream-based machine learning, able to analyze network-trafﬁc streams on the ﬂy, using supervised learning techniques. We address two major challenges associated to stream-based machine learning and online network monitoring: (i) how to dynamically learn from and adapt to non-stationary data and patterns changing over time, and (ii) how to deal with the limited availability of ground truth or labeled data to continuously tune a supervised learning model. We introduce ADAM \& RAL, two stream-based machine-learning approaches to tackle these challenges. ADAM implements multiple stream-based machine-learning models and relies on an adaptive memory strategy to dynamically adapt the size of the system’s learning memory to the most recent data distribution, triggering new learning steps when concept drifts are detected. RAL implements a stream-based active-learning strategy to reduce the amount of labeled data needed for streambased learning, dynamically deciding on the most informative samples to integrate into the continuous learning scheme. Using a reinforcement learning loop, RAL improves prediction performance by additionally learning from the goodness of its previous sample-selection decisions. We focus on a particularly challenging problem in network monitoring: continuously tuning detection models able to recognize network attacks over time. By continuously learning from and detecting concept drifts within real network measurements, we show that ADAM \& RAL can continuously achieve high detection accuracy and limit the amount of training data needed to detect attacks over dynamic network data streams.},
-	language = {en},
-	author = {Wassermann, Sarah and Cuvelier, Thibaut and Mulinka, Pavol and Casas, Pedro},
-	year = {2019},
-	pages = {10},
-	file = {Wassermann et al. - ADAM & RAL Adaptive Memory Learning and Reinforce.pdf:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/LQ9HU24M/Wassermann et al. - ADAM & RAL Adaptive Memory Learning and Reinforce.pdf:application/pdf}
 }
 
 @article{campos_skip_2018,
@@ -177,11 +133,11 @@
 	title = {Walling {Up} {Backdoors} in {Intrusion} {Detection} {Systems}},
 	abstract = {Interest in poisoning attacks and backdoors recently resurfaced for Deep Learning (DL) applications. Several successful defense mechanisms have been recently proposed for Convolutional Neural Networks (CNNs), for example in the context of autonomous driving. We show that visualization approaches can aid in identifying a backdoor independent of the used classifier. Surprisingly, we find that common defense mechanisms fail utterly to remove backdoors in DL for Intrusion Detection Systems (IDSs). Finally, we devise pruning-based approaches to remove backdoors for Decision Trees (DTs) and Random Forests (RFs) and demonstrate their effectiveness for two different network security datasets.},
 	urldate = {2019-12-07},
-	booktitle = {Big-{DAMA} '19},
+	booktitle = {Big-{DAMA}},
 	publisher = {ACM},
 	author = {Bachl, Maximilian and Hartl, Alexander and Fabini, Joachim and Zseby, Tanja},
 	year = {2019},
-	keywords = {Pruning, Deep Learning, Explainable AI, Network security, Poisoning attack, Random Forests},
+	keywords = {Deep Learning, Explainable AI, Network security, Poisoning attack, Pruning, Random Forests},
 	pages = {8--13}
 }
 
@@ -190,12 +146,11 @@
 	shorttitle = {Rax},
 	doi = {10.1109/ICC.2019.8761187},
 	abstract = {This paper proposes Reactive Adaptive eXperience based congestion control (Rax), a new method of congestion control (CC) that uses online reinforcement learning (RL) to maintain an optimum congestion window with respect to a given reward function and based on current network conditions. We use a neural network based approach that can be initialized either with random weights or with a previously trained neural network to improve stability and convergence time. As the processing of rewards in CC depends on the arrival of acknowledgements, which are delayed and received one by one, the problem is not suitable for current implementations of Deep RL. As a remedy we propose Partial Action Learning, a formulation of Deep RL that supports delayed and partial rewards. We show that our method converges to a stable, close-to-optimum solution within minutes and outperforms existing CC algorithms in typical networks. Thus, this paper demonstrates that Deep RL can be done online and can compete with classic CC schemes such as Cubic.},
-	booktitle = {{ICC} 2019 - 2019 {IEEE} {International} {Conference} on {Communications} ({ICC})},
+	booktitle = {{ICC}},
 	author = {Bachl, Maximilian and Zseby, Tanja and Fabini, Joachim},
 	month = may,
 	year = {2019},
-	note = {ISSN: 1550-3607},
-	keywords = {Reinforcement learning, learning (artificial intelligence), telecommunication congestion control, neural nets, neural network, Measurement, Biological neural networks, convergence time, deep reinforcement learning, deep RL, Microsoft Windows, online reinforcement learning, optimum congestion window, partial action learning, Rax, reactive adaptive experience based congestion control, reward function, telecommunication computing, Telecommunications, TV},
+	keywords = {Biological neural networks, convergence time, deep reinforcement learning, deep RL, learning (artificial intelligence), Measurement, Microsoft Windows, neural nets, neural network, online reinforcement learning, optimum congestion window, partial action learning, Rax, reactive adaptive experience based congestion control, Reinforcement learning, reward function, telecommunication computing, telecommunication congestion control, Telecommunications, TV},
 	pages = {1--6},
 	file = {IEEE Xplore Abstract Record:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/PZGRMM59/8761187.html:text/html;IEEE Xplore Full Text PDF:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/JTG9DWLB/Bachl et al. - 2019 - Rax Deep Reinforcement Learning for Congestion Co.pdf:application/pdf}
 }
@@ -235,6 +190,7 @@
 	abstract = {Neural networks have become an increasingly popular solution for network intrusion detection systems (NIDS). Their capability of learning complex patterns and behaviors make them a suitable solution for differentiating between normal trafﬁc and network attacks. However, a drawback of neural networks is the amount of resources needed to train them. Many network gateways and routers devices, which could potentially host an NIDS, simply do not have the memory or processing power to train and sometimes even execute such models. More importantly, the existing neural network solutions are trained in a supervised manner. Meaning that an expert must label the network trafﬁc and update the model manually from time to time.},
 	language = {en},
 	urldate = {2020-01-24},
+	booktitle = {{NDSS}},
 	publisher = {Internet Society},
 	author = {Mirsky, Yisroel and Doitshman, Tomer and Elovici, Yuval and Shabtai, Asaf},
 	year = {2018},
@@ -247,7 +203,7 @@
 	url = {https://www.aclweb.org/anthology/D14-1179},
 	doi = {10.3115/v1/D14-1179},
 	urldate = {2020-02-04},
-	booktitle = {Proceedings of the 2014 {Conference} on {Empirical} {Methods} in {Natural} {Language} {Processing} ({EMNLP})},
+	booktitle = {{EMNLP} 2014},
 	publisher = {Association for Computational Linguistics},
 	author = {Cho, Kyunghyun and van Merriënboer, Bart and Gulcehre, Caglar and Bahdanau, Dzmitry and Bougares, Fethi and Schwenk, Holger and Bengio, Yoshua},
 	month = oct,
@@ -289,10 +245,10 @@
 	shorttitle = {Detecting network intrusions via sampling},
 	doi = {10.1109/INFCOM.2003.1209210},
 	abstract = {In this paper, we consider the problem of detecting an intruding packet in a communication network. Detection is accomplished by sampling a portion of the packets transiting selected network links (or router interfaces). Since sampling entails incurring network costs for real-time packet sampling and packet examination hardware, we would like to develop a network packet sampling strategy to effectively detect network intrusions while not exceeding a given total sampling budget. We consider this problem in a game theoretic framework, where the intruder picks paths (or the network ingress point if only shortest path routing is possible) to minimize chances of detection and where the network operator chooses a sampling strategy to maximize the chances of detection. We formulate the game theoretic problem, and develop sampling schemes that are optimal in this game theoretic setting.},
+	booktitle = {{INFOCOM}},
 	author = {Murali Kodialam and Lakshman, T.V.},
 	month = mar,
 	year = {2003},
-	note = {ISSN: 0743-166X},
 	keywords = {communication network, Communication networks, Computer crime, Costs, Drugs, game theoretic problem, game theory, Game theory, Hardware, Intrusion detection, network intrusion detection, network link, packet examination hardware, packet switching, real-time packet sampling, router interfaces, Routing, sampling methods, Sampling methods, shortest path routing, telecommunication links, telecommunication network routing, telecommunication security, Telecommunication traffic},
 	pages = {1880--1889 vol.3},
 	file = {IEEE Xplore Abstract Record:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/Q942R9M9/1209210.html:text/html;IEEE Xplore Full Text PDF:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/7VCHCBGU/Murali Kodialam and Lakshman - 2003 - Detecting network intrusions via sampling a game .pdf:application/pdf}
