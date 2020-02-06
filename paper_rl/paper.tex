@@ -114,7 +114,7 @@ firstname.lastname@tuwien.ac.at}}
 
 \begin{abstract}
 
-\glspl{rnn} have been shown to be valuable for constructing \glspl{ids} for network data. They allow already determining if a flow is malicious or not before it is over, making it possible to take action immediately. However, considering the large number of packets that have to be inspected, the question of computational as well as energy efficiency arises. We show that by using a novel \gls{rl}-based approach called \textit{\ours{}}, we can reduce the number of consumed packets by more than three fourths while keeping classification accuracy high. Comparing to various other sampling techniques, \ours{} consistently achieves higher classification accuracy with the same number of sampled packets. A major novelty of our \gls{rl}-based approach is that it can not only skip up to a predefined maximum number of samples like other approaches proposed in the domain of Natural Language Processing but can possibly skip arbitrarily many packets, saving even more computational resources for long sequences. Inspecting \ours{}'s behavior of choosing packets shows that it adopts different sampling strategies for different attack types and network flows. Finally we build an automatic steering mechanism that can guide \ours{} in deployment to achieve a desired level of sparsity.
+\glspl{rnn} have been shown to be valuable for constructing \glspl{ids} for network data. They already allow determining if a flow is malicious or not before it is over, making it possible to take action immediately. However, considering the large number of packets that have to be inspected, the question of computational as well as energy efficiency arises. We show that by using a novel \gls{rl}-based approach called \textit{\ours{}}, we can reduce the number of consumed packets by more than three fourths while keeping classification accuracy high. Comparing to various other sampling techniques, \ours{} consistently achieves higher classification accuracy with the same number of sampled packets. A major novelty of our \gls{rl}-based approach is that it can not only skip up to a predefined maximum number of samples like other approaches proposed in the domain of Natural Language Processing but can possibly skip arbitrarily many packets, saving even more computational resources for long sequences. Inspecting \ours{}'s behavior of choosing packets shows that it adopts different sampling strategies for different attack types and network flows. Finally we build an automatic steering mechanism that can guide \ours{} in deployment to achieve a desired level of sparsity.
 
 \end{abstract}
 
@@ -134,11 +134,14 @@ firstname.lastname@tuwien.ac.at}}
 
 \section{Introduction}
 \label{sec:introduction}
+\note{blue}{Fares: I fixed the paper based on Tanja's comments. still  (1) the abstract is not touched yet (2) figures with axes (time step) need to be changed... We need to be carefull with the 9 pages limit}
 
 %There is a significant body of scientific work focusing on the detection of unwanted behavior in networks. In the past, a viable way of performing intrusion detection was to inspect the content of packets themselves and detect if a packet delivers potentially harmful content. More recently, with the increasing deployment of encryption, the focus now lies on features that are always available to network monitoring equipment like port numbers, protocol flags or packet sizes when encrypting above the transport layer.
 
 % Fares:
-As the need for security mechanisms in today's infrastructure's communication networks grows, a substantial body of scientific work focuses on developing reliable and explainable frameworks for the identification of unwanted behavior. In the past, a viable way to detect intrusions was to analyze the contents of the packets themselves and determine, for example, whether a packet contains potentially harmful content by matching patterns. More recently, with the increasing deployment of encryption, the focus is now on features that are always available for network monitoring devices such as port numbers, protocol flags and packet sizes when encrypting above the transport layer.
+As the need for security mechanisms in today's infrastructure's communication networks grows, a substantial body of scientific work focuses on developing reliable and explainable frameworks for the identification of unwanted behavior. In the past, a viable way to detect intrusions was to analyze the contents of the packets themselves and determine, for example, whether a packet contains potentially harmful content by matching patterns. More recently, with the increasing deployment of encryption, the focus is now on features available for network monitoring devices even if packets are encrypted, such as packet sizes and temporal behavior. In our work we concentrate on features available when encrypting above transport layer (like for example TLS or QUIC), i.e. we also include port numbers and protocol flags.
+
+
 
 %Network communication is usually aggregated into \textit{flows}, which are commonly defined as a sequence of packets sharing certain properties. When analyzing flows, not only the aforementioned features are available but also features related to the timing of the individual packets. Various approaches have been proposed to extract features from flows and then perform anomaly detection with the extracted flows \cite{meghdouri_analysis_2018}.
 %While these approaches frequently work well, it is problematic that the whole flow has to be received first and only afterwards anomaly detection is applied, revealing attack flows. Thus, we design a network \gls{ids} that operates on a per-packet basis and decides if a packet is anomalous based on features that are available even for traffic that is encrypted above the transport layer, like for example TLS or QUIC.
@@ -146,8 +149,8 @@ As the need for security mechanisms in today's infrastructure's communication ne
 %\cite{hartl_explainability_2019} showed that such a system has similar performance to other flow-based anomaly detection systems but can detect anomalies \textit{before} the flow terminates and analyzed its security with respect to adversaries extensively.
 
 % Fares:
-Network communication is typically aggregated into \textit{flows}, which are commonly defined as a sequence of packets that share certain properties. When analyzing flows, not only the aforementioned features are available but also features representing the temporal behavior of the individual packets. Various approaches have been proposed to extract flow features with which anomaly detection can be performed: In \cite{meghdouri_analysis_2018} compare such approaches and show their efficacy.
-While these approaches often work well, a major drawback is that the whole flow must be received first and only then anomaly detection can be applied, revealing malicious flows. Thus, we design a network \gls{ids} that operates on a per-packet basis and determines whether a packet is anomalous based on features that are available even for traffic that is encrypted above the transport layer, like for example TLS or QUIC.
+Network communication is typically aggregated into \textit{flows}, which are commonly defined as a sequence of packets that share certain properties. When analyzing flows, not only the aforementioned features are available but also features representing the temporal behavior of the individual packets. Various approaches have been proposed to extract flow features with which anomaly detection can be performed: Authors in \cite{meghdouri_analysis_2018} compare such approaches and show their efficacy.
+While these approaches often work well, a major drawback is that the whole flow must be received first and only then anomaly detection can be applied, to reveal malicious flows. Thus, we design a network \gls{ids} that operates on a per-packet basis and determines whether a packet is anomalous based on the aforementioned features.
 In this way, an \gls{rnn}-based \gls{ids} has the benefit of avoiding feature engineering procedures and let the classifier build high level features by itself.
 \cite{hartl_explainability_2019} show that such an architecture has similar performance to traditional flow-based anomaly detection systems, but can still detect anomalies \textit{before} the flow ends. Furthermore they analyzed its robustness with respect to adversaries extensively.
 
@@ -221,7 +224,7 @@ Given enough training instances, \gls{rl} algorithms have been shown to perform 
 %\end{split}
 %\end{align}
 
-For a flow of length $T$ at each timestep $t$ we have two reward metrics which we compute in a fashion that is known from \textit{R-learning} \cite{schwartz_reinforcement_1993}:
+For a flow of length $N$ at each packet $n$ we have two reward metrics which we compute in a fashion that is known from \textit{R-learning} \cite{schwartz_reinforcement_1993}:
 
 %\begin{figure}
 %\centering
@@ -233,27 +236,27 @@ For a flow of length $T$ at each timestep $t$ we have two reward metrics which w
 \begin{figure*}
 \centering
   \includegraphics[width=0.8\textwidth]{img/rewards_calc_example.pdf}
-  \caption{The computation of the rewards for a sample malicious flow: Gray packets (0) are skipped while black ones (1) are chosen. ``\#Left\//\#Total'' and ``Confidence'' are the underlying parameters for rewards calculations (see \autoref{eq:R_classification} and \autoref{eq:R_sparsity}). Numbers are rounded to two digits after the decimal point.}
+  \caption{The computation of the rewards for a sample malicious flow: Gray packets (0) are skipped while black ones (1) are chosen. ``\#Skipped\//\#Total'' (number of packets skipped with respect to the total number of packets both starting from the current position) and ``Confidence'' are the underlying parameters for rewards calculations (see \autoref{eq:R_classification} and \autoref{eq:R_sparsity}). Numbers are rounded to two digits after the decimal point.}
   \label{fig:rewards}
 \end{figure*}
 
 The classification reward metric (\autoref{eq:R_classification}) captures how correct the classifier is on average for all future packets of a flow. The label of each packet in a flow has a value of 0 for non-attack traffic and 1 for attack traffic with one flow being only attack or non-attack but not mixed. The confidence is the sigmoided $\left(\frac{e^x}{1+e^x}\right)$ output of the classifier, yielding a value between 0 and 1, where 0 is absolute confidence for a flow being benign and 1 is absolute confidence for a flow being an attack.
 \begin{align}
 \begin{split}
-R_{\text{classification},t} = \frac{1}{T-t} \sum_{i=t+1}^{T} |1 - \left(\text{label}_i - \text{confidence}_i\right)|
+R_{\text{classification},n} = \frac{1}{N-n} \sum_{i=n+1}^{N} |1 - \left(\text{label}_i - \text{confidence}_i\right)|
 \end{split}
 \label{eq:R_classification}
 \end{align}
 
 Intuitively, the classification reward makes sure, that packets are chosen that contain the maximum accuracy and thus result in the highest classification performance.
 
-The sparsity reward metric (\autoref{eq:R_sparsity}) captures how much sparsity is achieved on average for all future packets of a flow. E.g. for a flow of length 10 if after timestep 5, 3 packets are chosen and 2 are skipped from what is left, the sparsity reward metric at timestep 5 is $\frac{2}{10-(4+1)}=\frac{2}{5}$.
+The sparsity reward metric (\autoref{eq:R_sparsity}) captures how much sparsity is achieved on average for all future packets of a flow. E.g. for a flow of length 10 if after the 5th packet, 3 packets are chosen and 2 are skipped from what is left, the sparsity reward metric at packet 5 is $\frac{2}{10-(4+1)}=\frac{2}{5}$.
 %\note{blue}{Fares: This equation can be shortened by diving by the total count of packets left.\\
 %Fares: If the length of the flow is not known, how do we estimate T}.
 %\note{red}{Max: It's only relevant during training when you know the lengths of the flows. In deployment, you don't need the rewards anymore...}
 \begin{align}
 \begin{split}
-R_{\text{sparsity},t} = \frac{\sum_{i=t+1}^{T} 1_{\text{skipped},i}}{T-(t+1)}
+R_{\text{sparsity},n} = \frac{\sum_{i=n+1}^{N} 1_{\text{skipped},i}}{N-(n+1)}
 \end{split}
 \label{eq:R_sparsity}
 \end{align}
@@ -266,40 +269,40 @@ Our proposed framework (see \autoref{fig:neuralNetworkArchitecture}) consists of
 
 The classifier's goal is to guess correctly if a flow is an attack or not. For this, it outputs its confidence for non-attack/attack after reading a packet. As stated in \autoref{subsec:classifier}, we choose an LSTM-based supervised classifier for this work, but our framework can work together with any classifier as long as it outputs a confidence for non-attack/attack at each packet and can handle skipped packets. For instance it would also be possible to replace the LSTM with an unsupervised autoencoder akin to \cite{mirsky_kitsune_2018}.
 
-The critic aims to estimate the future expected average classification performance and the future expected average sparsity that can be achieved at a timestep $t$ (a timestep is a packet). For this, given the current input vector and the state of the LSTM cells $s_t$ and the neural network weights of the critic $\theta_v$, it outputs $v_{\text{classification},t}$ and $v_{\text{sparsity},t}$ at each timestep $t$. It aims to predict the classification performance and sparsity correctly for each timestep by minimizing the following loss function:
+The critic aims to estimate the future expected average classification performance and the future expected average sparsity that can be achieved at a packet $n$. For this, given the current input vector and the state of the LSTM cells $s_n$ and the neural network weights of the critic $\theta_v$, it outputs the value functions $v_{\text{classification},n}$ and $v_{\text{sparsity},n}$ at each packet $n$. It aims to predict the classification performance and sparsity correctly for each packet by minimizing the following loss function:
 \begin{align}
 \begin{split}
-l_{\text{v},t} =& \left(R_{\text{classification},t} - v_{\text{classification},t}\left(s_t ; \theta_\text{c} \right)\right)^2 \\
-+ & \left(R_{\text{sparsity},t} - v_{\text{sparsity},t}\left(s_t ; \theta_\text{c} \right)\right)^2
+l_{\text{v},n} =& \left(R_{\text{classification},n} - v_{\text{classification},n}\left(s_n ; \theta_\text{c} \right)\right)^2 \\
++ & \left(R_{\text{sparsity},n} - v_{\text{sparsity},n}\left(s_n ; \theta_\text{c} \right)\right)^2
 \end{split}
 \end{align}
 
-Now that the reward metrics and the critic's outputs are defined, we can define the overall utility $U$ that we want to maximize at each timestep $t$ as follows:
+Now that the reward metrics and the critic's outputs are defined, we can define the overall utility $U$ that we want to maximize at each packet $n$ as follows:
 \begin{align}
 \begin{split}
-U_t =& \left(R_{\text{classification},t} + \alpha \cdot R_{\text{sparsity},t}\right) \\
-- & \left(v_{\text{classification},t} + \alpha \cdot v_{\text{sparsity},t}\right)
+U_n =& \left(R_{\text{classification},n} + \alpha \cdot R_{\text{sparsity},n}\right) \\
+- & \left(v_{\text{classification},n} + \alpha \cdot v_{\text{sparsity},n}\right)
 \end{split}
 \end{align}
 
-This means that we want the reward to be higher than the critic's expectation. Note that it would be also possible to unify both reward metrics in one and have the critic have only one output, but we consider it to be more interpretable to have two separate outputs, which can be inspected by an operator.
+With $\alpha$ being the sparsity-accuracy tradeoff parameter. This means that we want the reward to be higher than the critic's expectation. Note that it would be also possible to unify both reward metrics in one and have the critic have only one output, but we consider it to be more interpretable to have two separate outputs, which can be inspected by an operator.
 
-The actor outputs a probability distribution at timestep $t$, which is sampled to determine the number of packets that should be skipped. It aims to change the distribution so that actions which result in a higher reward are chosen more frequently, maximizing the utility function. However, this strategy could lead to the actor getting stuck with what it considers the best decision and never try alternatives even though they might result in a higher reward. This would be equivalent to the actor being stuck in a local maximum. Thus, the actor not only tries to change the distribution so that the actions become more optimal (higher reward) but at the same time also aims to maximize the entropy of the distribution so that alternative choices are still explored reasonably often.
+The actor outputs a probability distribution at packet $n$, which is sampled to determine the number of packets that should be skipped next. It aims to change the distribution so that actions which result in a higher reward are chosen more frequently, maximizing the utility function. However, this strategy could lead to the actor getting stuck with what it considers the best decision and never try alternatives even though they might result in a higher reward. This would be equivalent to the actor being stuck in a local maximum. Thus, the actor not only tries to change the distribution so that the actions become more optimal (higher reward) but at the same time also aims to maximize the entropy of the distribution so that alternative choices are still explored reasonably often.
 
-Specifically, at packet $t$ of a network flow, given the current state $s_t$ (which consists of the current input as well as the LSTM state) and the neural network weights of the actor $\theta_a$, the actor outputs a probability distribution $\pi \left( a_t \given s_t ; \theta_\text{a} \right)$ from which the action $a_t \ge 1$ is sampled. $a_t=1$ means that the next packet is inspected next, while, for example, $a_t=2$ means that one packet is skipped until the next that is chosen, $a_t = 3$ means that two are skipped and so forth. Besides wanting to make actions which result in a high reward more likely, the actor also seeks to optimize the entropy $H(\cdot)$ of the probability distribution so that it keeps exploring and doesn't get stuck with a suboptimal policy.
+Specifically, at packet $n$ of a network flow, given the current state $s_n$ (which consists of the current input as well as the LSTM state) and the neural network weights of the actor $\theta_a$, the actor outputs a probability distribution $\pi \left( a_n \given s_n ; \theta_\text{a} \right)$ from which the action $a_n \ge 1$ is sampled. $a_n=1$ means that the next packet is inspected next, while, for example, $a_n=2$ means that one packet is skipped until the next that is chosen, $a_n = 3$ means that two are skipped and so forth. Besides wanting to make actions which result in a high reward more likely, the actor also seeks to optimize the entropy $H(\cdot)$ of the probability distribution so that it keeps exploring and doesn't get stuck with a suboptimal policy.
 
 Combining these objectives, the actor network aims to minimize the loss function
 \begin{align}
 \begin{split}
-l_{\text{a},t} =& \underbrace{ -\log \left( \pi \left( a_t \given s_t ; \theta_\text{a} \right) \right) U_t}_{\text{Policy Loss}} \\
-&- \beta \underbrace{H\left( \pi\left( s_t; \theta_a \right)\right) }_{\text{Enthropy}}
+l_{\text{a},n} =& \underbrace{ -\log \left( \pi \left( a_n \given s_n ; \theta_\text{a} \right) \right) U_n}_{\text{Policy Loss}} \\
+&- \beta \underbrace{H\left( \pi\left( s_n; \theta_a \right)\right) }_{\text{Entropy}}
 \end{split}\label{eq:actor}
 \end{align}
 
 %The Critic network evaluates the behavior of the Actor network and computes the classification performance and sparsity that it thinks is going to be achieved.% using the computed value function and gives it feedback based on the performance obtained by the LSTM classifier.
 %The number of packets to skip is taken from the Actor's output distribution and fed into the packet parser, which is responsible for counting the packets and selecting the appropriate one.
 
-In related work regarding \gls{rl}-based sampling for sequences, only discrete actions were evaluated so far: The actor would output a categorical probability distribution with a fixed maximum number of bins $k$. A drawback of this approach is that only a predefined maximum number of packets can be skipped and that for a very large number of $k$, it can take a long time to converge to an optimum policy as there are $k$ different options to explore at each timestep $t$. Besides discrete actions, we thus also experiment with continuous actions, which allow to skip arbitrarily many packets.
+In related work regarding \gls{rl}-based sampling for sequences, only discrete actions were evaluated so far: The actor would output a categorical probability distribution with a fixed maximum number of bins $k$. A drawback of this approach is that only a predefined maximum number of packets can be skipped at once (the maximum of the actions space) and that for a very large number of $k$, it can take a long time to converge to an optimum policy as there are $k$ different options to explore at each packet $n$. Besides discrete actions, we thus also experiment with continuous actions, which allow to skip arbitrarily many packets with long-tailed distributions.
 
 \begin{figure}
 \centering
@@ -335,7 +338,7 @@ The architecture in \autoref{fig:neuralNetworkArchitecture} shows that the actor
 \begin{align}
 \text{softplus}(x) = \log\left(1 + e^x \right)
 \end{align}
-To parametrize the normal distribution that underlies the log-normal distribution, we first have to compute the parameters $\mu_{\text{normal}}$ and $\sigma_{\text{normal}}$ from $\mu$ and $\sigma$. We can compute them as follows:
+Since the log-normal distribution can not be explicitly parametrized, we parametrize first the normal distribution that underlies the log-normal distribution by deriving the parameters $\mu_{\text{normal}}$ and $\sigma_{\text{normal}}$ from $\mu$ and $\sigma$ as follows:
 
 \begin{align}
 \mu_{\text{normal}} = \frac{1}{2}\left( 2\log(\mu) - \log\left(\frac{\mu^2 + \sigma^2}{\mu^2}\right) \right)
@@ -345,16 +348,16 @@ To parametrize the normal distribution that underlies the log-normal distributio
 \sigma_{\text{normal}} = \sqrt{\log\left(\frac{\mu^2 + \sigma^2}{\mu^2}\right)}
 \end{align}
 
-When experimenting with continuous actions, we encountered one practical problem: At the beginning of training, the classifier would still perform badly and would not give the actor a useful reward. As a result, the actor would only focus on sparsity and aim to maximize it, as the classification reward would always be equally bad no matter how many packets are chosen. Thus, the actor would learn to let $\mu$ go to infinity. This would increase the reward at the beginning when the interaction between the three components of our \gls{rl} system is still fragile. As a solution, we add a penalty to the reward calculation when the actor jumps far behind the last flow packet. The modified reward applies only to the last chosen packet and penalizes the actor jumping more than one packet behind the last packet. The sparsity reward formula (\autoref{eq:R_sparsity}) of the last packet is modified as follows, where \textit{last} refers to the index of the last chosen packet in the flow ($t=\textit{last}$):
+When experimenting with continuous actions, we encountered one practical problem: At the beginning of training, the classifier would still perform badly and would not give the actor a useful reward. As a result, the actor would only focus on sparsity and aim to maximize it, as the classification reward would always be equally bad no matter how many packets are chosen. Thus, the actor would learn to let $\mu$ go to infinity. This would increase the reward at the beginning when the interaction between the three components of our \gls{rl} system is still fragile. As a solution, we add a penalty to the reward calculation when the actor jumps far behind the last flow packet. The modified reward applies only to the last chosen packet and penalizes the actor jumping more than one packet behind the last packet. The sparsity reward formula (\autoref{eq:R_sparsity}) of the last packet is modified as follows, where \textit{last} refers to the index of the last chosen packet in the flow ($n=\textit{last}$):
 
 \begin{align}
 \begin{split}
-R_{\text{sparsity},\textit{last}} = \frac{\left(\sum_{i=\textit{last}+1}^{T} 1_{\text{skipped},i}\right) - \left(\textit{last}+a_{\textit{last}} - T - 1\right)}{T- (\textit{last}+1)}
+R_{\text{sparsity},\textit{last}} = \frac{\left(\sum_{i=\textit{last}+1}^{N} 1_{\text{skipped},i}\right) - \left(\textit{last}+a_{\textit{last}} - N - 1\right)}{N- (\textit{last}+1)}
 \end{split}
 \label{eq:R_sparsity_last}
 \end{align}
 
-Specifically, it adds the term $\left(\textit{last}+a_{\textit{last}} - T - 1\right)$ to the numerator which penalizes the actor jumping more than one packet behind the flow. Jumping just right after the flow does not get penalized because if the actor considers the rest of the flow as irrelevant, ignoring the rest of the flow and jumping to the first packet behind the flow is a useful action.
+Specifically, it adds the term $\left(\textit{last}+a_{\textit{last}} - N - 1\right)$ to the numerator which penalizes the actor jumping more than one packet behind the flow. Jumping just right after the flow does not get penalized because if the actor considers the rest of the flow as irrelevant, ignoring the rest of the flow and jumping to the first packet behind the flow is a useful action.
 
 \section{Other sampling techniques}
 \label{sec:other_sampling_techniques}
@@ -364,16 +367,16 @@ We opt for three sampling families that, unlike \ours{} cannot adapt their strat
 
 \subsection{Random Sampling}
 
-Given the fraction $p$ of packets to be selected in a sequence of $T$ packets, this technique will sample each individual packet with probability of $p$. If the sequence is large enough, $n$ packets will be randomly sampled from a uniform distribution whereby $n= p \times T$. In practice, these technique works well if several packets have similar properties (redundancy) and therefore the probability of skipping important information is minimal.
+Given the fraction $p$ of packets to be selected in a sequence of $N$ packets, this technique will sample each individual packet with probability of $p$. Theoretically, if the sequence is large enough (infinitely large), $m$ packets will be randomly sampled from a uniform distribution whereby $m \approx \lfloor N \times p \rfloor$. Nevertheless, in the case of short flows, $m$ is not constant and varies to some degree.  In practice, these technique works well if several packets have similar properties (redundancy) and therefore the probability of skipping important information is minimal.
 
-\subsection{First \emph{n} Sampling}
-As its name suggests, this technique only samples the first packets from each flow and ignores the rest of the flow. For a sampling probability $p$ it will take the first $n$ packets from each flow so that $n \approx T * p$. For example, for a flow with length 10 and $p=0.2$, it will take the first 2 packets. For this procedure the length of a flow has to be known beforehand and thus it is not applicable in a streaming scenario. This technique is successful under the assumption that most information for determining maliciousness is present in the first few packets of a flow, i.e. a large data transfer in which the initial packets represent a hand-shake after which the majority of packets contain the raw data and do not reveal significant information to non-\gls{dpi} systems.
+\subsection{Relative First \emph{m} Packets}
+As its name suggests, this technique only samples the first packets from each flow and ignores the rest of the flow. For a sampling rate $p$ it will take the first $m$ packets from each flow so that $m = \lfloor N \times p \rfloor$. For example, for a flow with length 10 and $p=0.2$, it will take the first 2 packets, for another flow of length 40 and for the same sampling rate ($p=0.2$), it will sample the first 8 packets. For this procedure the length of a flow has to be known beforehand and thus it is not applicable in a streaming scenario. This technique is successful under the assumption that most information for determining maliciousness is present in the first few packets of a flow, i.e. a large data transfer in which the initial packets represent a hand-shake after which the majority of packets contain the raw data and do not reveal significant information to non-\gls{dpi} systems.
 
-\subsection{First \emph{n} Equal Sampling}
-This technique is similar to the one above, with the difference that the length of a flow doesn't have to be known beforehand. If flows have an average length of 10 packets, and the sampling probability $p=0.2$ it would take up to two packets from each flow.
+\subsection{First \emph{m} Packets}
+This technique is similar to the one above, with the difference that the length of a flow doesn't have to be known beforehand. If flows have an average length of 10 packets, and the sampling rate $p=0.2$ it would take up to two packets from each flow regardless of its length.
 
 \subsection{Every \emph{i}th Sampling}
-Finally we use a periodic sampling technique that takes a sample each $i= \frac{1}{p}$ packet. Similar to the last technique, the length of the flow is not needed in this case. In practice, this technique is best suited to keep the distribution of the sampled set similar to the original distribution, and it is thus suited for scenarios where information is heterogeneously distributed between packets over an entire network flow.
+Finally we use a periodic sampling technique that for a sampling rate $p$, it takes a sample each $i= \lfloor \frac{1}{p} \rfloor$ packet(s). Similar to the last technique, the length of the flow is not needed in this case. In practice, this technique is best suited to keep the distribution of the sampled set similar to the original distribution, and it is thus suited for scenarios where information is heterogeneously distributed between packets over an entire network flow.
 
 In each of the above techniques, the first packet of each flow is always taken because otherwise one could get undefined behavior: If a flow only consists of 1 packet and this packet is not chosen, it is not even defined if the prediction of the classifier was correct for this flow or not. Thus, in our implementations of the above sampling techniques, we make sure that even when the first packet is always chosen, the overall fraction of chosen packets corresponds to the sampling probability $p$.
 
@@ -451,7 +454,7 @@ We study the effect of the sparsity-accuracy tradeoff first, then we evaluate bo
 For all our experiments we train our networks for at least 8 epochs ($>10$ million flows for both datasets) with the Adam optimizer with a learning rate of $0.001$. An important implementation detail is that we always start with the first packet of a flow, meaning that it cannot be skipped. Also, we set the entropy parameter to $0.01$. 
 \autoref{fig:training} shows how, during training, accuracy increases quickly at the beginning and then gradually afterwards. At the same time, sparsity gets higher as the \gls{rl} learns which packets can be skipped since they do not influence classification performance. %We then evaluate the resulting neural networks on the test dataset. 
 
-Opposed to the behavior during training, we do not randomly sample from the probability distribution of the actor during testing. Instead take the mean of the distribution for the continuous case and the mode for the discrete one. This is reasonable and best practice \cite{mnih_asynchronous_2016} since during testing we do not aim to explore the possible choices anymore as they were already learned during training: Only the optimal choice, which was learned, should be applied and no exploration is necessary since the actor does not train anymore. Furthermore, the critic is only necessary during training for the reward of the actor. During deployment, it can be disabled, saving computational power. 
+Opposed to the behavior during training, we do not randomly sample from the probability distribution of the actor during testing. We instead take the mean of the distribution for the continuous case and the mode for the discrete one. This is reasonable and best practice \cite{mnih_asynchronous_2016} since during testing we do not aim to explore the possible choices anymore as they were already learned during training: Only the optimal choice, which was learned, should be applied and no exploration is necessary since the actor does not train anymore. Furthermore, the critic is only necessary during training for the reward of the actor. During deployment, it can be disabled, saving computational power. 
 
 \begin{table}
 % Evaluated using
@@ -484,8 +487,10 @@ Results show that the higher the tradeoff, the less packets are sampled and the 
 %}
 % Max: Could be but it is too speculative in my opinion. From what I saw, neural networks depend quite a lot on the initialization and on luck, so it might just be that it was lucky...
 
-The fact that for UNSW-NB15 sparsity is higher is caused by the fact that it has more packets per flow on average and thus more redundant information that the \gls{rl} learns to skip. %This, on the other hand, holds since almost the same number of packets is sampled from each flow for both datasets (see \autoref{sec:conclusion}).
+%The fact that for UNSW-NB15 sparsity is higher is caused by the fact that it has more packets per flow on average and thus more redundant information that the \gls{rl} learns to skip. %This, on the other hand, holds since almost the same number of packets is sampled from each flow for both datasets (see \autoref{sec:conclusion}).
 % Max: I don't understand the sentence commented out above...
+
+The higher sparsity in UNSW-NB15 is caused by the fact that it has more packets per flow on average and thus \ours{} achieves higher sparsity even by sampling the same number of packets as in CIC-IDS-2017.
 
 %\todo{Write that the sparsity is higher for UNSW-NB15 because it contains longer flows}
 
@@ -565,7 +570,7 @@ One concern could be the overly deterministic nature of the decisions of \ours{}
 So far, we have always trained \ours{} with a fixed tradeoff parameter $\alpha$. Nevertheless, there is also an important use case in which an operator wants a certain minimum sparsity, for example 50\%, to limit the necessary computation power and thus reduce costs.
 We thus propose a method that enables steering the tradeoff to achieve a certain desired sparsity. The steering algorithm works as follows:
 \begin{enumerate}
-\item A model is trained for which the trade-off is chosen randomly for each flow during training from a uniform distribution yielding values between 0 and 1. We add a new feature to each packet that indicates the tradeoff chosen for the respective flow so that it can adjust its sampling strategy in anticipation of the tradeoff that will determine the reward.
+\item A model is trained for which the tradeoff is chosen randomly for each flow during training from a uniform distribution yielding values between 0 and 1. We add a new feature to each packet that indicates the tradeoff chosen for the respective flow so that it can adjust its sampling strategy in anticipation of the tradeoff that will determine the reward.
 \item During deployment, the tradeoff is set to the maximum that was used during training (1 in our case), which results in maximum sparsity. The tradeoff is then continuously decremented if the current sparsity is still above the specified minimum. It is important that the tradeoff can never fall below 0 because this is a case that has not been encountered during training and can lead to abnormal behavior.
 \end{enumerate}
 
