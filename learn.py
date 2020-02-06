@@ -667,14 +667,22 @@ def train_rl():
 					locs, scales = compute_normal_distribution_from_log_normal(current_slice_action_probs[:,:,0], current_slice_action_probs[:,:,1])
 
 					if (scales < CLAMPING_CONSTANT).any():
-						print("scales underflowed!")
+						print("problem at top!")
 						print("current_slice_action_probs[:,:,0]", current_slice_action_probs[:,:,0])
 						print("current_slice_action_probs[:,:,1]", current_slice_action_probs[:,:,1])
 						print("locs", locs)
 						print("scales", scales)
 						scales = torch.max(scales, CLAMPING_CONSTANT)
 
-					current_slice_action_dists = torch.distributions.log_normal.LogNormal(locs, scales, validate_args=True)
+					try:
+						current_slice_action_dists = torch.distributions.log_normal.LogNormal(locs, scales, validate_args=True)
+					except ValueError as e:
+						print("crash at top!")
+						print("current_slice_action_probs[:,:,0]", current_slice_action_probs[:,:,0])
+						print("current_slice_action_probs[:,:,1]", current_slice_action_probs[:,:,1])
+						print("locs", locs)
+						print("scales", scales)
+						raise e
 
 				outputs_rl_actor.append(current_slice_action_probs)
 				decisions = current_slice_action_dists.sample()
@@ -708,8 +716,8 @@ def train_rl():
 							overshoot[seq_index] = chosen_indices[step_index+1][seq_index] - orig_seq_lens[seq_index]
 						new_already_found_packets_per_sample[seq_index] += 1
 						already_skipped_packets_per_sample[seq_index] += torch.min(chosen_indices[step_index+1][seq_index] if step_index+1 < len(chosen_indices) else torch.tensor(float("inf")), orig_seq_lens[seq_index]) - chosen_indices[step_index][seq_index] - 1
-				# rewards_sparsity.append((already_skipped_packets_per_sample)/(already_skipped_packets_per_sample+already_found_packets_per_sample+overshoot))
-				rewards_sparsity.append((already_skipped_packets_per_sample-overshoot)/(already_skipped_packets_per_sample+already_found_packets_per_sample))
+				rewards_sparsity.append((already_skipped_packets_per_sample)/(already_skipped_packets_per_sample+already_found_packets_per_sample+overshoot))
+				# rewards_sparsity.append((already_skipped_packets_per_sample-overshoot)/(already_skipped_packets_per_sample+already_found_packets_per_sample))
 				overshoot = torch.zeros((batch_size), dtype=torch.float32).to(device)
 				already_found_packets_per_sample = new_already_found_packets_per_sample
 
@@ -824,14 +832,22 @@ def train_rl():
 				locs, scales = compute_normal_distribution_from_log_normal(effective_output_rl_actor[:,0], effective_output_rl_actor[:,1])
 
 				if (scales < CLAMPING_CONSTANT).any():
-					print("scales underflowed!")
+					print("problem at bottom!")
 					print("current_slice_action_probs[:,:,0]", current_slice_action_probs[:,:,0])
 					print("current_slice_action_probs[:,:,1]", current_slice_action_probs[:,:,1])
 					print("locs", locs)
 					print("scales", scales)
 					scales = torch.max(scales, CLAMPING_CONSTANT)
 
-				effective_rl_actor_dists = torch.distributions.log_normal.LogNormal(locs, scales, validate_args=True)
+				try:
+					effective_rl_actor_dists = torch.distributions.log_normal.LogNormal(locs, scales, validate_args=True)
+				except ValueError as e:
+					print("crash at bottom!")
+					print("current_slice_action_probs[:,:,0]", current_slice_action_probs[:,:,0])
+					print("current_slice_action_probs[:,:,1]", current_slice_action_probs[:,:,1])
+					print("locs", locs)
+					print("scales", scales)
+					raise e
 
 			effective_rewards_sparsity = rewards_sparsity_catted.detach()[mask_rl_first].view(-1)
 			effective_rewards_sparsity_with_tradeoff = (tradeoff*rewards_sparsity_catted.detach())[mask_rl_first].view(-1)
