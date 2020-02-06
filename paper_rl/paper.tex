@@ -166,7 +166,7 @@ Nevertheless, not only the accuracy and reliability of classification, but also 
 \item have a parameter that allows to \textbf{trade off} classification performance for sparsity (choosing fewer packets).
 \item be \textbf{independent of the classifier} so that any classifier can be used and that the classifier doesn't have to be aware of the sampling strategy.
 \item be \textbf{retrainable} so that the sampling can be continuously adapted depending on the current threat landscape.
-\item be able to \textbf{skip arbitrarily} many packets since network flows can be very long but only the first couple of packets are needed to decide whether an attack occurred or not and the remaining packets can be skipped altogether.
+\item be able to \textbf{skip arbitrarily} many packets since network flows can be very long but only the first couple of packets are needed to decide whether an attack occurred or not and the remaining packets be lightweight, so that computation efficiency is not lower because of the sampling overhead. 
 \end{enumerate}
 
 
@@ -174,12 +174,14 @@ Nevertheless, not only the accuracy and reliability of classification, but also 
 
 % Fares:
 For this purpose we develop an \gls{rl}-based \gls{ids}: \textit{\ours{}} that fulfills the above properties. We show that a significant number of packets can be skipped while the accuracy does not drop
-considerably. Compared to other common sampling techniques, \ours{} performs better when being trained on the same number of packets.
+considerably. Compared to other common sampling techniques, \ours{} performs better when being trained on the same number of flows.
 
 %As \ours{} uses a parameter to trade-off accuracy for sparsity, the resulting accuracy and sparsity are determined by this parameter. However, since it also might be desired to specify the sparsity itself, we propose a steering system which takes a desired sparsity as its input and modifies the parameter of the reinforcement learning in a control loop until the specified sparsity is reached.
 
 % Fares:
 The accuracy-sparsity trade-off of \ours{} can be regulated by a reinforcement learning parameter that directly affects both quantities. However, as in some deployments, a certain sparsity has to be minimally achieved to limit the computational expense, we also develop a steering system that adapts the trade-off parameter in a closed control loop. In this way the given budget of computation power is not exceeded.
+
+To make \ours{} as lightweight as possible, our implementation allows to let the sampling and the classifier to be implemented in the same neural network, meaning that no overhead is introduced. Without this option enabled, the computational power required is $2\times$ what would be required without the sampling. Thus, for this option, less than $50\%$ of packets must be sampled to gain a computational efficiency advantage. 
 
 To encourage reproducibility and facilitate experimentation, we publicly release the source code, the trained ML models, the data and the figures of this work\footnote{\url{https://github.com/CN-TU/adversarial-recurrent-ids/tree/rl}}.
 
@@ -626,7 +628,7 @@ We thus propose a method that enables steering the tradeoff to achieve a certain
 In this paper we aimed to develop smart packet sampling methods for the use case of \glspl{ids} to save computational power. To this end, we proposed \ours{} which is a framework for packet sampling based on \gls{rl}.
 
 % Max: 1/4 is already pronounced one fourth
-We show that the \gls{rl}-based approach with a tradeoff between classification accuracy and sparsity indeed results in higher sparsity the larger the tradeoff parameter, while potentially classification performance is sacrificed. Surprisingly, we saw that \ours{} on average chooses very few packets per flow: Typically $\approx \frac{1}{4}$. Furthermore, our results showed that \gls{rl}-based sampling can intelligently choose relevant packets for intrusion detection and outperform non-smart sampling techniques.
+We showed that the \gls{rl}-based approach with a tradeoff between classification accuracy and sparsity indeed results in higher sparsity the larger the tradeoff parameter, while potentially classification performance is sacrificed. Surprisingly, we saw that \ours{} on average chooses very few packets per flow: Typically $\approx \frac{1}{4}$. Furthermore, our results showed that \gls{rl}-based sampling can intelligently choose relevant packets for intrusion detection and outperform non-smart sampling techniques.
 
 Besides discrete actions for our \gls{rl} system we also implemented continuous ones. We showed that a naive implementation would not work as the training is too fragile in the beginning and the \gls{rl} system learned to maximize only one of the rewards (sparsity) in the beginning. This was solved by adding a penalty for jumping behind the end of the sequence which proved effective. Comparing with discrete actions, continuous actions seem to perform on par. This is still an advantage, as for continuous actions the neural network only needs to have two outputs (mean and standard deviation) while for discrete ones it needs as many outputs as there are actions. The continuous action framework is thus more lightweight and also can learn to skip arbitrarily many packets.
 
