@@ -4,7 +4,7 @@ Contact: Maximilian Bachl, Fares Meghdouri
 This repository contains the code, the data and the machine learning models for our upcoming paper on using Deep Reinforcement Learning for packet sampling. We perform our study in the context of Intrusion Detection Systems.
 
 # Dataset
-We use the CIC-IDS-2017 dataset. The repository contains a preprocessed version of the datasets (refer to the paper for more information). 
+We use the CIC-IDS-2017 dataset. The repository contains a preprocessed version of the dataset (refer to the paper for more information). 
 
 ```flows.pickle``` is the file containing preprocessed flows of CIC-IDS-2017. Due to size constraints on GitHub they had to be split. Restore ```flows.pickle``` as follows:
 * Concatenate the parts: ```cat flows.pickle.gz.part-* > flows.pickle.gz```
