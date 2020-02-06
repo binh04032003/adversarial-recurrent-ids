@@ -185,11 +185,19 @@ To encourage reproducibility and facilitate experimentation, we publicly release
 
 \section{Related Work}
 
-\cite{hartl_explainability_2019} build an LSTM-based \cite{hochreiter_long_1997} recurrent classifier for Network Intrusion Detection and develop methods for explainability and to assess the security of recurrent classifiers.
+There is a significant body of research on sampling for networks: \cite{zseby_sampling_2005} give an overview of common methods for packet sampling in IP networks. \cite{estan_building_2004} develop a scheme that adapts the sampling rate depending on available resources. 
+
+Several approaches have been proposed to implement sampling for \gls{ids}:  \cite{estan_new_2003} propose to single out large flows for \gls{ids} and sample fewer packets for increased computational efficiency. \cite{bakhoum_intrusion_2011} use an approach based on Markov chains to sample packets for \gls{ids}.
+\cite{murali_kodialam_detecting_2003} lay out a game-theoretic model for determining which network paths are more vulnerable and require more packet sampling. 
+\cite{ha_suspicious_2016} develop a system for Software Defined Networks, which aims to sample more packets from more vulnerable parts of the network.
+
+Regarding \gls{rnn} for \gls{ids}, \cite{hartl_explainability_2019} build an LSTM-based recurrent classifier for Network Intrusion Detection and develop methods for explainability and to assess the security of recurrent classifiers.
+
+Some works investigated ways to let \glspl{rnn} skip parts of sequences. The focus of these works was mostly Natural Language Processing and we know of no work that focuses on network traffic. The following papers provide an overview of this research domain:
 
 \cite{yu_learning_2017} propose using \gls{rl} to let an LSTM learn to skim text. Their technique does not aim to maximize sparsity but only lets the \gls{rl} optimize classification performance for the sequence as a whole. Thus, if it learns to skip elements it is only because it is better for achieving good classification performance, not because it wants to increase sparsity.
 
-\cite{campos_skip_2018} develop a technique that includes a \textit{skip gate} into LSTM or GRU \cite{cho_learning_2014} cells. It works without \gls{rl} but on the downside, their method can only be trained once and not be adapted afterwards and also it explicitly depends on the the implementation of the underlying classifier, while we want a solution in which the sampling procedure and the classifier are independent.
+\cite{campos_skip_2018} develop a technique that includes a \textit{skip gate} into LSTM and other recurrent cells. It works without \gls{rl} but on the downside, their method can only be trained once and not be adapted afterwards and also it explicitly depends on the the implementation of the underlying classifier, while we want a solution in which the sampling procedure and the classifier are independent.
 
 \cite{seo_neural_2018} use an LSTM with one full state vector and one reduced one. At each step they decide whether to use the reduced or the full state vector and can reduce computational cost by using the reduced one. For network traffic we think that it is often not even necessary to have a reduced state vector since for some attack flows, already the first couple of packets might contain enough information and then the remaining packets of the flow do not have to be considered anymore at all.
 

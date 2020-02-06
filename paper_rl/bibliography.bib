@@ -219,7 +219,7 @@
 @inproceedings{schwartz_reinforcement_1993,
 	title = {A reinforcement learning method for maximizing undiscounted rewards},
 	volume = {298},
-	booktitle = {Proceedings of the tenth international conference on machine learning},
+	booktitle = {{ICML}},
 	author = {Schwartz, Anton},
 	year = {1993},
 	pages = {298--305}
@@ -235,7 +235,6 @@
 	abstract = {Neural networks have become an increasingly popular solution for network intrusion detection systems (NIDS). Their capability of learning complex patterns and behaviors make them a suitable solution for differentiating between normal trafﬁc and network attacks. However, a drawback of neural networks is the amount of resources needed to train them. Many network gateways and routers devices, which could potentially host an NIDS, simply do not have the memory or processing power to train and sometimes even execute such models. More importantly, the existing neural network solutions are trained in a supervised manner. Meaning that an expert must label the network trafﬁc and update the model manually from time to time.},
 	language = {en},
 	urldate = {2020-01-24},
-	booktitle = {Proceedings 2018 {Network} and {Distributed} {System} {Security} {Symposium}},
 	publisher = {Internet Society},
 	author = {Mirsky, Yisroel and Doitshman, Tomer and Elovici, Yuval and Shabtai, Asaf},
 	year = {2018},
@@ -265,4 +264,91 @@
 	author = {Hochreiter, Sepp and Schmidhuber, Jürgen},
 	year = {1997},
 	pages = {1735--1780}
+}
+
+@article{ha_suspicious_2016,
+	title = {Suspicious traffic sampling for intrusion detection in software-defined networks},
+	volume = {109},
+	issn = {13891286},
+	url = {https://linkinghub.elsevier.com/retrieve/pii/S1389128616301645},
+	doi = {10.1016/j.comnet.2016.05.019},
+	abstract = {In order to defend a cloud computing system from security attackers, an intrusion detection system (IDS) is widely used to inspect suspicious traﬃc on the network. However, the processing capacity of an IDS is much smaller than the amount of traﬃc to be inspected in a large-scaled network system. In this paper, we propose a traﬃc sampling strategy for software-deﬁned networking (SDN) that fully utilizes the inspection capability of malicious traﬃc, while maintaining the total aggregate volume of the sampled traﬃc below the inspection processing capacity of the IDS. We formulate an optimization problem to ﬁnd an appropriate sampling rate for each switch, and sample the traﬃc ﬂows in the network according to the optimal sampling rates using the SDN functionalities. The simulation and experimental results indicate that the proposed approach signiﬁcantly enhances the inspection performance of malicious traﬃc in large-sized networks.},
+	language = {en},
+	urldate = {2020-02-06},
+	journal = {Computer Networks},
+	author = {Ha, Taejin and Kim, Sunghwan and An, Namwon and Narantuya, Jargalsaikhan and Jeong, Chiwook and Kim, JongWon and Lim, Hyuk},
+	month = nov,
+	year = {2016},
+	pages = {172--182},
+	file = {Ha et al. - 2016 - Suspicious traffic sampling for intrusion detectio.pdf:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/Y5GUIJQA/Ha et al. - 2016 - Suspicious traffic sampling for intrusion detectio.pdf:application/pdf}
+}
+
+@inproceedings{murali_kodialam_detecting_2003,
+	title = {Detecting network intrusions via sampling: a game theoretic approach},
+	volume = {3},
+	shorttitle = {Detecting network intrusions via sampling},
+	doi = {10.1109/INFCOM.2003.1209210},
+	abstract = {In this paper, we consider the problem of detecting an intruding packet in a communication network. Detection is accomplished by sampling a portion of the packets transiting selected network links (or router interfaces). Since sampling entails incurring network costs for real-time packet sampling and packet examination hardware, we would like to develop a network packet sampling strategy to effectively detect network intrusions while not exceeding a given total sampling budget. We consider this problem in a game theoretic framework, where the intruder picks paths (or the network ingress point if only shortest path routing is possible) to minimize chances of detection and where the network operator chooses a sampling strategy to maximize the chances of detection. We formulate the game theoretic problem, and develop sampling schemes that are optimal in this game theoretic setting.},
+	author = {Murali Kodialam and Lakshman, T.V.},
+	month = mar,
+	year = {2003},
+	note = {ISSN: 0743-166X},
+	keywords = {communication network, Communication networks, Computer crime, Costs, Drugs, game theoretic problem, game theory, Game theory, Hardware, Intrusion detection, network intrusion detection, network link, packet examination hardware, packet switching, real-time packet sampling, router interfaces, Routing, sampling methods, Sampling methods, shortest path routing, telecommunication links, telecommunication network routing, telecommunication security, Telecommunication traffic},
+	pages = {1880--1889 vol.3},
+	file = {IEEE Xplore Abstract Record:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/Q942R9M9/1209210.html:text/html;IEEE Xplore Full Text PDF:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/7VCHCBGU/Murali Kodialam and Lakshman - 2003 - Detecting network intrusions via sampling a game .pdf:application/pdf}
+}
+
+@article{bakhoum_intrusion_2011,
+	title = {Intrusion detection model based on selective packet sampling},
+	volume = {2011},
+	issn = {1687-417X},
+	url = {https://jis-eurasipjournals.springeropen.com/articles/10.1186/1687-417X-2011-2},
+	doi = {10.1186/1687-417X-2011-2},
+	abstract = {Recent experimental work by Androulidakis and Papavassiliou (IET Commun 2(3):399, 2008; IEEE Netw 23(1):6, 2009) has shown that it is possible to maintain a high level of network security while selectively inspecting packets for the existence of intrusive activity, thereby resulting in a minimal amount of processing overhead. In this paper, a statistical approach for the modeling of network intrusions as Markov processes is introduced. The theoretical findings presented here confirm the earlier experimental results of Androulidakis and Papavassiliou. A common notion about network intrusion detection systems is that every packet arriving into a network must be inspected in order to prevent intrusions. This investigation, together with the earlier experimental results, disproves that notion. Additional experimental testing of a corporate local area network is reported.},
+	language = {en},
+	number = {1},
+	urldate = {2020-02-06},
+	journal = {EURASIP Journal on Information Security},
+	author = {Bakhoum, Ezzat G},
+	month = dec,
+	year = {2011},
+	pages = {2},
+	file = {Bakhoum - 2011 - Intrusion detection model based on selective packe.pdf:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/8EUQES27/Bakhoum - 2011 - Intrusion detection model based on selective packe.pdf:application/pdf}
+}
+
+@article{estan_new_2003,
+	title = {New directions in traffic measurement and accounting},
+	volume = {21},
+	language = {en},
+	number = {3},
+	journal = {ACM Transactions on Computer Systems},
+	author = {Estan, Cristian and Varghese, George},
+	year = {2003},
+	pages = {44},
+	file = {Estan and Varghese - New directions in traffic measurement and accounti.pdf:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/UC25Q5D3/Estan and Varghese - New directions in traffic measurement and accounti.pdf:application/pdf}
+}
+
+@inproceedings{estan_building_2004,
+	address = {Portland, Oregon, USA},
+	title = {Building a better {NetFlow}},
+	isbn = {978-1-58113-862-7},
+	url = {https://doi.org/10.1145/1015467.1015495},
+	doi = {10.1145/1015467.1015495},
+	abstract = {Network operators need to determine the composition of the traffic mix on links when looking for dominant applications, users, or estimating traffic matrices. Cisco's NetFlow has evolved into a solution that satisfies this need by reporting flow records that summarize a sample of the traffic traversing the link. But sampled NetFlow has shortcomings that hinder the collection and analysis of traffic data. First, during flooding attacks router memory and network bandwidth consumed by flow records can increase beyond what is available; second, selecting the right static sampling rate is difficult because no single rate gives the right tradeoff of memory use versus accuracy for all traffic mixes; third, the heuristics routers use to decide when a flow is reported are a poor match to most applications that work with time bins; finally, it is impossible to estimate without bias the number of active flows for aggregates with non-TCP traffic.In this paper we propose Adaptive NetFlow, deployable through an update to router software, which addresses many shortcomings of NetFlow by dynamically adapting the sampling rate to achieve robustness without sacrificing accuracy. To enable counting of non-TCP flows, we propose an optional Flow Counting Extension that requires augmenting existing hardware at routers. Both our proposed solutions readily provide descriptions of the traffic of progressively smaller sizes. Transmitting these at progressively higher levels of reliability allows graceful degradation of the accuracy of traffic reports in response to network congestion on the reporting path.},
+	urldate = {2020-02-06},
+	booktitle = {{SIGCOMM}},
+	publisher = {ACM},
+	author = {Estan, Cristian and Keys, Ken and Moore, David and Varghese, George},
+	month = aug,
+	year = {2004},
+	keywords = {data summarization, network monitoring, traffic measurement},
+	pages = {245--256},
+	file = {Full Text PDF:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/3IVL2APH/Estan et al. - 2004 - Building a better NetFlow.pdf:application/pdf}
+}
+
+@article{zseby_sampling_2005,
+	title = {Sampling and filtering techniques for {IP} packet selection},
+	journal = {draft-ietf-psamp-sample-tech-07},
+	author = {Zseby, Tanja and Molina, Maurizio and Duffield, Nick and Niccolini, Saverio and Raspall, Fredric},
+	year = {2005}
 }

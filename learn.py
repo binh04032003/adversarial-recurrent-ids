@@ -871,7 +871,7 @@ def train_rl():
 			total_loss.backward()
 			optimizer.step()
 
-			if batches_processed % 100 == 0:
+			if batches_processed % opt.loggingInterval == 0:
 				writer.add_scalar("loss", loss.item(), samples)
 				writer.add_scalar("loss_critic", loss_rl_critic.item(), samples)
 				writer.add_scalar("loss_actor", loss_rl_actor.item(), samples)
@@ -2235,6 +2235,7 @@ if __name__=="__main__":
 	parser.add_argument('--steering_step_size', type=float, default=0.01, help='step size for steering')
 	parser.add_argument('--steering_target_sparsity', type=float, default=0.5, help='target sparsity for steering')
 	parser.add_argument('--batches_to_consider_for_steering', type=int, default=100)
+	parser.add_argument('--loggingInterval', type=int, default=100)
 
 	# parser.add_argument('--nSamples', type=int, default=1, help='number of items to sample for the feature importance metric')
 
