@@ -10,10 +10,10 @@ We use two datasets in the paper: CIC-IDS-2017 and UNSW-NB-15. The repository co
 * Concatenate the parts: ```cat flows.pickle.gz.part-* > flows.pickle.gz```
 * Unzip them: ```gzip -d flows.pickle.gz```
 
-Proceed analogously for ```flows15.pickle```.
+Proceed analogously for ```flows15.pickle```. Information on how to reproduce the preprocessed datasets can be found in the [Datasets-preprocessing](https://github.com/CN-TU/Datasets-preprocessing) repository.
 
 # Trained models
-Models in the [runs](runs) folder have been trained with the following configuration:
+Models in the [runs](runs) folder have been trained with the following configurations:
 * Oct26_00-03-50_gpu: CIC-IDS-2017
 * Oct28_15-41-46_gpu: UNSW-NB-15
 * Nov19_18-25-03_gpu: CIC-IDS-2017 with feature dropout
