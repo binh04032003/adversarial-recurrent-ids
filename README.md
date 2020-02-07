@@ -10,7 +10,11 @@ We use two datasets in the paper: CIC-IDS-2017 and UNSW-NB-15. The repository co
 * Concatenate the parts: ```cat flows.pickle.gz.part-* > flows.pickle.gz```
 * Unzip them: ```gzip -d flows.pickle.gz```
 
-Proceed analogously for ```flows15.pickle```. Information on how to reproduce the preprocessed datasets can be found in the [Datasets-preprocessing](https://github.com/CN-TU/Datasets-preprocessing) repository.
+Proceed analogously for ```flows15.pickle```. 
+
+If you want to produce the preprocessed files yourself: 
+* Follow the information on how to reproduce the preprocessed datasets in the [Datasets-preprocessing](https://github.com/CN-TU/Datasets-preprocessing) repository.
+* Run the ```parse.py``` script on the resulting ```.csv``` file to get the final ```.pickle``` file. 
 
 # Trained models
 Models in the [runs](runs) folder have been trained with the following configurations:
