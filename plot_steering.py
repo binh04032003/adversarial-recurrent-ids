@@ -38,7 +38,7 @@ lines += plt.plot(x, tradeoffs_sampling_rl, color=colors[1])
 plt.legend(lines, ["Sparsity", "Tradeoff"], loc='upper right')
 plt.ylabel('Tradeoff')
 plt.tight_layout()
-plt.savefig("paper_rl/img/" + path[:-5] + '.pdf', bbox_inches = 'tight', pad_inches = 0)
+plt.savefig("paper_rl/img/" + (path.split("/")[-1])[:-5] + '.pdf', bbox_inches = 'tight', pad_inches = 0)
 # plt.show()
 
 plt.close()
