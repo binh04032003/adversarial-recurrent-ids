@@ -391,7 +391,7 @@ def custom_collate(seqs, things=(True, True, True)):
 
 				print("opt.global_tradeoff", opt.global_tradeoff, "empirical_sparsity", empirical_sparsity)
 
-				new_file_name = f"{opt.net.split('/')[-1]}_global_tradeoff_{initial_global_tradeoff}_steering_step_size_{opt.steering_step_size}_steering_target_sparsity_{opt.steering_target_sparsity}_batches_to_consider_for_steering_{opt.batches_to_consider_for_steering}_sampling_rl.json"
+				new_file_name = f"{'_'.join(opt.net.split('/')[-2:])}_global_tradeoff_{initial_global_tradeoff}_steering_step_size_{opt.steering_step_size}_steering_target_sparsity_{opt.steering_target_sparsity}_batches_to_consider_for_steering_{opt.batches_to_consider_for_steering}_sampling_rl.json"
 				f = open(new_file_name, "w")
 				f.write(json.dumps([chosen_packets_per_epoch_sampling_rl, all_packets_per_epoch_sampling_rl, tradeoffs_sampling_rl]))
 				f.close()
@@ -850,6 +850,7 @@ def train_rl():
 					raise e
 
 			effective_rewards_sparsity = rewards_sparsity_catted.detach()[mask_rl_first].view(-1)
+			assert type(tradeoff) is float or tradeoff.shape == rewards_sparsity_catted.shape
 			effective_rewards_sparsity_with_tradeoff = (tradeoff*rewards_sparsity_catted.detach())[mask_rl_first].view(-1)
 			effective_rewards_classification = rewards_classification_catted.detach()[mask_rl_first].view(-1)
 			# assert (effective_rewards_sparsity.shape == effective_rewards_classification.shape)

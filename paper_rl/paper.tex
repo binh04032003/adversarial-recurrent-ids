@@ -469,7 +469,8 @@ We use Z-score normalization and a train/test split of 2:1. To speed up experime
 
 \begin{figure}[h]
 \centering
-  \includegraphics[width=\columnwidth]{{"img/events.out.tfevents.1579352256.gpu"}.pdf}
+%  \includegraphics[width=\columnwidth]{{"img/events.out.tfevents.1579352256.gpu"}.pdf}
+  \includegraphics[width=\columnwidth]{{"img/events.out.tfevents.1580988920.gpu"}.pdf}
   \caption{Training with a tradeoff of 0.1 with continuous actions. Training accuracy increases sharply in the beginning while becoming slower later on. Sparsity increases sharply in the beginning and then more slowly. As the classifier gets better, the \gls{rl} starts skipping more packets.}
   \label{fig:training}
 \end{figure}
@@ -550,7 +551,7 @@ Youden & 98.5\% & 97.8\% \\
 \end{tabular}
 \end{table}
 
-\autoref{tab:results_disc_cont} compares continuous and discrete (20 different) actions and shows that continuous actions result in a higher accuracy with fewer samples being selected. This leads to the conclusion, that at least for our use case and for the dataset we consider, there is no consistent difference in performance for continuous and discrete actions. Generally, the advantage of discrete actions is that they are theoretically more powerful as they can compare each of the possible actions with each other, while the only possibility for continuous actions is to increase or decrease the mean of the log-normal distribution, which can lead to worse performance. On the other hand, with discrete actions, the maximum number of samples to skip is fixed, which we consider to be a major drawback. Furthermore, training time is potentially higher since, for example, for a discrete action space of 20 actions, each option is treated as being completely different and, while actually there is not a large difference between skipping 18 or 19 packets, there is a big difference between skipping 0 packets compared to skipping 19 packets. This means that for discrete actions, all actions are perceived as being completely independent, which is not true as the reward function considers sparsity, which increases gradually as more packets are skipped and thus similar actions result in similar rewards.
+\autoref{tab:results_disc_cont} compares continuous and discrete (20 different) actions and shows that continuous actions result in a higher accuracy with fewer samples being selected. This leads to the conclusion, that at least for our use case and for the dataset we consider, continuous actions seem to perform better. Generally, the advantage of discrete actions is that they are theoretically more powerful as they can compare each of the possible actions with each other, while the only possibility for continuous actions is to increase or decrease the mean of the log-normal distribution, which can lead to worse performance. On the other hand, with discrete actions, the maximum number of samples to skip is fixed, which we consider to be a major drawback. Furthermore, training time is potentially higher since, for example, for a discrete action space of 20 actions, each option is treated as being completely different and, while actually there is not a large difference between skipping 18 or 19 packets, there is a big difference between skipping 0 packets compared to skipping 19 packets. This means that for discrete actions, all actions are perceived as being completely independent, which is not true as the reward function considers sparsity, which increases gradually as more packets are skipped and thus similar actions result in similar rewards.
 
 \subsection{Comparing with other sampling methods}
 
@@ -613,7 +614,7 @@ We thus propose a method that enables steering the tradeoff to achieve a certain
 
 \begin{figure}[h]
 \centering
-  \includegraphics[width=\columnwidth]{{"img/lstm_module_8.pth_global_tradeoff_1.0_steering_step_size_0.05_steering_target_sparsity_0.5_batches_to_consider_for_steering_500_sampling_rl"}.pdf}
+  \includegraphics[width=\columnwidth]{{"img/Jan27_18-32-15_gpu_lstm_module_8.pth_global_tradeoff_1.0_steering_step_size_0.05_steering_target_sparsity_0.5_batches_to_consider_for_steering_500_sampling_rl"}.pdf}
   \caption{Steering the tradeoff with an allowed minimum sparsity of 50\%. The tradeoff is initialized as 1 and continuously lowered as long as the sparsity is higher than 50\%. The procedure stops if the minimum sparsity is reached or the tradeoff reached its minimum of 0, which is the case here. Sparsity falls from around 74.5\% to 73.5\%.}
   \label{fig:steering}
 \end{figure}
