@@ -6,8 +6,9 @@ import itertools
 
 import pickle
 import json
+import sys
 
-df = pd.read_csv('packet.csv')
+df = pd.read_csv(sys.argv[1])
 mapping = dict([(b, a) for a, b in enumerate(sorted(set(list(df["Attack"]))))])
 
 categories = ['Botnet', 'Brute Force', 'DoS', 'Infiltration', 'Normal', 'PortScan', 'Web Attack']
