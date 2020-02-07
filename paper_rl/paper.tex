@@ -188,25 +188,35 @@ To encourage reproducibility and facilitate experimentation, we publicly release
 
 \section{Related Work}
 
-There is a significant body of research on sampling for networks: \cite{zseby_sampling_2005} give an overview of common methods for packet sampling in IP networks. \cite{estan_building_2004} develop a scheme that adapts the sampling rate depending on available resources. 
+%There is a significant body of research on sampling for communication networks: \cite{zseby_sampling_2005} give an overview of common methods for packet sampling in IP networks. \cite{estan_building_2004} develop a scheme that adapts the sampling rate depending on available resources. 
 
-Several approaches have been proposed to implement sampling for \gls{ids}:  \cite{estan_new_2003} propose to single out large flows for \gls{ids} and sample fewer packets for increased computational efficiency. \cite{bakhoum_intrusion_2011} use an approach based on Markov chains to sample packets for \gls{ids}.
-\cite{murali_kodialam_detecting_2003} lay out a game-theoretic model for determining which network paths are more vulnerable and require more packet sampling. 
-\cite{ha_suspicious_2016} develop a system for Software Defined Networks, which aims to sample more packets from more vulnerable parts of the network.
+Sampling of network packets to minimize computational effort has been extensively studied and a significant body of reaserch has developed a variety of methods to cope with the complexity of traffic. In \cite{estan_building_2004}, authors have developed a scheme that varies the sampling rate depending on the available resources, making sampling framework more effective than conventional fixed-rate sampling. In view of the endless options of sampling techniques, the authors in \cite{zseby_sampling_2005} published an overview of common methods for packet sampling in IP networks.
 
-Regarding \gls{rnn} for \gls{ids}, \cite{hartl_explainability_2019} build an LSTM-based recurrent classifier for Network Intrusion Detection and develop methods for explainability and to assess the security of recurrent classifiers.
+%Several approaches have been proposed to implement sampling for \gls{ids}:  \cite{estan_new_2003} propose to single out large flows for \gls{ids} and sample fewer packets for increased computational efficiency. \cite{bakhoum_intrusion_2011} use an approach based on Markov chains to sample packets for \gls{ids}.
+%\cite{murali_kodialam_detecting_2003} lay out a game-theoretic model for determining which network paths are more vulnerable and require more packet sampling. 
+%\cite{ha_suspicious_2016} develop a system for Software Defined Networks, which aims to sample more packets from more vulnerable parts of the network.
 
-Some works investigated ways to let \glspl{rnn} skip parts of sequences. The focus of these works was mostly Natural Language Processing and we know of no work that focuses on network traffic. The following papers provide an overview of this research domain:
+As far as sampling for \glspl{ids} is concerned, several approaches have been proposed to sample packets retaining high detection performance. Authors in \cite{estan_new_2003} propose to single out large flows for \gls{ids} and sample fewer packets for increased computational efficiency. In \cite{bakhoum_intrusion_2011} an approach based on Markov chains to sample packets for \gls{ids} was used. \cite{murali_kodialam_detecting_2003} lay out a game-theoretic model for determining which network paths are more vulnerable and require more packet sampling and \cite{ha_suspicious_2016} develop a system for Software Defined Networks, which aims to sample more packets from more vulnerable parts of the network.
 
-\cite{yu_learning_2017} propose using \gls{rl} to let an LSTM learn to skim text. Their technique does not aim to maximize sparsity but only lets the \gls{rl} optimize classification performance for the sequence as a whole. Thus, if it learns to skip elements it is only because it is better for achieving good classification performance, not because it wants to increase sparsity.
+% Regarding \gls{rnn} for \gls{ids}, \cite{hartl_explainability_2019} build an LSTM-based recurrent classifier for Network Intrusion Detection and develop methods for explainability and to assess the security of recurrent classifiers.
 
-\cite{campos_skip_2018} develop a technique that includes a \textit{skip gate} into LSTM and other recurrent cells. It works without \gls{rl} but on the downside, their method can only be trained once and not be adapted afterwards and also it explicitly depends on the the implementation of the underlying classifier, while we want a solution in which the sampling procedure and the classifier are independent.
+Conversely, \gls{rnn}-based \glspl{ids} has been shown to perform very well. In \cite{hartl_explainability_2019}, authors build a LSTM-based recurrent classifier for Network Intrusion Detection and further develop explainability methods as well as recurrent-classifiers security assessment.
 
-\cite{seo_neural_2018} use an LSTM with one full state vector and one reduced one. At each step they decide whether to use the reduced or the full state vector and can reduce computational cost by using the reduced one. For network traffic we think that it is often not even necessary to have a reduced state vector since for some attack flows, already the first couple of packets might contain enough information and then the remaining packets of the flow do not have to be considered anymore at all.
+%Some works investigated ways to let \glspl{rnn} skip parts of sequences. The focus of these works was mostly Natural Language Processing and we know of no work that focuses on network traffic. The following papers provide an overview of this research domain:
+
+In this context, some works investigated ways to let \glspl{rnn} skip parts of sequences. The focus of these works was mostly Natural Language Processing and we know of no work that focuses on network traffic. The following papers provide an overview of this research domain:
+
+Authors in \cite{yu_learning_2017} propose the usage of \gls{rl} to make a LSTM network learn to skim text. Their technique does not aim to maximize sparsity but only lets the \gls{rl} optimize classification performance for the sequence as a whole. Thus, if it learns to skip elements it is only because it is better for achieving good classification performance, not because it wants to increase sparsity.
+
+Another technique developed in \cite{campos_skip_2018} includes a \textit{skip gate} into LSTM and other recurrent cells. It works without \gls{rl} but on the downside, their method can only be trained once and not be adapted afterwards and also it explicitly depends on the the implementation of the underlying classifier, while we want a solution in which the sampling procedure and the classifier are independent.
+
+A LSTM network with two state vectors (one full state vector and one reduced one) was used in \cite{seo_neural_2018}. At each step the network decides whether to use the reduced or the full state vector and can reduce computational cost by using the reduced one. For network traffic it is often not even necessary to have a reduced state vector since for some attack flows, already the first couple of packets might contain enough information and then the remaining packets of the flow do not have to be considered anymore at all \cite{hartl_explainability_2019}.
 
 \cite{gui_long_2018} use \gls{rl} but their intention is not to skip samples but instead to make the \gls{rl} learn to choose a previous state that can aid at the current step. Thus it tries to help the \gls{rnn} with memorizing information from the past but does not actually take less data, which is the goal we pursue in this work.
 
-These proposed techniques focus their evaluation on text and hence do not fulfill all criteria we set out in \autoref{sec:introduction}. Furthermore, all techniques that use \gls{rl} use discrete actions, meaning that there is a hyperparameter $k$, which influences the maximum jump that is possible. However, for a network flow, already after the second packet it might be obvious that a flow is an attack and thus the remaining packets can be completely ignored. It is thus beneficial to not have a fixed maximum step size but a continuous one. This allows skipping arbitrarily many packets.
+
+
+These proposed techniques focus their evaluation on text and hence do not fulfill all criteria we set out in \autoref{sec:introduction}. Furthermore, all techniques that use \gls{rl} use discrete actions, meaning that there is a hyperparameter $k$, which influences the maximum jump that is possible. However, for a network flow, already after the second packet it might be obvious that a flow is an attack and thus the remaining packets can be completely ignored. It is therefore beneficial not to have a fixed maximum step size but a continuous one. This allows skipping arbitrarily many packets and gives more flexibility  to the sampling framework.
 
 %\section{Setup}
 %%ci
