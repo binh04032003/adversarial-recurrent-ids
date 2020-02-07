@@ -500,16 +500,16 @@ Opposed to the behavior during training, we do not randomly sample from the prob
 %\end{table}
 
 \begin{table}
-\caption{Comparing classification metrics per flow with different tradeoffs.} \label{tab:results_tradeoff}
+\caption{Comparing classification metrics per flow with different tradeoffs. The higher the tradeoff, the higher the sparsity but also the lower the accuracy.} \label{tab:results_tradeoff}
 \centering
-\begin{tabular}{>{\rowmac}l >{\rowmac}r>{\rowmac}r>{\rowmac}r<{\clearrow}} \toprule
-Tradeoff & 0.0 & 0.1 & 0.5 \\	\midrule
-\setrow{\bfseries}Sparsity & 0\% & 76.3\% & 76.5\% \\ \midrule
-\setrow{\bfseries}Accuracy & 99.5\% & 99.4\% & 99.3\% \\
-Precision & 99.4\% & 98.5\% & 98.7\% \\
-Recall & 98.5\% & 99.0\% & 98.6\% \\
-F1 & 99.0\% & 98.7\% & 98.6\% \\
-Youden & 98.4\% & 98.5\% & 98.2\% \\
+\begin{tabular}{>{\rowmac}l >{\rowmac}r>{\rowmac}r>{\rowmac}r>{\rowmac}r<{\clearrow}} \toprule
+Tradeoff & 0.0 & 0.1 & 0.5 & 1.0 \\	\midrule
+\setrow{\bfseries}Sparsity & 0\% & 76.3\% & 76.5\% & 76.8\% \\ \midrule
+\setrow{\bfseries}Accuracy & 99.5\% & 99.4\% & 99.3\% & 99\% \\
+Precision & 99.4\% & 98.5\% & 98.7\% & 97.9\% \\
+Recall & 98.5\% & 99.0\% & 98.6\% & 98.1\% \\
+F1 & 99.0\% & 98.7\% & 98.6\% & 98.0\% \\
+Youden & 98.4\% & 98.5\% & 98.2\% & 97.4\% \\
 \bottomrule
 \end{tabular}
 \end{table}

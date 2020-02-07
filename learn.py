@@ -667,7 +667,7 @@ def train_rl():
 					locs, scales = compute_normal_distribution_from_log_normal(current_slice_action_probs[:,:,0], current_slice_action_probs[:,:,1])
 
 					if (scales < CLAMPING_CONSTANT).any():
-						print("problem at top!")
+						print("Step", samples, "problem at top!")
 						print("current_slice_action_probs[:,:,0]", current_slice_action_probs[:,:,0])
 						print("current_slice_action_probs[:,:,1]", current_slice_action_probs[:,:,1])
 						print("locs", locs)
@@ -677,7 +677,7 @@ def train_rl():
 					try:
 						current_slice_action_dists = torch.distributions.log_normal.LogNormal(locs, scales, validate_args=True)
 					except ValueError as e:
-						print("crash at top!")
+						print("Step", samples, "crash at top!")
 						print("current_slice_action_probs[:,:,0]", current_slice_action_probs[:,:,0])
 						print("current_slice_action_probs[:,:,1]", current_slice_action_probs[:,:,1])
 						print("locs", locs)
@@ -832,7 +832,7 @@ def train_rl():
 				locs, scales = compute_normal_distribution_from_log_normal(effective_output_rl_actor[:,0], effective_output_rl_actor[:,1])
 
 				if (scales < CLAMPING_CONSTANT).any():
-					print("problem at bottom!")
+					print("Step", samples, "problem at bottom!")
 					print("current_slice_action_probs[:,:,0]", current_slice_action_probs[:,:,0])
 					print("current_slice_action_probs[:,:,1]", current_slice_action_probs[:,:,1])
 					print("locs", locs)
@@ -842,7 +842,7 @@ def train_rl():
 				try:
 					effective_rl_actor_dists = torch.distributions.log_normal.LogNormal(locs, scales, validate_args=True)
 				except ValueError as e:
-					print("crash at bottom!")
+					print("Step", samples, "crash at bottom!")
 					print("current_slice_action_probs[:,:,0]", current_slice_action_probs[:,:,0])
 					print("current_slice_action_probs[:,:,1]", current_slice_action_probs[:,:,1])
 					print("locs", locs)
