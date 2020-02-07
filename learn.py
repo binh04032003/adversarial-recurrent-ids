@@ -656,7 +656,7 @@ def train_rl():
 				else:
 					(current_slice_output, current_slice_action_probs, current_slice_values), _ = lstm_module(current_collated_slice)
 
-				current_slice_values = torch.nn.functional.softplus(current_slice_values)
+				# current_slice_values = torch.nn.functional.softplus(current_slice_values)
 
 				outputs.append(current_slice_output)
 
@@ -716,8 +716,8 @@ def train_rl():
 							overshoot[seq_index] = chosen_indices[step_index+1][seq_index] - orig_seq_lens[seq_index]
 						new_already_found_packets_per_sample[seq_index] += 1
 						already_skipped_packets_per_sample[seq_index] += torch.min(chosen_indices[step_index+1][seq_index] if step_index+1 < len(chosen_indices) else torch.tensor(float("inf")), orig_seq_lens[seq_index]) - chosen_indices[step_index][seq_index] - 1
-				rewards_sparsity.append((already_skipped_packets_per_sample)/(already_skipped_packets_per_sample+already_found_packets_per_sample+overshoot))
-				# rewards_sparsity.append((already_skipped_packets_per_sample-overshoot)/(already_skipped_packets_per_sample+already_found_packets_per_sample))
+				# rewards_sparsity.append((already_skipped_packets_per_sample)/(already_skipped_packets_per_sample+already_found_packets_per_sample+overshoot))
+				rewards_sparsity.append((already_skipped_packets_per_sample-overshoot)/(already_skipped_packets_per_sample+already_found_packets_per_sample))
 				overshoot = torch.zeros((batch_size), dtype=torch.float32).to(device)
 				already_found_packets_per_sample = new_already_found_packets_per_sample
 
