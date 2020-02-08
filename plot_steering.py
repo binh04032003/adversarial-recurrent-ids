@@ -30,7 +30,7 @@ x = list(range(1,len(chosen_packets_per_epoch_sampling_rl)+1))
 plt.figure(figsize=(5,3))
 lines = []
 lines += plt.plot(x, 100*chosen_packets_per_epoch_sampling_rl/all_packets_per_epoch_sampling_rl, color=colors[0])
-plt.xlabel("Time steps")
+plt.xlabel("Time")
 plt.ylabel('Sparsity (%)')
 
 plt.twinx()

@@ -183,7 +183,7 @@ for attack_type, (seqs, lens) in enumerate(zip(results_by_attack_number, orig_se
 
 	if SHOW_TITLE:
 		plt.title(reverse_mapping[attack_type])
-	ax1.set_xlabel('Time step $t$')
+	ax1.set_xlabel('Packet $n$')
 	plt.xlim((-0.5,max(x_values)+0.5))
 	plt.tight_layout()
 
