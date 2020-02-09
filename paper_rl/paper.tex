@@ -271,7 +271,7 @@ R_{\text{classification},n} = \frac{1}{N-n} \sum_{i=n+1}^{N} |1 - \left(\text{la
 
 Intuitively, the classification reward makes sure, that packets are chosen that contain the maximum accuracy and thus result in the highest classification performance.
 
-The sparsity reward metric (\autoref{eq:R_sparsity}) captures how much sparsity is achieved on average for all future packets of a flow. E.g. for a flow of length 10 if after the 5th packet, 3 packets are chosen and 2 are skipped from what is left, the sparsity reward metric at packet 5 is $\frac{2}{10-(4+1)}=\frac{2}{5}$.
+The sparsity reward metric (\autoref{eq:R_sparsity}) captures how much sparsity is achieved on average for all future packets of a flow. E.g. for a flow of length 10 if after 5 packets have been processed, 3 packets are chosen and 2 are skipped from the remaining 5 packets, the sparsity reward metric at packet 5 is $\frac{2}{10-(4+1)}=\frac{2}{5}$.
 %\note{blue}{Fares: This equation can be shortened by diving by the total count of packets left.\\
 %Fares: If the length of the flow is not known, how do we estimate T}.
 %\note{red}{Max: It's only relevant during training when you know the lengths of the flows. In deployment, you don't need the rewards anymore...}
@@ -379,7 +379,7 @@ We opt for three sampling families that, unlike \ours{} cannot adapt their strat
 
 \subsection{Random Sampling}
 
-Given the fraction $p$ of packets to be selected in a sequence of $N$ packets, this technique will sample each individual packet with probability of $p$. Theoretically, if the sequence is large enough (infinitely large), $m$ packets will be randomly sampled from a uniform distribution whereby $m \approx \lfloor N \times p \rfloor$. Nevertheless, in the case of short flows, $m$ is not constant and varies to some degree.  In practice, these technique works well if several packets have similar properties (redundancy) and therefore the probability of skipping important information is minimal.
+Given the fraction $p$ of packets to be selected in a sequence of $N$ packets, this technique will sample each individual packet with probability of $p$. Theoretically, if the sequence is large enough (infinitely large), $m$ packets will be randomly sampled from a uniform distribution whereby $m \approx \lfloor N \times p \rfloor$. Nevertheless, in the case of short flows, $m$ is not constant and varies to some degree (this effect is larger for short flows).  In practice, these technique works well if several packets have similar properties (redundancy) and therefore the probability of skipping important information is minimal.
 
 \subsection{Relative First \emph{m} Packets}
 As its name suggests, this technique only samples the first packets from each flow and ignores the rest of the flow. For a sampling rate $p$ it will take the first $m$ packets from each flow so that $m = \lfloor N \times p \rfloor$. For example, for a flow with length 10 and $p=0.2$, it will take the first 2 packets, for another flow of length 40 and for the same sampling rate ($p=0.2$), it will sample the first 8 packets. For this procedure the length of a flow has to be known beforehand and thus it is not applicable in a streaming scenario. This technique is successful under the assumption that most information for determining maliciousness is present in the first few packets of a flow, i.e. a large data transfer in which the initial packets represent a hand-shake after which the majority of packets contain the raw data and do not reveal significant information to non-\gls{dpi} systems.
@@ -472,7 +472,7 @@ Heartbleed	&	$<$0.01\%	\\
 %}{}
 %\end{table}
 
-For our experiments, we use the \textit{CIC-IDS-2017} \cite{sharafaldin_toward_2018} dataset, which includes more than 2 million flows of network data, containing both benign traffic and a large number of different attacks. The distribution of different attacks in the datasets are shown in \autoref{tab:occurrence}.
+For our experiments, we use the \textit{CIC-IDS-2017} \cite{sharafaldin_toward_2018} dataset, which includes more than 2 million flows of network data, containing both benign traffic and a large number of different attacks. The distribution of different attacks in the dataset are shown in \autoref{tab:occurrence}.
 
 We use Z-score normalization and a train/test split of 2:1. To speed up experimentation, we cut flows at a maximum length of 20. As Figure \ref{fig:inspectingAll} shows, there are only few flows that exceed that length.
 
@@ -489,7 +489,7 @@ We use Z-score normalization and a train/test split of 2:1. To speed up experime
 %The results of the sampling part are discussed in this section.
 We study the effect of the sparsity-accuracy tradeoff first, then we evaluate both discrete and continuous actions and, finally, we compare our results with other sampling techniques. Overall, sampling based on \gls{rl} reveals that a high number of packets can be skipped while maintaining good accuracy. Then, we inspect how the \gls{rl} chooses packets and if some patterns can be spotted.
 
-For all our experiments we train our networks for at least 8 epochs ($>10$ million flows for both datasets) with the Adam optimizer with a learning rate of $0.001$. An important implementation detail is that we always start with the first packet of a flow, meaning that it cannot be skipped. Also, we set the entropy parameter to $0.01$. 
+For all our experiments we train our networks for at least 8 epochs ($>10$ million flows) with the Adam optimizer with a learning rate of $0.001$. An important implementation detail is that we always start with the first packet of a flow, meaning that it cannot be skipped. Also, we set the entropy parameter to $0.01$. 
 \autoref{fig:training} shows how, during training, accuracy increases quickly at the beginning and then gradually afterwards. At the same time, sparsity gets higher as the \gls{rl} learns which packets can be skipped since they do not influence classification performance. %We then evaluate the resulting neural networks on the test dataset. 
 
 Opposed to the behavior during training, we do not randomly sample from the probability distribution of the actor during deployment. We instead take the mean of the distribution for the continuous case and the mode for the discrete one. This is reasonable and best practice \cite{mnih_asynchronous_2016} since during deployment we do not aim to explore the possible choices anymore as they were already learned during training: Only the optimal choice, which was learned, should be applied and no exploration is necessary since the actor does not train anymore. Furthermore, the critic is only necessary during training for the reward of the actor. During deployment, it can be disabled, saving computational power.
@@ -517,11 +517,11 @@ Opposed to the behavior during training, we do not randomly sample from the prob
 \begin{tabular*}{\columnwidth}{>{\rowmac}l @{\extracolsep{\fill}} >{\rowmac}c>{\rowmac}c>{\rowmac}c>{\rowmac}c<{\clearrow}} \toprule
 Tradeoff & 0.0 & 0.1 & 0.5 & 1.0 \\	\midrule
 \setrow{\bfseries}Sparsity & 0\% & 76.3\% & 76.5\% & 76.8\% \\ \midrule
-\setrow{\bfseries}Accuracy & 99.5\% & 99.4\% & 99.3\% & 99.0\% \\
-Precision & 99.4\% & 98.5\% & 98.7\% & 97.9\% \\
-Recall & 98.5\% & 99.0\% & 98.6\% & 98.1\% \\
-F1 & 99.0\% & 98.7\% & 98.6\% & 98.0\% \\
-Youden & 98.4\% & 98.5\% & 98.2\% & 97.4\% \\
+Accuracy & \textbf{99.5\%} & 99.4\% & 99.3\% & 99.0\% \\
+Precision & \textbf{99.4\%} & 98.5\% & 98.7\% & 97.9\% \\
+Recall & 98.5\% & \textbf{99.0\%} & 98.6\% & 98.1\% \\
+F1 & \textbf{99.0\%} & 98.7\% & 98.6\% & 98.0\% \\
+Youden & 98.4\% & \textbf{98.5\%} & 98.2\% & 97.4\% \\
 \bottomrule
 \end{tabular*}
 }
@@ -532,11 +532,11 @@ Youden & 98.4\% & 98.5\% & 98.2\% & 97.4\% \\
 \begin{tabular*}{\columnwidth}{>{\rowmac}l @{\extracolsep{\fill}} >{\rowmac}c>{\rowmac}c>{\rowmac}c>{\rowmac}c>{\rowmac}c<{\clearrow}} \toprule
 & \gls{rl} & random & every $i$th & relative first \emph{m} & first \emph{m} \\	\midrule
 \setrow{\bfseries}Sparsity & 76.3\% & 76.3\% & 76.3\% & 76.3\% & 76.3\% \\ \midrule
-\setrow{\bfseries}Accuracy & 99.4\% & 96.9\% & 97.8\% & 97.3\% & 98.3\% \\
-Precision & 98.5\% & 92.4\% & 95.8\% & 93.8\% & 95.6\% \\
-Recall & 99.0\% & 95.6\% & 95.4\% & 95.5\% & 97.9\% \\
-F1 & 99.7\% & 94.0\% & 95.6\% & 94.7\% & 96.7\% \\
-Youden & 98.5\% & 93.0\% & 93.9\% & 93.4\% & 96.4\% \\
+Accuracy & \textbf{99.4\%} & 96.9\% & 97.8\% & 97.3\% & 98.3\% \\
+Precision & \textbf{98.5\%} & 92.4\% & 95.8\% & 93.8\% & 95.6\% \\
+Recall & \textbf{99.0\%} & 95.6\% & 95.4\% & 95.5\% & 97.9\% \\
+F1 & \textbf{99.7\%} & 94.0\% & 95.6\% & 94.7\% & 96.7\% \\
+Youden & \textbf{98.5\%} & 93.0\% & 93.9\% & 93.4\% & 96.4\% \\
 \bottomrule
 \end{tabular*}
 }
@@ -544,7 +544,7 @@ Youden & 98.5\% & 93.0\% & 93.9\% & 93.4\% & 96.4\% \\
 
 \subsection{Influence of the tradeoff}
 
-\autoref{tab:results_tradeoff} shows the influence of the tradeoff parameter $\alpha$ for both datasets. For columns with a tradeoff of 0.0, we train the classifier regularly with all packets without using \gls{rl}. For tradeoffs 0.1 and 0.5 we train \ours{} using \gls{rl} with continuous actions and keep the tradeoff constant for the whole training. Results show that the higher the tradeoff, the fewer packets are sampled and the lower the accuracy.
+\autoref{tab:results_tradeoff} shows the influence of the tradeoff parameter $\alpha$. For columns with a tradeoff of 0.0, we train the classifier regularly with all packets without using \gls{rl}. For tradeoffs 0.1 and 0.5 we train \ours{} using \gls{rl} with continuous actions and keep the tradeoff constant for the whole training. Results show that the higher the tradeoff, the fewer packets are sampled and the lower the accuracy.
 
 \subsection{Discrete vs.~Continuous actions}
 
@@ -570,11 +570,11 @@ Youden & 98.5\% & 93.0\% & 93.9\% & 93.4\% & 96.4\% \\
 \begin{tabular}{>{\rowmac}l >{\rowmac}r>{\rowmac}r<{\clearrow}} \toprule
 Actions & continuous & discrete \\	\midrule
 \setrow{\bfseries}Sparsity & 76.3\% & 73.6\% \\ \midrule
-\setrow{\bfseries}Accuracy & 99.4\% & 99.2\% \\
-Precision & 98.5\% & 98.7\% \\
-Recall & 99.0\% & 98.3\% \\
-F1 & 99.7\% & 98.5\% \\
-Youden & 98.5\% & 97.8\% \\
+Accuracy & \textbf{99.4\%} & 99.2\% \\
+Precision & 98.5\% & \textbf{98.7\%} \\
+Recall & \textbf{99.0\%} & 98.3\% \\
+F1 & \textbf{99.7\%} & 98.5\% \\
+Youden & \textbf{98.5\%} & 97.8\% \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -651,7 +651,7 @@ We thus propose a method that enables steering the tradeoff to achieve a certain
 
 %\autoref{fig:steering} shows the steering in action. It stops when the tradeoff reaches 0 and the specified minimum sparsity of 50\% has not been reached yet. It might seem surprising that even with a parameter of 0, which means that only classification matters and sparsity not at all, still a sparsity of 73.5\% is achieved. We attribute this to the fact that \ours{} learns that some flows contain may contain packets that do not contain any useful information about determining maliciousness. Thus they are even skipped when there is no reward for skipping them because they do not increase the classification score at all.
 
-\autoref{fig:steering} shows the steering in action. We start with a maximum sparsity of ~74.4\% and try to reach 50\%. To do so, the steering system starts decreasing the tradeoff parameter until it reaches 0. It might seem surprising that even with a tradeoff of 0, which means that only classification matters and not sparsity not at all, a sparsity of 73.5\% is still achieved. We attribute this to the fact that \ours{} learns that some flows may contain packets that do not contribute in determining maliciousness and are skipped since they do not affect the accuracy. %\item the actor still in any case attempts to maximize the entropy of its distribution which means that when no packets are skipped, entropy is very low. \end{enumerate*}%Nothworthy is the fact that the goal sparsity (50\%) is not reached due to the previous assumptions, however, a decreasing slope is clearly shown in figure 4
+\autoref{fig:steering} shows the steering in action. We start with a maximum sparsity of ~74.4\% and try to reach 50\%. To do so, the steering system starts decreasing the tradeoff parameter until it reaches 0. It might seem surprising that even with a tradeoff of 0, which means that only classification matters and sparsity has zero influence, a sparsity of 73.5\% is still achieved. We attribute this to the fact that \ours{} learns that some flows may contain packets that do not contribute in determining maliciousness and are skipped since they do not affect the accuracy. %\item the actor still in any case attempts to maximize the entropy of its distribution which means that when no packets are skipped, entropy is very low. \end{enumerate*}%Nothworthy is the fact that the goal sparsity (50\%) is not reached due to the previous assumptions, however, a decreasing slope is clearly shown in figure 4
 
 
 \section{Conclusion}
