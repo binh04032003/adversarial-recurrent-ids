@@ -146,13 +146,13 @@ As the need for security mechanisms in today's infrastructure's communication ne
 %Network communication is usually aggregated into \textit{flows}, which are commonly defined as a sequence of packets sharing certain properties. When analyzing flows, not only the aforementioned features are available but also features related to the timing of the individual packets. Various approaches have been proposed to extract features from flows and then perform anomaly detection with the extracted flows \cite{meghdouri_analysis_2018}.
 %While these approaches frequently work well, it is problematic that the whole flow has to be received first and only afterwards anomaly detection is applied, revealing attack flows. Thus, we design a network \gls{ids} that operates on a per-packet basis and decides if a packet is anomalous based on features that are available even for traffic that is encrypted above the transport layer, like for example TLS or QUIC.
 %At the same time, an \gls{rnn}-based \gls{ids} has the benefit of avoiding tedious feature engineering procedures, which derive statistical measures from the sequence of packet features, but providing any available information to the classifier.
-%\cite{hartl_explainability_2019} showed that such a system has similar performance to other flow-based anomaly detection systems but can detect anomalies \textit{before} the flow terminates and analyzed its security with respect to adversaries extensively.
+%\cite{hartl_explainability_2020} showed that such a system has similar performance to other flow-based anomaly detection systems but can detect anomalies \textit{before} the flow terminates and analyzed its security with respect to adversaries extensively.
 
 % Fares:
 Network communication is typically aggregated into \textit{flows}, which are commonly defined as a sequence of packets that share certain properties. When analyzing flows, not only the aforementioned features are available but also features representing the temporal behavior of the individual packets. Various approaches have been proposed to extract flow features with which anomaly detection can be performed: Authors in \cite{meghdouri_analysis_2018} compare such approaches and show their efficacy.
 While these approaches often work well, a major drawback is that the whole flow must be received first and only then anomaly detection can be applied, to reveal malicious flows. Thus, we design a network \gls{ids} that operates on a per-packet basis and determines whether a packet is anomalous based on the aforementioned features.
 In this way, an \gls{rnn}-based \gls{ids} has the benefit of avoiding feature engineering procedures and let the classifier build high level features by itself.
-\cite{hartl_explainability_2019} show that such an architecture has similar performance to traditional flow-based anomaly detection systems, but can still detect anomalies \textit{before} the flow ends. Furthermore they analyzed its robustness with respect to adversaries extensively.
+\cite{hartl_explainability_2020} show that such an architecture has similar performance to traditional flow-based anomaly detection systems, but can still detect anomalies \textit{before} the flow ends. Furthermore they analyzed its robustness with respect to adversaries extensively.
 
 %However, for practical use, not only classification accuracy and security are important but also computational efficiency. This follows from the fact that a rationally-acting company will only deploy an \gls{ids} if the cost that is saved by avoiding security breaches is higher than the cost of the \gls{ids} itself. The cost of the \gls{ids} can be split in the cost of purchase/installation, the cost of operating it and the cost of maintaining it. The goal we pursue here is to develop sampling strategies that do not significantly degrade classification performance while being able to only process a small fraction of the original data. Specifically, the sampling technique should
 
@@ -198,9 +198,9 @@ Sampling of network packets to minimize computational effort has been extensivel
 
 As far as sampling for \glspl{ids} is concerned, several approaches have been proposed to sample packets retaining high detection performance. Authors in \cite{estan_new_2003} propose to single out large flows for \gls{ids} and sample fewer packets for increased computational efficiency. In \cite{bakhoum_intrusion_2011} an approach based on Markov chains to sample packets for \gls{ids} was used. \cite{murali_kodialam_detecting_2003} lay out a game-theoretic model for determining which network paths are more vulnerable and require more packet sampling and \cite{ha_suspicious_2016} develop a system for Software Defined Networks, which aims to sample more packets from more vulnerable parts of the network.
 
-% Regarding \gls{rnn} for \gls{ids}, \cite{hartl_explainability_2019} build an LSTM-based recurrent classifier for Network Intrusion Detection and develop methods for explainability and to assess the security of recurrent classifiers.
+% Regarding \gls{rnn} for \gls{ids}, \cite{hartl_explainability_2020} build an LSTM-based recurrent classifier for Network Intrusion Detection and develop methods for explainability and to assess the security of recurrent classifiers.
 
-Conversely, \gls{rnn}-based \glspl{ids} has been shown to perform very well. In \cite{hartl_explainability_2019}, authors build a LSTM-based recurrent classifier for Network Intrusion Detection and further develop explainability methods as well as recurrent-classifiers security assessment.
+Conversely, \gls{rnn}-based \glspl{ids} has been shown to perform very well. In \cite{hartl_explainability_2020}, authors build a LSTM-based recurrent classifier for Network Intrusion Detection and further develop explainability methods as well as recurrent-classifiers security assessment.
 
 %Some works investigated ways to let \glspl{rnn} skip parts of sequences. The focus of these works was mostly Natural Language Processing and we know of no work that focuses on network traffic. The following papers provide an overview of this research domain:
 
@@ -210,9 +210,9 @@ Authors in \cite{yu_learning_2017} propose the usage of \gls{rl} to make a LSTM 
 
 Another technique developed in \cite{campos_skip_2018} includes a \textit{skip gate} into LSTM and other recurrent cells. It works without \gls{rl} but on the downside, their method can only be trained once and not be adapted afterwards and also it explicitly depends on the the implementation of the underlying classifier, while we want a solution in which the sampling procedure and the classifier are independent.
 
-A LSTM network with two state vectors (one full state vector and one reduced one) was used in \cite{seo_neural_2018}. At each step the network decides whether to use the reduced or the full state vector and can reduce computational cost by using the reduced one. For network traffic it is often not even necessary to have a reduced state vector since for some attack flows, already the first couple of packets might contain enough information and then the remaining packets of the flow do not have to be considered anymore at all \cite{hartl_explainability_2019}.
+A LSTM network with two state vectors (one full state vector and one reduced one) was used in \cite{seo_neural_2018}. At each step the network decides whether to use the reduced or the full state vector and can reduce computational cost by using the reduced one. For network traffic it is often not even necessary to have a reduced state vector since for some attack flows, already the first couple of packets might contain enough information and then the remaining packets of the flow do not have to be considered anymore at all \cite{hartl_explainability_2020}.
 
-\cite{gui_long_2018} use \gls{rl} but their intention is not to skip samples but instead to make the \gls{rl} learn to choose a previous state that can aid at the current step. Thus it tries to help the \gls{rnn} with memorizing information from the past but does not actually take less data, which is the goal we pursue in this work.
+\cite{gui_long_2019} use \gls{rl} but their intention is not to skip samples but instead to make the \gls{rl} learn to choose a previous state that can aid at the current step. Thus it tries to help the \gls{rnn} with memorizing information from the past but does not actually take less data, which is the goal we pursue in this work.
 
 
 
@@ -228,7 +228,7 @@ To fulfill the goals outlined in \autoref{sec:introduction}, in this section we 
 
 \subsection{Classifier}
 \label{subsec:classifier}
-We implemented a three-layer LSTM-based classifier with 128 neurons at each layer. We choose 128 neurons as we don't notice a significant degradation of performance compared to the results of \cite{hartl_explainability_2019} (check Table II, flow accuracy) and as fewer neurons allowed for more agility during the training phase and allowed us to run more experiments. As the input features we use source port, destination port, protocol identifier, packet length, \gls{iat} to the previous packet in the flow, packet direction (i.e. forward or reverse path) and all TCP flags (0 if the flow is not TCP).
+We implemented a three-layer LSTM-based classifier with 128 neurons at each layer. We choose 128 neurons as we don't notice a significant degradation of performance compared to the results of \cite{hartl_explainability_2020} (check Table II, flow accuracy) and as fewer neurons allowed for more agility during the training phase and allowed us to run more experiments. As the input features we use source port, destination port, protocol identifier, packet length, \gls{iat} to the previous packet in the flow, packet direction (i.e. forward or reverse path) and all TCP flags (0 if the flow is not TCP).
 We omitted \gls{ttl} values, as they are likely to lead to unwanted prediction behaviour \cite{bachl_walling_2019}.  Among the used features, source port, destination port and protocol identifier are constant over the whole flow while the others vary.
 Additionally, we add the number of skipped packets since the last packet as a feature, which can help the classifier because otherwise it might be confused because of missing packets.
 We used the usual 5-tuple flow key, which distinguishes flows based on the protocol they use and their source and destination port and IP address.
@@ -510,13 +510,13 @@ Opposed to the behavior during training, we do not randomly sample from the prob
 %\end{tabular*}
 %\end{table}
 
-\begin{table*}
-\parbox{.45\linewidth}{
+\begin{table}[h]
+%\parbox{.45\linewidth}{
 \caption{Comparing classification metrics per flow with different tradeoffs. The higher the tradeoff, the higher the sparsity but also the lower the accuracy.} \label{tab:results_tradeoff}
 \centering
 \begin{tabular*}{\columnwidth}{>{\rowmac}l @{\extracolsep{\fill}} >{\rowmac}c>{\rowmac}c>{\rowmac}c>{\rowmac}c<{\clearrow}} \toprule
 Tradeoff & 0.0 & 0.1 & 0.5 & 1.0 \\	\midrule
-\setrow{\bfseries}Sparsity & 0\% & 76.3\% & 76.5\% & 76.8\% \\ \midrule
+Sparsity & 0\% & 76.3\% & 76.5\% & \textbf{76.8\%} \\ \midrule
 Accuracy & \textbf{99.5\%} & 99.4\% & 99.3\% & 99.0\% \\
 Precision & \textbf{99.4\%} & 98.5\% & 98.7\% & 97.9\% \\
 Recall & 98.5\% & \textbf{99.0\%} & 98.6\% & 98.1\% \\
@@ -524,14 +524,18 @@ F1 & \textbf{99.0\%} & 98.7\% & 98.6\% & 98.0\% \\
 Youden & 98.4\% & \textbf{98.5\%} & 98.2\% & 97.4\% \\
 \bottomrule
 \end{tabular*}
-}
-\hspace{0.8cm}
-\parbox{.45\linewidth}{
-\caption{Comparing classification metrics per flow between \gls{rl}-based sampling with continuous actions (tradeoff $0.1$) and alternative strategies.} \label{tab:results_others}
+%}
+\end{table}
+
+\begin{table}[h]
+% XXX: Max: Without the vspace, the table violates the margins. WTF!!!
+\vspace{0.075in}
+\caption{Comparing classification metrics per flow between \gls{rl}-based sampling with continuous actions (tradeoff 0.1) and alternative strategies.}
+\label{tab:results_others}
 \centering
 \begin{tabular*}{\columnwidth}{>{\rowmac}l @{\extracolsep{\fill}} >{\rowmac}c>{\rowmac}c>{\rowmac}c>{\rowmac}c>{\rowmac}c<{\clearrow}} \toprule
 & \gls{rl} & random & every $i$th & relative first \emph{m} & first \emph{m} \\	\midrule
-\setrow{\bfseries}Sparsity & 76.3\% & 76.3\% & 76.3\% & 76.3\% & 76.3\% \\ \midrule
+Sparsity & 76.3\% & 76.3\% & 76.3\% & 76.3\% & 76.3\% \\ \midrule
 Accuracy & \textbf{99.4\%} & 96.9\% & 97.8\% & 97.3\% & 98.3\% \\
 Precision & \textbf{98.5\%} & 92.4\% & 95.8\% & 93.8\% & 95.6\% \\
 Recall & \textbf{99.0\%} & 95.6\% & 95.4\% & 95.5\% & 97.9\% \\
@@ -539,8 +543,8 @@ F1 & \textbf{99.7\%} & 94.0\% & 95.6\% & 94.7\% & 96.7\% \\
 Youden & \textbf{98.5\%} & 93.0\% & 93.9\% & 93.4\% & 96.4\% \\
 \bottomrule
 \end{tabular*}
-}
-\end{table*}
+%}
+\end{table}
 
 \subsection{Influence of the tradeoff}
 
@@ -564,12 +568,12 @@ Youden & \textbf{98.5\%} & 93.0\% & 93.9\% & 93.4\% & 96.4\% \\
 %\end{tabular*}
 %\end{table}
 
-\begin{table}
+\begin{table}[h]
 \caption{Comparing classification metrics per flow with either discrete (20 different actions) or continuous actions. The tradeoff is always $0.1$.} \label{tab:results_disc_cont}
 \centering
 \begin{tabular}{>{\rowmac}l >{\rowmac}r>{\rowmac}r<{\clearrow}} \toprule
 Actions & continuous & discrete \\	\midrule
-\setrow{\bfseries}Sparsity & 76.3\% & 73.6\% \\ \midrule
+Sparsity & \textbf{76.3\%} & 73.6\% \\ \midrule
 Accuracy & \textbf{99.4\%} & 99.2\% \\
 Precision & 98.5\% & \textbf{98.7\%} \\
 Recall & \textbf{99.0\%} & 98.3\% \\
@@ -599,7 +603,7 @@ Youden & \textbf{98.5\%} & 97.8\% \\
 %\end{table}
 
 Next we compared the \gls{rl} technique used by \ours{} with several intuitive sampling strategies suggested in \autoref{sec:other_sampling_techniques}.
-\autoref{tab:results_others} reveals that \ours{} achieves the highest accuracy with the same sparsity. Not surprisingly, random sampling performs the worst, as it is likely that a flow is ``unfortunate'' and doesn't get enough packets sampled while another one gets more packets or the packets that carry more useful information. The best strategy besides the \gls{rl} approach seems to be ``first $m$'' sampling, which matches the conclusion from \cite{hartl_explainability_2019} that the first couple of packets are the most important ones for determining maliciousness of a flow.
+\autoref{tab:results_others} reveals that \ours{} achieves the highest accuracy with the same sparsity. Not surprisingly, random sampling performs the worst, as it is likely that a flow is ``unfortunate'' and doesn't get enough packets sampled while another one gets more packets or the packets that carry more useful information. The best strategy besides the \gls{rl} approach seems to be ``first $m$'' sampling, which matches the conclusion from \cite{hartl_explainability_2020} that the first couple of packets are the most important ones for determining maliciousness of a flow.
 ``first $m$'' performs better than ``relative first $m$'' because for ``relative first $m$'', longer flows will have more packets sampled from them. Conversely, very short flows will get few packets. For example, with $p=0.2$, a flow of length 20 will get 4 packets while one with 4 packets will get only 1. However, with `first $m$'', the short and the long flow will get the same number of packets. Apparently it is better if all flows get the same number of packets than if long flows get more packets. 
 
 \subsection{Inspecting the \gls{rl}'s behavior}
@@ -631,7 +635,7 @@ Next we compared the \gls{rl} technique used by \ours{} with several intuitive s
 
 \autoref{fig:inspecting} shows the sampling strategy for different attack types. Figure \ref{fig:inspectingNormal} shows that for benign traffic, the sampling strategy is quite heterogeneous: Not specific packets get always chosen, but different packets get chosen, depending on the flow. This contrasts with SSH Patator (Figure \ref{fig:inspectingPatator}), where the 0th, the 3rd, the 13th and the 15th packet are always chosen, since they appear to be especially indicative of an attack. Also, the flows seem to contain no useful information between the 3rd and the 13th packet, so that this part is always skipped altogether. Slowloris (Figure \ref{fig:inspectingSlowloris}) is more similar to what we saw for benign traffic: The sampling strategy varies a lot for different flows and not always the same pattern is used. When looking at all flows (Figure \ref{fig:inspectingAll}) it becomes apparent that the second packet (index 1) is almost never chosen, and the third is also chosen quite rarely. We attribute this to the fact that most communication flows are TCP and use handshakes, meaning that the second packet is simply a reply a part of the handshake, revealing no important information. In general, we see that the sampling strategy varies significantly between different attack types and for some attack types even for different flows within the same attack type, showing that \ours{} learns to choose the packets effectively, which reveal the malicious nature of a flow.
 
-One concern could be the overly deterministic nature of the decisions of \ours{} for some attack types: An adversary could see that only certain packets of a flow are looked at by the \gls{rl} system and thus only manipulate the few packets that the classifier looks at to generate adversarial samples with methods as studied by \cite{hartl_explainability_2019}. One potential remedy for this is to also randomly sample from the distribution of the actor during deployment like it is done during training. This could result in slightly worse accuracy but lead to behavior that is harder to predict for an adversary. Currently we take the mean of the probability distribution for continuous actions and the mode for the discrete one, resulting in deterministic behavior.
+One concern could be the overly deterministic nature of the decisions of \ours{} for some attack types: An adversary could see that only certain packets of a flow are looked at by the \gls{rl} system and thus only manipulate the few packets that the classifier looks at to generate adversarial samples with methods as studied by \cite{hartl_explainability_2020}. One potential remedy for this is to also randomly sample from the distribution of the actor during deployment like it is done during training. This could result in slightly worse accuracy but lead to behavior that is harder to predict for an adversary. Currently we take the mean of the probability distribution for continuous actions and the mode for the discrete one, resulting in deterministic behavior.
 
 \section{Steering}
 

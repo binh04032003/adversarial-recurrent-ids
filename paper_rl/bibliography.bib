@@ -1,88 +1,43 @@
 
-@article{mnih_asynchronous_2016,
-	title = {Asynchronous {Methods} for {Deep} {Reinforcement} {Learning}},
-	url = {http://arxiv.org/abs/1602.01783},
-	abstract = {We propose a conceptually simple and lightweight framework for deep reinforcement learning that uses asynchronous gradient descent for optimization of deep neural network controllers. We present asynchronous variants of four standard reinforcement learning algorithms and show that parallel actor-learners have a stabilizing effect on training allowing all four methods to successfully train neural network controllers. The best performing method, an asynchronous variant of actor-critic, surpasses the current state-of-the-art on the Atari domain while training for half the time on a single multi-core CPU instead of a GPU. Furthermore, we show that asynchronous actor-critic succeeds on a wide variety of continuous motor control problems as well as on a new task of navigating random 3D mazes using a visual input.},
-	urldate = {2020-01-16},
-	journal = {arXiv:1602.01783 [cs]},
-	author = {Mnih, Volodymyr and Badia, Adrià Puigdomènech and Mirza, Mehdi and Graves, Alex and Lillicrap, Timothy P. and Harley, Tim and Silver, David and Kavukcuoglu, Koray},
-	month = jun,
-	year = {2016},
-	note = {arXiv: 1602.01783},
-	keywords = {Computer Science - Machine Learning},
-	file = {arXiv Fulltext PDF:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/ZYPU4IR5/Mnih et al. - 2016 - Asynchronous Methods for Deep Reinforcement Learni.pdf:application/pdf;arXiv.org Snapshot:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/27VWHXNW/1602.html:text/html}
-}
-
-@article{campos_skip_2018,
+@inproceedings{campos_skip_2018,
 	title = {Skip {RNN}: {Learning} to {Skip} {State} {Updates} in {Recurrent} {Neural} {Networks}},
 	shorttitle = {Skip {RNN}},
 	url = {http://arxiv.org/abs/1708.06834},
 	abstract = {Recurrent Neural Networks (RNNs) continue to show outstanding performance in sequence modeling tasks. However, training RNNs on long sequences often face challenges like slow inference, vanishing gradients and difficulty in capturing long term dependencies. In backpropagation through time settings, these issues are tightly coupled with the large, sequential computational graph resulting from unfolding the RNN in time. We introduce the Skip RNN model which extends existing RNN models by learning to skip state updates and shortens the effective size of the computational graph. This model can also be encouraged to perform fewer state updates through a budget constraint. We evaluate the proposed model on various tasks and show how it can reduce the number of required RNN updates while preserving, and sometimes even improving, the performance of the baseline RNN models. Source code is publicly available at https://imatge-upc.github.io/skiprnn-2017-telecombcn/ .},
 	urldate = {2020-01-21},
-	journal = {arXiv:1708.06834 [cs]},
+	booktitle = {{ICLR}},
 	author = {Campos, Victor and Jou, Brendan and Giro-i-Nieto, Xavier and Torres, Jordi and Chang, Shih-Fu},
 	month = feb,
 	year = {2018},
-	note = {arXiv: 1708.06834},
 	keywords = {Computer Science - Artificial Intelligence, Computer Science - Computer Vision and Pattern Recognition},
 	annote = {Comment: Accepted as conference paper at ICLR 2018},
 	file = {arXiv Fulltext PDF:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/NDQDYF8X/Campos et al. - 2018 - Skip RNN Learning to Skip State Updates in Recurr.pdf:application/pdf;arXiv.org Snapshot:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/TXSEWRMW/1708.html:text/html}
 }
 
-@article{seo_neural_2018,
+@inproceedings{seo_neural_2018,
 	title = {Neural {Speed} {Reading} via {Skim}-{RNN}},
 	url = {http://arxiv.org/abs/1711.02085},
 	abstract = {Inspired by the principles of speed reading, we introduce Skim-RNN, a recurrent neural network (RNN) that dynamically decides to update only a small fraction of the hidden state for relatively unimportant input tokens. Skim-RNN gives computational advantage over an RNN that always updates the entire hidden state. Skim-RNN uses the same input and output interfaces as a standard RNN and can be easily used instead of RNNs in existing models. In our experiments, we show that Skim-RNN can achieve significantly reduced computational cost without losing accuracy compared to standard RNNs across five different natural language tasks. In addition, we demonstrate that the trade-off between accuracy and speed of Skim-RNN can be dynamically controlled during inference time in a stable manner. Our analysis also shows that Skim-RNN running on a single CPU offers lower latency compared to standard RNNs on GPUs.},
 	urldate = {2020-01-21},
-	journal = {arXiv:1711.02085 [cs]},
+	booktitle = {{ICLR}},
 	author = {Seo, Minjoon and Min, Sewon and Farhadi, Ali and Hajishirzi, Hannaneh},
 	month = mar,
 	year = {2018},
-	note = {arXiv: 1711.02085},
 	keywords = {Computer Science - Computation and Language},
 	annote = {Comment: ICLR 2018},
 	file = {arXiv Fulltext PDF:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/BK7T9QEG/Seo et al. - 2018 - Neural Speed Reading via Skim-RNN.pdf:application/pdf;arXiv.org Snapshot:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/TTMEA56F/1711.html:text/html}
 }
 
-@article{yu_learning_2017,
-	title = {Learning to {Skim} {Text}},
-	url = {http://arxiv.org/abs/1704.06877},
-	abstract = {Recurrent Neural Networks are showing much promise in many sub-areas of natural language processing, ranging from document classification to machine translation to automatic question answering. Despite their promise, many recurrent models have to read the whole text word by word, making it slow to handle long documents. For example, it is difficult to use a recurrent network to read a book and answer questions about it. In this paper, we present an approach of reading text while skipping irrelevant information if needed. The underlying model is a recurrent network that learns how far to jump after reading a few words of the input text. We employ a standard policy gradient method to train the model to make discrete jumping decisions. In our benchmarks on four different tasks, including number prediction, sentiment analysis, news article classification and automatic Q{\textbackslash}\&A, our proposed model, a modified LSTM with jumping, is up to 6 times faster than the standard sequential LSTM, while maintaining the same or even better accuracy.},
-	urldate = {2020-01-21},
-	journal = {arXiv:1704.06877 [cs]},
-	author = {Yu, Adams Wei and Lee, Hongrae and Le, Quoc V.},
-	month = apr,
-	year = {2017},
-	note = {arXiv: 1704.06877},
-	keywords = {Computer Science - Machine Learning, Computer Science - Computation and Language},
-	file = {arXiv Fulltext PDF:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/3WSXFEAQ/Yu et al. - 2017 - Learning to Skim Text.pdf:application/pdf;arXiv.org Snapshot:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/6PWJB5ZU/1704.html:text/html}
-}
-
-@article{gui_long_2018,
-	title = {Long {Short}-{Term} {Memory} with {Dynamic} {Skip} {Connections}},
-	url = {http://arxiv.org/abs/1811.03873},
-	abstract = {In recent years, long short-term memory (LSTM) has been successfully used to model sequential data of variable length. However, LSTM can still experience difficulty in capturing long-term dependencies. In this work, we tried to alleviate this problem by introducing a dynamic skip connection, which can learn to directly connect two dependent words. Since there is no dependency information in the training data, we propose a novel reinforcement learning-based method to model the dependency relationship and connect dependent words. The proposed model computes the recurrent transition functions based on the skip connections, which provides a dynamic skipping advantage over RNNs that always tackle entire sentences sequentially. Our experimental results on three natural language processing tasks demonstrate that the proposed method can achieve better performance than existing methods. In the number prediction experiment, the proposed model outperformed LSTM with respect to accuracy by nearly 20\%.},
-	urldate = {2020-01-21},
-	journal = {arXiv:1811.03873 [cs]},
-	author = {Gui, Tao and Zhang, Qi and Zhao, Lujun and Lin, Yaosong and Peng, Minlong and Gong, Jingjing and Huang, Xuanjing},
-	month = nov,
-	year = {2018},
-	note = {arXiv: 1811.03873},
-	keywords = {Computer Science - Computation and Language},
-	file = {arXiv Fulltext PDF:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/BQAEUSNQ/Gui et al. - 2018 - Long Short-Term Memory with Dynamic Skip Connectio.pdf:application/pdf;arXiv.org Snapshot:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/CRG3WLSL/1811.html:text/html}
-}
-
-@article{hartl_explainability_2019,
+@inproceedings{hartl_explainability_2020,
 	title = {Explainability and {Adversarial} {Robustness} for {RNNs}},
 	url = {http://arxiv.org/abs/1912.09855},
 	abstract = {Recurrent Neural Networks (RNNs) yield attractive properties for constructing Intrusion Detection Systems (IDSs) for network data. With the rise of ubiquitous Machine Learning (ML) systems, malicious actors have been catching up quickly to find new ways to exploit ML vulnerabilities for profit. Recently developed adversarial ML techniques focus on computer vision and their applicability to network traffic is not straightforward: Network packets expose fewer features than an image, are sequential and impose several constraints on their features. We show that despite these completely different characteristics, adversarial samples can be generated reliably for RNNs. To understand a classifier's potential for misclassification, we extend existing explainability techniques and propose new ones, suitable particularly for sequential data. Applying them shows that already the first packets of a communication flow are of crucial importance and are likely to be targeted by attackers. Feature importance methods show that even relatively unimportant features can be effectively abused to generate adversarial samples. Since traditional evaluation metrics such as accuracy are not sufficient for quantifying the adversarial threat, we propose the Adversarial Robustness Score (ARS) for comparing IDSs, capturing a common notion of adversarial robustness, and show that an adversarial training procedure can significantly and successfully reduce the attack surface.},
 	urldate = {2020-01-21},
-	journal = {arXiv:1912.09855 [cs, stat]},
+	booktitle = {2020 {IEEE} {Sixth} {International} {Conference} on {Big} {Data} {Computing} {Service} and {Applications} ({BigDataService})},
 	author = {Hartl, Alexander and Bachl, Maximilian and Fabini, Joachim and Zseby, Tanja},
-	month = dec,
-	year = {2019},
-	note = {arXiv: 1912.09855},
-	keywords = {Computer Science - Networking and Internet Architecture, Computer Science - Machine Learning, Statistics - Machine Learning, Computer Science - Cryptography and Security},
+	month = apr,
+	year = {2020},
+	keywords = {Computer Science - Cryptography and Security, Computer Science - Machine Learning, Computer Science - Networking and Internet Architecture, Statistics - Machine Learning},
 	file = {arXiv Fulltext PDF:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/Q96GWYPR/Hartl et al. - 2019 - Explainability and Adversarial Robustness for RNNs.pdf:application/pdf;arXiv.org Snapshot:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/UTLUVCAX/1912.html:text/html}
 }
 
@@ -155,17 +110,16 @@
 	file = {IEEE Xplore Abstract Record:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/PZGRMM59/8761187.html:text/html;IEEE Xplore Full Text PDF:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/JTG9DWLB/Bachl et al. - 2019 - Rax Deep Reinforcement Learning for Congestion Co.pdf:application/pdf}
 }
 
-@article{mnih_playing_2013,
+@inproceedings{mnih_playing_2013,
 	title = {Playing {Atari} with {Deep} {Reinforcement} {Learning}},
 	url = {http://arxiv.org/abs/1312.5602},
 	abstract = {We present the ﬁrst deep learning model to successfully learn control policies directly from high-dimensional sensory input using reinforcement learning. The model is a convolutional neural network, trained with a variant of Q-learning, whose input is raw pixels and whose output is a value function estimating future rewards. We apply our method to seven Atari 2600 games from the Arcade Learning Environment, with no adjustment of the architecture or learning algorithm. We ﬁnd that it outperforms all previous approaches on six of the games and surpasses a human expert on three of them.},
 	language = {en},
 	urldate = {2020-01-24},
-	journal = {arXiv:1312.5602 [cs]},
+	booktitle = {{NIPS}},
 	author = {Mnih, Volodymyr and Kavukcuoglu, Koray and Silver, David and Graves, Alex and Antonoglou, Ioannis and Wierstra, Daan and Riedmiller, Martin},
 	month = dec,
 	year = {2013},
-	note = {arXiv: 1312.5602},
 	keywords = {Computer Science - Machine Learning},
 	annote = {Comment: NIPS Deep Learning Workshop 2013},
 	file = {Mnih et al. - 2013 - Playing Atari with Deep Reinforcement Learning.pdf:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/GMYI3I5J/Mnih et al. - 2013 - Playing Atari with Deep Reinforcement Learning.pdf:application/pdf}
@@ -304,7 +258,59 @@
 
 @article{zseby_sampling_2005,
 	title = {Sampling and filtering techniques for {IP} packet selection},
-	journal = {IETF Request for Comments RFC 5475},
+	journal = {draft-ietf-psamp-sample-tech-07},
 	author = {Zseby, Tanja and Molina, Maurizio and Duffield, Nick and Niccolini, Saverio and Raspall, Fredric},
-	year = {2009}
+	year = {2005}
+}
+
+@inproceedings{mnih_asynchronous_2016,
+	address = {New York, NY, USA},
+	series = {{ICML}'16},
+	title = {Asynchronous methods for deep reinforcement learning},
+	abstract = {We propose a conceptually simple and lightweight framework for deep reinforcement learning that uses asynchronous gradient descent for optimization of deep neural network controllers. We present asynchronous variants of four standard reinforcement learning algorithms and show that parallel actor-learners have a stabilizing effect on training allowing all four methods to successfully train neural network controllers. The best performing method, an asynchronous variant of actor-critic, surpasses the current state-of-the-art on the Atari domain while training for half the time on a single multi-core CPU instead of a GPU. Furthermore, we show that asynchronous actor-critic succeeds on a wide variety of continuous motor control problems as well as on a new task of navigating random 3D mazes using a visual input.},
+	urldate = {2020-02-09},
+	booktitle = {Proceedings of the 33rd {International} {Conference} on {International} {Conference} on {Machine} {Learning} - {Volume} 48},
+	publisher = {JMLR.org},
+	author = {Mnih, Volodymyr and Badia, Adrià Puigdomènech and Mirza, Mehdi and Graves, Alex and Harley, Tim and Lillicrap, Timothy P. and Silver, David and Kavukcuoglu, Koray},
+	month = jun,
+	year = {2016},
+	pages = {1928--1937}
+}
+
+@inproceedings{yu_learning_2017,
+	address = {Vancouver, Canada},
+	title = {Learning to {Skim} {Text}},
+	url = {https://www.aclweb.org/anthology/P17-1172},
+	doi = {10.18653/v1/P17-1172},
+	abstract = {Recurrent Neural Networks are showing much promise in many sub-areas of natural language processing, ranging from document classification to machine translation to automatic question answering. Despite their promise, many recurrent models have to read the whole text word by word, making it slow to handle long documents. For example, it is difficult to use a recurrent network to read a book and answer questions about it. In this paper, we present an approach of reading text while skipping irrelevant information if needed. The underlying model is a recurrent network that learns how far to jump after reading a few words of the input text. We employ a standard policy gradient method to train the model to make discrete jumping decisions. In our benchmarks on four different tasks, including number prediction, sentiment analysis, news article classification and automatic Q\&A, our proposed model, a modified LSTM with jumping, is up to 6 times faster than the standard sequential LSTM, while maintaining the same or even better accuracy.},
+	urldate = {2020-02-09},
+	booktitle = {Proceedings of the 55th {Annual} {Meeting} of the {Association} for {Computational} {Linguistics} ({Volume} 1: {Long} {Papers})},
+	publisher = {Association for Computational Linguistics},
+	author = {Yu, Adams Wei and Lee, Hongrae and Le, Quoc},
+	month = jul,
+	year = {2017},
+	pages = {1880--1890},
+	file = {Full Text PDF:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/KZGKQBSI/Yu et al. - 2017 - Learning to Skim Text.pdf:application/pdf}
+}
+
+@inproceedings{gui_long_2019,
+	title = {Long {Short}-{Term} {Memory} with {Dynamic} {Skip} {Connections}},
+	volume = {33},
+	booktitle = {Proceedings of the {AAAI} {Conference} on {Artificial} {Intelligence}},
+	author = {Gui, Tao and Zhang, Qi and Zhao, Lujun and Lin, Yaosong and Peng, Minlong and Gong, Jingjing and Huang, Xuanjing},
+	year = {2019},
+	pages = {6481--6488}
+}
+
+@inproceedings{lorbeer_anomaly_2019,
+	title = {Anomaly {Detection} with {HMM} {Gauge} {Likelihood} {Analysis}},
+	doi = {10.1109/BigDataService.2019.00008},
+	abstract = {This paper describes a new method, HMM gauge likelihood analysis, or GLA, of detecting anomalies in discrete time series using Hidden Markov Models and clustering. At the center of the method lies the comparison of subsequences. To achieve this, they first get assigned to their Hidden Markov Models using the Baum-Welch algorithm. Next, those models are described by an approximating representation of the probability distributions they define. Finally, this representation is then analyzed with the help of some clustering technique or other outlier detection tool and anomalies are detected. Clearly, HMMs could be substituted by some other appropriate model, e.g. some other dynamic Bayesian network. Our learning algorithm is unsupervised, so it doesn't require the labeling of large amounts of data. The usability of this method is demonstrated by applying it to synthetic and real-world syslog data.},
+	booktitle = {2019 {IEEE} {Fifth} {International} {Conference} on {Big} {Data} {Computing} {Service} and {Applications} ({BigDataService})},
+	author = {Lorbeer, Boris and Deutsch, Tanja and Ruppel, Peter and Küpper, Axel},
+	month = apr,
+	year = {2019},
+	keywords = {anomaly detection, Anomaly detection, Anomaly Detection, Hidden Markov Models, clustering, t-SNE, LSTM, Baum-Welch algorithm, belief networks, Clustering algorithms, clustering technique, discrete time series, dynamic Bayesian network, GLA, Heuristic algorithms, hidden Markov models, Hidden Markov models, HMM gauge likelihood analysis, Machine learning, Microsoft Windows, outlier detection tool, probability distributions, security of data, statistical distributions, time series, Time series analysis, unsupervised learning, unsupervised learning algorithm},
+	pages = {1--8},
+	file = {IEEE Xplore Abstract Record:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/9MAZN4U6/8848216.html:text/html;Submitted Version:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/QASAVKPS/Lorbeer et al. - 2019 - Anomaly Detection with HMM Gauge Likelihood Analys.pdf:application/pdf}
 }
