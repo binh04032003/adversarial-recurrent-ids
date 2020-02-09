@@ -146,6 +146,7 @@ for attack_type, (seqs, lens) in enumerate(zip(results_by_attack_number, orig_se
 	# lens = [item.shape[0] for item in values_by_length]
 
 	fig, ax1 = plt.subplots(figsize=(5,3))
+
 	x_values = list(range(min(len(lens), MAX_X)))
 	ret = ax1.bar(x_values, lens[:MAX_X], width=1, color="gray", alpha=0.2, label="fraction of samples")
 	# ret4 = ax1.bar(x_values, fraction_of_chosen_packets_by_flows[:MAX_X], width=1, color="red", alpha=0.2, label="fraction of chosen samples")

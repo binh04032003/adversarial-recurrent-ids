@@ -10,6 +10,7 @@ import random
 import time
 from functools import reduce
 from tqdm import tqdm
+import statistics
 
 import collections
 import itertools
@@ -167,6 +168,7 @@ all_packets_per_epoch_sampling_rl = [[]]
 batch_counter_sampling_rl = 0
 tradeoffs_sampling_rl = []
 initial_global_tradeoff = None
+global_all_end_accuracies = [[]]
 
 def custom_collate(seqs, things=(True, True, True)):
 	seqs, labels, categories = zip(*seqs)
@@ -383,17 +385,20 @@ def custom_collate(seqs, things=(True, True, True)):
 			if batch_counter_sampling_rl > 0 and batch_counter_sampling_rl % opt.batches_to_consider_for_steering == 0:
 				chosen_packets_per_epoch_sampling_rl[-1] = sum(chosen_packets_per_epoch_sampling_rl[-1])
 				all_packets_per_epoch_sampling_rl[-1] = sum(all_packets_per_epoch_sampling_rl[-1])
+				# print("global_all_end_accuracies", global_all_end_accuracies)
+				global_all_end_accuracies[-1] = statistics.mean(global_all_end_accuracies[-1])
 				empirical_sparsity = float(chosen_packets_per_epoch_sampling_rl[-1]/all_packets_per_epoch_sampling_rl[-1])
 				chosen_packets_per_epoch_sampling_rl.append([])
 				all_packets_per_epoch_sampling_rl.append([])
+				global_all_end_accuracies.append([])
 
 				tradeoffs_sampling_rl.append(opt.global_tradeoff)
 
-				print("opt.global_tradeoff", opt.global_tradeoff, "empirical_sparsity", empirical_sparsity)
+				print("opt.global_tradeoff", opt.global_tradeoff, "empirical_sparsity", empirical_sparsity, "global_all_end_accuracies", global_all_end_accuracies[-2])
 
 				new_file_name = f"{'_'.join(opt.net.split('/')[-2:])}_global_tradeoff_{initial_global_tradeoff}_steering_step_size_{opt.steering_step_size}_steering_target_sparsity_{opt.steering_target_sparsity}_batches_to_consider_for_steering_{opt.batches_to_consider_for_steering}_sampling_rl.json"
 				f = open(new_file_name, "w")
-				f.write(json.dumps([chosen_packets_per_epoch_sampling_rl, all_packets_per_epoch_sampling_rl, tradeoffs_sampling_rl]))
+				f.write(json.dumps([chosen_packets_per_epoch_sampling_rl, all_packets_per_epoch_sampling_rl, tradeoffs_sampling_rl, global_all_end_accuracies]))
 				f.close()
 				if empirical_sparsity < opt.steering_target_sparsity:
 					opt.global_tradeoff += opt.steering_step_size
@@ -989,6 +994,8 @@ def test():
 
 		all_accuracies.append(accuracy_items.cpu().numpy())
 		all_end_accuracies.append(end_accuracy_items.cpu().numpy())
+		if opt.variableTradeoff:
+			global_all_end_accuracies[-1] += end_accuracy_items.cpu().numpy().tolist()
 
 		# Data is (Sequence Index, Batch Index, Feature Index)
 		for batch_index in range(output.shape[1]):

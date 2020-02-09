@@ -648,8 +648,8 @@ We thus propose a method that enables steering the tradeoff to achieve a certain
 
 \begin{figure}[h]
 \centering
-  \includegraphics[width=\columnwidth]{{"img/Jan27_18-32-15_gpu_lstm_module_8.pth_global_tradeoff_1.0_steering_step_size_0.05_steering_target_sparsity_0.5_batches_to_consider_for_steering_500_sampling_rl"}.pdf}
-  \caption{Steering the tradeoff with an allowed minimum sparsity of 50\%. The tradeoff is initialized as 1 and continuously lowered as long as the sparsity is higher than 50\%. The procedure stops if the minimum sparsity is reached or the tradeoff reached its minimum of 0, which is the case here. Sparsity falls from around 74.5\% to 73.5\%.}
+  \includegraphics[width=\columnwidth]{{"img/Feb07_17-08-56_gpu_lstm_module_8.pth_global_tradeoff_1.0_steering_step_size_0.1_steering_target_sparsity_0.5_batches_to_consider_for_steering_1000_sampling_rl"}.pdf}
+  \caption{Steering the tradeoff with an allowed minimum sparsity of 50\% over the test dataset. The tradeoff is initialized as 1 and continuously lowered in a streaming fashion as long as the sparsity is higher than 50\%. The procedure stops if the minimum sparsity is reached or the tradeoff reached its minimum of 0, which is the case here. Sparsity falls from a high of around 72.5\% to a low of 71\%.}
   \label{fig:steering}
 \end{figure}
 
