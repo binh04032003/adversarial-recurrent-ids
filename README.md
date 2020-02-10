@@ -1,7 +1,7 @@
 # reinforcement-learning-for-packet-sampling
 Contact: Maximilian Bachl, Fares Meghdouri
 
-This repository contains the code, the data and the machine learning models for our upcoming paper on using Deep Reinforcement Learning for packet sampling. We perform our study in the context of Intrusion Detection Systems.
+This repository contains the code, the data and the machine learning models for our upcoming paper called *SparseIDS: Learning Packet Sampling with Reinforcement Learning*.
 
 # Dataset
 We use the CIC-IDS-2017 dataset. The repository contains a preprocessed version of the dataset (refer to the paper for more information). 
