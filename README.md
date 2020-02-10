@@ -1,4 +1,4 @@
-# reinforcement-learning-for-packet-sampling
+# SparseIDS: Learning Packet Sampling with Reinforcement Learning
 Contact: Maximilian Bachl, Fares Meghdouri
 
 This repository contains the code, the data and the machine learning models for our upcoming paper called *SparseIDS: Learning Packet Sampling with Reinforcement Learning*.
