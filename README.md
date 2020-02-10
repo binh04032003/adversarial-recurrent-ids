@@ -16,6 +16,27 @@ If you want to produce the preprocessed files yourself:
 * Follow the information on how to reproduce the preprocessed datasets in the [Datasets-preprocessing](https://github.com/CN-TU/Datasets-preprocessing) repository.
 * Run the ```parse.py``` script on the resulting ```.csv``` file to get the final ```.pickle``` file. 
 
+# Usage examples
+A list of command-line arguments is printed when calling `learn.py` without arguments. Here we provide a few examples of how `learn.py` can be called.
+```bash
+# Train a new model
+./learn.py --dataroot flows.pickle
+# Evaluate a model on the test dataset
+./learn.py --dataroot flows.pickle --net runs/Oct26_00-03-50_gpu/lstm_module_1284.pth --function test
+# Compute several feature importance metrics
+./learn.py --dataroot flows.pickle --net runs/Oct26_00-03-50_gpu/lstm_module_1284.pth --function feature_importance
+./learn.py --dataroot flows.pickle --net runs/Nov19_18-25-03_gpu/lstm_module_898.pth --function dropout_feature_importance
+./learn.py --dataroot flows.pickle --net runs/Nov19_18-25-03_gpu/lstm_module_898.pth --function dropout_feature_correlation
+./learn.py --dataroot flows.pickle --net runs/Oct26_00-03-50_gpu/lstm_module_1284.pth --adjustFeatImpDistribution --function mutinfo_feat_imp
+./weight_feat_imp.py runs/Oct26_00-03-50_gpu/lstm_module_1284.pth
+# Generate adversarial samples
+./learn.py --dataroot flows.pickle --net runs/Oct26_00-03-50_gpu/lstm_module_1284.pth --function adv
+# Perform adversarial training
+./learn.py --dataroot flows.pickle --net runs/Oct26_00-03-50_gpu/lstm_module_1284.pth --advTraining
+# Compute ARS
+./learn.py --dataroot flows.pickle --net runs/Oct26_00-03-50_gpu/lstm_module_1284.pth --function adv_until_less_than_half
+```
+
 # Trained models
 Models in the [runs](runs) folder have been trained with the following configurations:
 * Oct26_00-03-50_gpu: CIC-IDS-2017
