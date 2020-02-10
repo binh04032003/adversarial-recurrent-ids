@@ -10,6 +10,23 @@ We use the CIC-IDS-2017 dataset. The repository contains a preprocessed version 
 * Concatenate the parts: ```cat flows.pickle.gz.part-* > flows.pickle.gz```
 * Unzip them: ```gzip -d flows.pickle.gz```
 
+# Requirements
+Our code needs Python >= 3.6 as well as the following pip packages:
+```
+matplotlib==3.0.2
+numpy==1.16.0
+scikit-learn==0.21.2
+scipy==1.3.0
+tensorboard==1.12.2
+tensorboardX==1.6
+tensorflow==1.12.0
+torch==1.1.0
+tqdm==4.30.0
+```
+
+# Usage examples
+
+
 # Trained models
 Models in the [runs](runs) folder have been trained with the following configuration:
 * Jan18_13-57-36_gpu: tradeoff 0.1, continuous actions
