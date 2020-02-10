@@ -11,7 +11,7 @@ import pickle
 def numpy_sigmoid(x):
 	return 1/(1+np.exp(-x))
 
-DIR_NAME = "plots/plot_rl"
+DIR_NAME = "paper_rl/img/plot_rl"
 ORDERING = ['', 'Length min', 'IAT min', 'Length max', 'IAT max']
 
 MAX_X = 20
@@ -189,7 +189,7 @@ for attack_type, (seqs, lens) in enumerate(zip(results_by_attack_number, orig_se
 	plt.tight_layout()
 
 	os.makedirs(DIR_NAME, exist_ok=True)
-	plt.savefig(DIR_NAME+'/{}_{}_{}.pdf'.format(file_name.split("/")[-1], attack_type, reverse_mapping[attack_type].replace("/", "-").replace(":", "-")), bbox_inches = 'tight', pad_inches = 0)
+	plt.savefig(DIR_NAME+'/{}_{}_{}.pdf'.format(file_name.split("/")[-1], attack_type, reverse_mapping[attack_type].replace("/", "-").replace(":", "-").replace(" ", "_").replace("(", "_").replace(")", "_")), bbox_inches = 'tight', pad_inches = 0)
 	plt.clf()
 
 

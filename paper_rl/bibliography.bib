@@ -33,7 +33,7 @@
 	url = {http://arxiv.org/abs/1912.09855},
 	abstract = {Recurrent Neural Networks (RNNs) yield attractive properties for constructing Intrusion Detection Systems (IDSs) for network data. With the rise of ubiquitous Machine Learning (ML) systems, malicious actors have been catching up quickly to find new ways to exploit ML vulnerabilities for profit. Recently developed adversarial ML techniques focus on computer vision and their applicability to network traffic is not straightforward: Network packets expose fewer features than an image, are sequential and impose several constraints on their features. We show that despite these completely different characteristics, adversarial samples can be generated reliably for RNNs. To understand a classifier's potential for misclassification, we extend existing explainability techniques and propose new ones, suitable particularly for sequential data. Applying them shows that already the first packets of a communication flow are of crucial importance and are likely to be targeted by attackers. Feature importance methods show that even relatively unimportant features can be effectively abused to generate adversarial samples. Since traditional evaluation metrics such as accuracy are not sufficient for quantifying the adversarial threat, we propose the Adversarial Robustness Score (ARS) for comparing IDSs, capturing a common notion of adversarial robustness, and show that an adversarial training procedure can significantly and successfully reduce the attack surface.},
 	urldate = {2020-01-21},
-	booktitle = {2020 {IEEE} {Sixth} {International} {Conference} on {Big} {Data} {Computing} {Service} and {Machine} {Learning} {Applications} ({BigDataService})},
+	booktitle = {{BigDataService} 2020},
 	author = {Hartl, Alexander and Bachl, Maximilian and Fabini, Joachim and Zseby, Tanja},
 	month = apr,
 	year = {2020},
@@ -264,13 +264,10 @@
 }
 
 @inproceedings{mnih_asynchronous_2016,
-	address = {New York, NY, USA},
-	series = {{ICML}'16},
 	title = {Asynchronous methods for deep reinforcement learning},
 	abstract = {We propose a conceptually simple and lightweight framework for deep reinforcement learning that uses asynchronous gradient descent for optimization of deep neural network controllers. We present asynchronous variants of four standard reinforcement learning algorithms and show that parallel actor-learners have a stabilizing effect on training allowing all four methods to successfully train neural network controllers. The best performing method, an asynchronous variant of actor-critic, surpasses the current state-of-the-art on the Atari domain while training for half the time on a single multi-core CPU instead of a GPU. Furthermore, we show that asynchronous actor-critic succeeds on a wide variety of continuous motor control problems as well as on a new task of navigating random 3D mazes using a visual input.},
 	urldate = {2020-02-09},
-	booktitle = {Proceedings of the 33rd {International} {Conference} on {International} {Conference} on {Machine} {Learning} - {Volume} 48},
-	publisher = {JMLR.org},
+	booktitle = {{ICML} '16},
 	author = {Mnih, Volodymyr and Badia, Adrià Puigdomènech and Mirza, Mehdi and Graves, Alex and Harley, Tim and Lillicrap, Timothy P. and Silver, David and Kavukcuoglu, Koray},
 	month = jun,
 	year = {2016},
@@ -284,8 +281,8 @@
 	doi = {10.18653/v1/P17-1172},
 	abstract = {Recurrent Neural Networks are showing much promise in many sub-areas of natural language processing, ranging from document classification to machine translation to automatic question answering. Despite their promise, many recurrent models have to read the whole text word by word, making it slow to handle long documents. For example, it is difficult to use a recurrent network to read a book and answer questions about it. In this paper, we present an approach of reading text while skipping irrelevant information if needed. The underlying model is a recurrent network that learns how far to jump after reading a few words of the input text. We employ a standard policy gradient method to train the model to make discrete jumping decisions. In our benchmarks on four different tasks, including number prediction, sentiment analysis, news article classification and automatic Q\&A, our proposed model, a modified LSTM with jumping, is up to 6 times faster than the standard sequential LSTM, while maintaining the same or even better accuracy.},
 	urldate = {2020-02-09},
-	booktitle = {Proceedings of the 55th {Annual} {Meeting} of the {Association} for {Computational} {Linguistics} ({Volume} 1: {Long} {Papers})},
-	publisher = {Association for Computational Linguistics},
+	booktitle = {{ACL} 2017},
+	publisher = {ACL},
 	author = {Yu, Adams Wei and Lee, Hongrae and Le, Quoc},
 	month = jul,
 	year = {2017},
@@ -296,7 +293,7 @@
 @inproceedings{gui_long_2019,
 	title = {Long {Short}-{Term} {Memory} with {Dynamic} {Skip} {Connections}},
 	volume = {33},
-	booktitle = {Proceedings of the {AAAI} {Conference} on {Artificial} {Intelligence}},
+	booktitle = {{AAAI} 2019},
 	author = {Gui, Tao and Zhang, Qi and Zhao, Lujun and Lin, Yaosong and Peng, Minlong and Gong, Jingjing and Huang, Xuanjing},
 	year = {2019},
 	pages = {6481--6488}
@@ -313,4 +310,21 @@
 	keywords = {anomaly detection, Anomaly detection, Anomaly Detection, Hidden Markov Models, clustering, t-SNE, LSTM, Baum-Welch algorithm, belief networks, Clustering algorithms, clustering technique, discrete time series, dynamic Bayesian network, GLA, Heuristic algorithms, hidden Markov models, Hidden Markov models, HMM gauge likelihood analysis, Machine learning, Microsoft Windows, outlier detection tool, probability distributions, security of data, statistical distributions, time series, Time series analysis, unsupervised learning, unsupervised learning algorithm},
 	pages = {1--8},
 	file = {IEEE Xplore Abstract Record:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/9MAZN4U6/8848216.html:text/html;Submitted Version:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/QASAVKPS/Lorbeer et al. - 2019 - Anomaly Detection with HMM Gauge Likelihood Analys.pdf:application/pdf}
+}
+
+@inproceedings{mao_neural_2017,
+	address = {Los Angeles, CA, USA},
+	title = {Neural {Adaptive} {Video} {Streaming} with {Pensieve}},
+	isbn = {978-1-4503-4653-5},
+	url = {http://dl.acm.org/citation.cfm?doid=3098822.3098843},
+	doi = {10.1145/3098822.3098843},
+	abstract = {Client-side video players employ adaptive bitrate (ABR) algorithms to optimize user quality of experience (QoE). Despite the abundance of recently proposed schemes, state-of-the-art ABR algorithms suffer from a key limitation: they use ﬁxed control rules based on simpliﬁed or inaccurate models of the deployment environment. As a result, existing schemes inevitably fail to achieve optimal performance across a broad set of network conditions and QoE objectives. We propose Pensieve, a system that generates ABR algorithms using reinforcement learning (RL). Pensieve trains a neural network model that selects bitrates for future video chunks based on observations collected by client video players. Pensieve does not rely on pre-programmed models or assumptions about the environment. Instead, it learns to make ABR decisions solely through observations of the resulting performance of past decisions. As a result, Pensieve automatically learns ABR algorithms that adapt to a wide range of environments and QoE metrics. We compare Pensieve to state-of-theart ABR algorithms using trace-driven and real world experiments spanning a wide variety of network conditions, QoE metrics, and video properties. In all considered scenarios, Pensieve outperforms the best state-of-the-art scheme, with improvements in average QoE of 12\%–25\%. Pensieve also generalizes well, outperforming existing schemes even on networks for which it was not explicitly trained.},
+	language = {en},
+	urldate = {2020-02-10},
+	booktitle = {{SIGCOMM} '17},
+	publisher = {ACM},
+	author = {Mao, Hongzi and Netravali, Ravi and Alizadeh, Mohammad},
+	year = {2017},
+	pages = {197--210},
+	file = {Mao et al. - 2017 - Neural Adaptive Video Streaming with Pensieve.pdf:/home/max/.zotero/zotero/zzt443zn.default/zotero/storage/PSSGBDKG/Mao et al. - 2017 - Neural Adaptive Video Streaming with Pensieve.pdf:application/pdf}
 }
