@@ -10,13 +10,16 @@ We use the CIC-IDS-2017 dataset. The repository contains a preprocessed version 
 * Concatenate the parts: ```cat flows.pickle.gz.part-* > flows.pickle.gz```
 * Unzip them: ```gzip -d flows.pickle.gz```
 
-<!--
 # Trained models
 Models in the [runs](runs) folder have been trained with the following configuration:
-* Oct26_00-03-50_gpu: CIC-IDS-2017
-* Oct28_15-41-46_gpu: UNSW-NB-15
-* Nov19_18-25-03_gpu: CIC-IDS-2017 with feature dropout
-* Nov19_18-25-53_gpu: UNSW-NB-15 with feature dropout
-* Nov20_18-27-31_gpu: CIC-IDS-2017 with adversarial training using L1 distance and CW with kappa=1
-* Nov20_18-28-17_gpu: UNSW-NB-15 with adversarial training using L1 distance and CW with kappa=1
--->
+* Jan18_13-57-36_gpu: tradeoff 0.1, continuous actions
+* Jan18_13-57-46_gpu: tradeoff 0.2, continuous actions
+* Jan18_14-06-48_gpu: tradeoff 0.5, continuous actions
+* Jan20_16-40-14_gpu: random with sparsity of 76.3%
+* Jan20_16-40-27_gpu: uniform with sparsity of 76.3%
+* Jan20_16-40-51_gpu: first_n with sparsity of 76.3%
+* Jan20_16-41-01_gpu: first_n_equal with sparsity of 76.3%
+* Jan21_14-11-40_gpu: train normally
+* Jan22_13-55-26_gpu: tradeoff 0.1, discrete actions 20 steps
+* Feb06_23-17-09_gpu: tradeoff 1.0, continuous actions
+* Feb07_17-08-56_gpu: variable tradeoff, continuous actions
