@@ -10,6 +10,10 @@ We use the CIC-IDS-2017 dataset. The repository contains a preprocessed version 
 * Concatenate the parts: ```cat flows.pickle.gz.part-* > flows.pickle.gz```
 * Unzip them: ```gzip -d flows.pickle.gz```
 
+If you want to produce the preprocessed files yourself: 
+* Follow the information on how to reproduce the preprocessed datasets in the [Datasets-preprocessing](https://github.com/CN-TU/Datasets-preprocessing) repository.
+* Run the ```parse.py``` script on the resulting ```.csv``` file to get the final ```.pickle``` file. 
+
 # Requirements
 Our code needs Python >= 3.6 as well as the following pip packages:
 ```
