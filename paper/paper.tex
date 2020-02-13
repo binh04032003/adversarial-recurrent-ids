@@ -129,31 +129,42 @@ At the same time, an \gls{rnn}-based \gls{ids} has the benefit of providing any 
 We show that our system has similar performance to other flow-based anomaly detection systems but can detect anomalies \textit{before} the flow terminates.
 
 However, for practical use, high detection accuracy is not enough. With the recent rise of interest in \gls{aml} techniques, also \gls{aml} for \glspl{ids} has been investigated. For example, \cite{bachl_walling_2019} investigates remedies for poisoning attacks on \glspl{ids} and \cite{hashemi_towards_2019} investigate adversarial robustness of common network \glspl{ids}.
-In this research, we investigate whether adversarial samples can be found for our \gls{rnn}-based model, i.e. minimally different attack flows which are classified as benign. This is not a trivially answerable question since adversarial samples have mostly been analyzed in the context of computer vision. Our scenario significantly deviates from computer vision because \begin{enumerate*}
+In this research, we investigate whether adversarial samples, i.e. minimally different attack flows which are classified as benign, can be found for our \gls{rnn}-based model. This is not a trivially answerable question since adversarial samples have mostly been analyzed in the context of computer vision. Our scenario significantly deviates from computer vision because \begin{enumerate*}
 \item the number of features is significantly smaller and
 \item only certain features can be manipulated if the flow should remain valid. % (for example the destination port cannot be manipulated)
 \end{enumerate*}
 
 Surprisingly, we can confirm that adversarial samples can be found even when considering these tight constraints. % mentioned before.
 Thus, we argue that traditional performance metrics like, e.g., accuracy are not sufficient for evaluating security-sensitive \gls{ml} systems.
-We propose the \acrfull{ars} as a new performance score, which captures the notion of how easily an adversary can generate adversarial samples.
+Despite the well-known threat of adversarial samples, we find that related literature lacks metrics for adversarial robustness and, in particular, no measure has been proposed for quantifying the robustness of \gls{ml}-based \glspl{ids}.
 
-Due to the threat of adversarial attacks, a further crucial requirement for \gls{ml}-based \glspl{ids} is that the classifier's decisions are interpretable by humans. This recently stirred up increased interest in explainability methods. Also in this case, common methods are designed to work with images or tabular data, but not with sequences. Hence, we extend existing explainability methods such as \glspl{pdp} \cite{friedman_greedy_2001} for sequential data. %These show the varying characteristics of different attacks and they aid with visualizing potentially vulnerable features for adversaries.
+
+Due to the threat of adversarial attacks, but also as a basic requirement for social acceptance of an \gls{ml}-based system, a further crucial requirement for \gls{ml}-based \glspl{ids} is that the classifier's decisions are interpretable by humans. This recently stirred up increased interest in explainability methods. Also in this case, common methods are designed to work with images or tabular data, but not with sequences. 
+
+In this paper, we attempt to provide a comprehensive discussion of these security-related topics in the context of \glspl{rnn}. Our main contributions are:
+\begin{itemize}[leftmargin=0.5cm]
+\item We analyze several methods for generating adversarial samples and show that adversarial samples can be generated efficiently for an \gls{rnn}-based classifier.
+\item Based on common robustness notions of related works, we propose the \acrfull{ars} as a new performance score for \glspl{ids}, which captures the notion of how easily an adversary can generate adversarial samples. We demonstrate that the \gls{ars} can be computed efficiently.
+\item We review methods for evaluating which features have a significant impact on the classifier's prediction, both picking up methods that have been proposed in the literature, extending them for \glspl{rnn}, and devising new methods. 
 Astonishingly, feature importance methods reveal that
 features, which are manipulated for successful adversarial flows,
 %the that are manipulable features, that are left for modification by adversaries
 are not even particularly important for the \gls{rnn}'s classification outcome. %Especially the first packets of a flow are critical for determining the decision of a recurrent \gls{ids}.
 Thus, we propose \textit{feature sensitivity} methods, which show how prone a feature is to cause misclassification. 
 
+\item Going further, we investigate which packets have a significant contribution to the classifier's decision and which values of these features lead to classification as attack. Hence, we extend existing explainability methods such as \glspl{pdp} \cite{friedman_greedy_2001} for sequential data. %These show the varying characteristics of different attacks and they aid with visualizing potentially vulnerable features for adversaries.
 %Since common explainability methods are designed to work with images or tabular data but not sequences, we extend existing explainability methods such as \glspl{pdp} \cite{friedman_greedy_2001} for sequential data. These show the varying characteristics of different attacks and they aid with visualizing potentially vulnerable features for adversaries.
 
-Based on the insights gained by the feature importance and explainability methods, we propose two defense methods.
+
+\item
+Based on the insights gained by the feature importance and explainability methods, we finally propose two defense methods.
 %develop a simple method for defending against adversaries who can manipulate arbitrary packets by simply leaving out potentially manipulable information from the classification process.
 First, by simply leaving out manipulable features, we obtain a classifier which is slightly less accurate but is still useful to be deployed in a real scenario. Second,
 by deploying an adversarial training procedure,
 %AH. compared to other research about adversarial training, I dont feel that out approach is so special
 %develop a custom adversarial training procedure which especially focuses on ease of use and low resource consumption and aims to keep the number of additionally introduced training hyperparameters low. With this novel strategy
 we can reduce the attack surface and harden the resulting \gls{ids} while retaining all features and similar classification performance. % like for the original \gls{ml} model.
+\end{itemize}
 
 We make all the source code, data and figures freely available to enable reproducibility and encourage experimentation at \url{https://github.com/CN-TU/adversarial-recurrent-ids}.
 
@@ -273,7 +284,7 @@ Youden	&	97.2\%	&	99.0\%	&	99.1\%	&	87.3\%	&	71.9\%	&	82.3\%	\\
 We now investigate whether known \gls{aml} methods can be used for generating adversarial flows for our \gls{rnn}. \cite{hashemi_towards_2019} previously studied the behavior of several Network \glspl{ids} under adversarial attacks but unlike us did not investigate \glspl{rnn}.
 
 A network packet contains significantly less features than, e.g., an image and, furthermore, most features such as TCP flags cannot be easily manipulated, as their manipulation might violate the protocol specifications and thus cause communication to fail. We identify the packet length and the \gls{iat} as features which are most likely to be exploited and thus choose them to be modified by the adversary. But even these features cannot be manipulated due to problem-specific constraints:
-\begin{itemize}[topsep=0pt,wide,labelwidth=!,labelindent=0pt]
+\begin{itemize}[leftmargin=0.5cm] %s[topsep=0pt,wide,labelwidth=!,labelindent=0pt]
 \item Only packets can be manipulated which are transmitted by the attacker, except for botnet and backdoor traffic, which is entirely controlled by an attacker and thus only packets travelling in one direction can be manipulated.
  %This means the attacker can only control one direction (except for botnets where both sides are attackers).
 \item Packets must not be smaller than initially, as otherwise less information could be transmitted.
@@ -560,7 +571,7 @@ For example, assuming that the test dataset is representative for production use
 Furthermore, let $f(A,x)$  denote the joint probability
 %\todo{Max: Ist joint probability nicht immer wenn man mehrere Ereignisse hat? Ich hätte hier probability density function geschrieben...}
 %AH. changed notation and wording
-for classification as attack and a feature value $x$. Accuracy then is $\int f(A,x) dx$ for attacks and $1-\int f(A,x) dx$ for benign traffic.
+for classification as attack and a feature value $x$. Accuracy then is $\int_{\mathbb R} f(A,x) dx$ for attacks and $1-\int_{\mathbb R} f(A,x) dx$ for benign traffic.
 \autoref{fig:mutinfo_example} shows two different distributions
 yielding the same accuracy, but clearly the right-side distribution has a larger influence on the prediction, as in the right-side case the prediction deterministically depends on the feature value.
 To capture such dependencies, we propose to use mutual information %instead of accuracy drop
@@ -618,7 +629,7 @@ To evaluate this hypothesis, \autoref{fig:confidence} depicts the classifier's p
 %averaging over all flows. %AH. there's no averaging happening
 % and also show the first and third quartiles.
 %\autoref{fig:confidence} shows that %this hypothesis is correct for most attack classes.
-While at the first couple of packets the confidence is not very high, towards the end of the flow it reaches values close to 1 and stays there. Hence, not only is the classifier able to make a reasonable classification after just a few packets, the figure also suggests that indeed later packets have a neglectable influence on the prediction.
+While at the first couple of packets the confidence is not very high, towards the end of the flow it reaches values close to 1 and stays there. Hence, not only is the classifier able to make a reasonable classification after just a few packets, the figure also suggests that indeed later packets have a negligible influence on the prediction.
 
 For investigating in more detail how features influence the prediction outcome, we extend \glspl{pdp} to the sequential setting.
 Denoting as $X=\{\boldsymbol X^1, \ldots, \boldsymbol X^m\}$ the series of packet features $\boldsymbol X^t \in \mathbb R^n$ and $h_t(X)$ the network's hidden state after time step $t$, we define the sequential \gls{pdp} as
@@ -736,7 +747,7 @@ We have implemented a recurrent classifier based on LSTMs to detect network atta
 which can already detect attacks before they are over. Furthermore, the recurrent approach allows us to inspect the influence of single packets on the detection performance and shows which packets are \textit{characteristic} for attacks.
 Even though the interpretation of \glspl{rnn} poses several difficulties, we have demonstrated methods for gaining insights into the model's functioning.
 
-We showed that even though our use case is very different from computer vision, adversarial samples can be found efficiently, even if only ostensibly unimportant features can be modified. Newly developed \textit{Feature sensitivity} methods can show which features can easily be manipulated by an adversary. We proposed the \gls{ars} for quantifying and comparing the adversarial threat for \glspl{ids}.
+We showed that even though our use case is very different from computer vision, adversarial samples can be found efficiently, even if only ostensibly unimportant features can be modified. Newly developed \textit{feature sensitivity} methods can show which features can easily be manipulated by an adversary. We proposed the \gls{ars} for quantifying and comparing the adversarial threat for \glspl{ids}.
 Deploying an adversarial training procedure, we could significantly reduce the adversarial threat.
 
 \section*{Acknowledgements}
