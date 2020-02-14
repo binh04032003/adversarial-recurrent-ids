@@ -29,7 +29,8 @@
 \usepackage[inline]{enumitem}
 \usepackage{xcolor}
 \usepackage{booktabs}
-\usepackage{hyperref}
+\usepackage[pdfauthor={Alexander Hartl, Maximilian Bachl, Joachim Fabini, Tanja Zseby},
+pdftitle={Explainability and Adversarial Robustness for RNNs}]{hyperref}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{graphicx}
@@ -259,7 +260,7 @@ During flow extraction we used the usual 5-tuple flow key, which distinguishes f
 We use Z-score normalization to transform feature values to the range appropriate for neural network training. We ensured that our classifiers do not suffer from overfitting using a train/test split of 2:1.
 
 For evaluation, we use the \textit{CIC-IDS-2017} \cite{sharafaldin_toward_2018} and \textit{UNSW-NB15} \cite{moustafa_unsw-nb15:_2015} datasets which each include more than 2 million flows of network data, containing both benign traffic and a large number of different attacks. Attacks contained in the datasets are shown in \autoref{tab:occurrence}.
-\autoref{tab:performance_results} shows the achieved classification performance when evalutuating metrics per packet and per flow and includes performance results for an MLP classifier from~\cite{bachl_walling_2019} for comparison.
+\autoref{tab:performance_results} shows the achieved classification performance when evaluating metrics per packet and per flow and includes performance results for an MLP classifier from~\cite{bachl_walling_2019} for comparison.
 % \autoref{tab:performance_results} shows that
 As depicted, our \gls{rnn}-based classifiers achieve an accuracy that is similar to previous work based on these datasets~\cite{meghdouri_analysis_2018,bachl_walling_2019}. However, unlike these classifiers, our recurrent classifier has the advantage of being able to detect attacks already before the attack flows terminate.
 
