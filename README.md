@@ -6,7 +6,7 @@ This repository contains the code, the data and the machine learning models for 
 # Dataset
 We use the CIC-IDS-2017 dataset. The repository contains a preprocessed version of the dataset (refer to the paper for more information). 
 
-```flows.pickle``` is the file containing preprocessed flows of CIC-IDS-2017. Due to size constraints on GitHub they had to be split. Restore ```flows.pickle``` as follows:
+```flows.pickle``` is the file containing preprocessed flows of CIC-IDS-2017. Due to size constraints on GitHub it had to be split. Restore ```flows.pickle``` as follows:
 * Concatenate the parts: ```cat flows.pickle.gz.part-* > flows.pickle.gz```
 * Unzip them: ```gzip -d flows.pickle.gz```
 
