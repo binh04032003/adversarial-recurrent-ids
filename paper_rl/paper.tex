@@ -327,7 +327,7 @@ In related work regarding \gls{rl}-based sampling for sequences, only discrete a
 \begin{figure}[h]
 \centering
   \includegraphics[width=\columnwidth]{neural_network.pdf}
-  \caption{An overview of the complete neural network being used in our experiments. Ocher stands for the input, blue for linear layers, red for LSTM layers and purple for the outputs of the neural network. The numbers in parentheses next to each label stand for the width of that layer (i.e.~the number of neurons (except for the inputs and outputs)). Parts of the neural network are shared between $v_\text{classification}$ and $v_\text{sparsity}$ as well as $\mu$ and $\sigma$ as they output quantities of similar magnitude and thus the gradients that are computed when updating the neural network are of the same order of magnitude as well. Our implementation also supports sharing the LSTM between all three neural network. However, as the five outputs can have different orders of magnitude, larger gradients would ``overwrite'' the gradients of the smaller ones.}
+  \caption{An overview of the complete neural network being used in our experiments. Ocher stands for the input, blue for linear layers, red for LSTM layers and purple for the outputs of the neural network. The numbers in parentheses next to each label stand for the width of that layer (i.e.~the number of neurons (except for the inputs and outputs)). Our implementation also supports sharing the LSTM between all three neural networks, which greatly reduces computational complexity: In this case, the first linear layers as well as the three layers of LSTM cells are shared while the last linear layers are still separate. We later show that shared weights perform almost on par with separate ones.}
   \label{fig:neuralNetworkArchitecture}
 \end{figure}
 
@@ -598,6 +598,27 @@ Youden & \textbf{98.5\%} & 93.0\% & 93.9\% & 93.4\% & 96.4\% \\
 Next we compared the \gls{rl} technique used by \ours{} with several common sampling strategies suggested in \autoref{sec:other_sampling_techniques}.
 \autoref{tab:results_others} reveals that \ours{} achieves the highest accuracy with the same sparsity. Not surprisingly, random sampling performs the worst, as it is likely that a flow is ``unfortunate'' and doesn't get enough packets sampled while another one gets more packets or the packets that carry more useful information. The best strategy besides the \gls{rl} approach seems to be ``first $m$'' sampling, which matches the conclusion from \cite{hartl_explainability_2020} that the first couple of packets are the most important ones for determining maliciousness of a flow.
 ``first $m$'' performs better than ``relative first $m$'' because for ``relative first $m$'', longer flows will have more packets sampled from them. Conversely, very short flows will get few packets. For example, with $p=0.2$, a flow of length 20 will get 4 packets while one with 4 packets will get only 1. However, with ``first $m$'', the short and the long flow will get the same number of packets. Apparently it is better if all flows get the same number of packets than if long flows get more packets. 
+
+\subsection{Shared weights}
+\begin{table}[h]
+%% XXX: Max: Without the vspace, the table violates the margins. WTF!!!
+%\vspace{0.075in}
+%\parbox{.45\linewidth}{
+\caption{Using shared weights for all components of \ours{}. This means that computational complexity in deployment is exactly the same compared to a classifier without our \gls{rl} framework.} \label{tab:results_shared}
+\centering
+\begin{tabular*}{\columnwidth}{>{\rowmac}l @{\extracolsep{\fill}} >{\rowmac}c>{\rowmac}c>{\rowmac}c>{\rowmac}c<{\clearrow}} \toprule
+Tradeoff & 0.0 & 0.1 & 0.5 & 1.0 \\	\midrule
+Sparsity & 0\% & 77.6\% & 77.6\% & \textbf{78.2\%} \\ \midrule
+Accuracy & \textbf{99.5\%} & 99.4\% & 99.3\% & 99.0\% \\
+Precision & \textbf{99.4\%} & 99.2\% & 98.6\% & 98.9\% \\
+Recall & \textbf{98.5\%} & 98.2\% & 98.7\% & 96.9\% \\
+F1 & \textbf{99.0\%} & 98.7\% & 98.6\% & 97.9\% \\
+Youden & \textbf{98.4\%} & 97.9\% & 98.2\% & 96.6\% \\
+\bottomrule
+\end{tabular*}
+%}
+\end{table}
+\autoref{tab:results_shared} shows that when sharing the neural network weights of the classifier, the actor and the critic, \ours{} achieves the same very high accuracy as in the case in which all every component has its own weights (\autoref{tab:results_tradeoff}). The achieved sparsity is even higher when using separate weights. One explanation for this might be that sharing weights has a regularizing effect. With shared weights, the \gls{rl} mechanism adds no computational complexity since all the operations in the neural network are the same for the actor and the classifier (the critic is not needed during deployment). The only part that is not shared is the last linear layer, which connects the last LSTM layer with the outputs.
 
 \subsection{Inspecting the \gls{rl}'s behavior}
 \label{subsec:inspecting}
