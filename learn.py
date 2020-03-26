@@ -2255,7 +2255,7 @@ if __name__=="__main__":
 
 	opt = parser.parse_args()
 	print(opt)
-	seed = opt.manualSeed if opt.manualSeed is not None else int.from_bytes(os.urandom(2), "big")
+	seed = int(opt.manualSeed) if opt.manualSeed is not None else int.from_bytes(os.urandom(2), "big")
 	print("seed", seed)
 	random.seed(seed)
 	np.random.seed(seed)
