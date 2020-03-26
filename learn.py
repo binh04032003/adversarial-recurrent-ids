@@ -657,7 +657,7 @@ def train_rl():
 				if not opt.shareNet:
 					current_slice_output, _ = lstm_module(current_collated_slice)
 					current_slice_action_probs, _ = lstm_module_rl_actor(current_collated_slice)
-					current_slice_values = lstm_module_rl_critic(current_collated_slice)[0]
+					current_slice_values, _ = lstm_module_rl_critic(current_collated_slice)
 				else:
 					(current_slice_output, current_slice_action_probs, current_slice_values), _ = lstm_module(current_collated_slice)
 
@@ -971,7 +971,10 @@ def test():
 		assert batch_size <= opt.batchSize, "batch_size: {}, opt.batchSize: {}".format(batch_size, opt.batchSize)
 		lstm_module.init_hidden(batch_size)
 
-		output, seq_lens = lstm_module(input_data)
+		if not opt.shareNet:
+			output, seq_lens = lstm_module(input_data)
+		else:
+			(output, _, _), seq_lens = lstm_module(input_data)
 
 		index_tensor = torch.arange(0, output.shape[0], dtype=torch.int64).unsqueeze(1).unsqueeze(2).repeat(1, output.shape[1], output.shape[2])
 
@@ -2211,7 +2214,7 @@ if __name__=="__main__":
 	parser.add_argument('--net_actor', default='', help="path to net (to continue training) for RL actor")
 	parser.add_argument('--net_critic', default='', help="path to net (to continue training) for RL critic")
 	parser.add_argument('--function', default='train', help='the function that is going to be called')
-	parser.add_argument('--manualSeed', default=0, type=int, help='manual seed')
+	parser.add_argument('--manualSeed', default=None, help='manual seed')
 	parser.add_argument('--maxLength', type=int, default=20, help='max length')
 	parser.add_argument('--maxSize', type=int, default=sys.maxsize, help='limit of samples to consider')
 	parser.add_argument('--removeChangeable', action='store_true', help='when training remove all features that an attacker could manipulate easily without changing the attack itself')
@@ -2252,10 +2255,11 @@ if __name__=="__main__":
 
 	opt = parser.parse_args()
 	print(opt)
-	SEED = opt.manualSeed
-	random.seed(SEED)
-	np.random.seed(SEED)
-	torch.manual_seed(SEED)
+	seed = opt.manualSeed if opt.manualSeed is not None else int.from_bytes(os.urandom(2), "big")
+	print("seed", seed)
+	random.seed(seed)
+	np.random.seed(seed)
+	torch.manual_seed(seed)
 
 	with open (opt.dataroot, "rb") as f:
 		all_data = pickle.load(f)
@@ -2309,13 +2313,14 @@ if __name__=="__main__":
 
 	if opt.net != '':
 		print("Loading", opt.net)
-		if not opt.shareNet:
-			lstm_module.load_state_dict(torch.load(opt.net, map_location=device))
-		else:
-			model_dict = lstm_module.state_dict()
-			pretrained_dict = {k: v for k, v in torch.load(opt.net, map_location=device).items() if k in model_dict}
-			model_dict.update(pretrained_dict)
-			lstm_module.load_state_dict(model_dict)
+		# if not opt.shareNet:
+		# 	lstm_module.load_state_dict(torch.load(opt.net, map_location=device))
+		# else:
+		# 	model_dict = lstm_module.state_dict()
+		# 	pretrained_dict = {k: v for k, v in torch.load(opt.net, map_location=device).items() if k in model_dict}
+		# 	model_dict.update(pretrained_dict)
+		# 	lstm_module.load_state_dict(model_dict)
+		lstm_module.load_state_dict(torch.load(opt.net, map_location=device))
 
 	if ("rl" in opt.function or opt.sampling=="rl") and not opt.shareNet:
 		lstm_module_rl_actor = OurLSTMModule(input_dim, opt.lookaheadSteps if not opt.continuous else 2, opt.hidden_size, opt.n_layers, batchSize, device).to(device)
