@@ -100,3 +100,6 @@ Models in the [runs](runs) folder have been trained with the following configura
 * Jan22_13-55-26_gpu: tradeoff 0.1, discrete actions 20 steps
 * Feb06_23-17-09_gpu: tradeoff 1.0, continuous actions
 * Feb07_17-08-56_gpu: variable tradeoff, continuous actions
+* Mar23_23-53-05_gpu: tradeoff 0.1, continuous actions, shared weights
+* Mar23_23-53-17_gpu: tradeoff 1.0, continuous actions, shared weights
+* Mar25_15-15-55_gpu: tradeoff 0.5, continuous actions, shared weights
