@@ -114,7 +114,7 @@ firstname.lastname@tuwien.ac.at}}
 
 \begin{abstract}
 
-\glspl{rnn} have been shown to be valuable for constructing \glspl{ids} for network data. They allow determining if a flow is malicious or not already before it is over, making it possible to take action immediately. However, considering the large number of packets that has to be inspected, the question of computational efficiency arises. We show that by using a novel \gls{rl}-based approach called \textit{\ours{}}, we can reduce the number of consumed packets by more than three fourths while keeping classification accuracy high. Comparing to various other sampling techniques, \ours{} consistently achieves higher classification accuracy by learning to sample only relevant packets. A major novelty of our \gls{rl}-based approach is that it can not only skip up to a predefined maximum number of samples like other approaches proposed in the domain of Natural Language Processing but can even skip arbitrarily many packets in one step. This enables saving even more computational resources for long sequences. Inspecting \ours{}'s behavior of choosing packets shows that it adopts different sampling strategies for different attack types and network flows. Finally we build an automatic steering mechanism that can guide \ours{} in deployment to achieve a desired level of sparsity.
+\glspl{rnn} have been shown to be valuable for constructing \glspl{ids} for network data. They allow determining if a flow is malicious or not already before it is over, making it possible to take action immediately. However, considering the large number of packets that has to be inspected, the question of computational efficiency arises. We show that by using a novel \gls{rl}-based approach called \textit{\ours{}}, we can reduce the number of consumed packets by more than three fourths while keeping classification accuracy high. To minimize the computational expenses of the \gls{rl}-based sampling we show that a shared neural network can be used for both the classifier and the \gls{rl} logic. Thus, no additional resources are consumed by the sampling in deployment. Comparing to various other sampling techniques, \ours{} consistently achieves higher classification accuracy by learning to sample only relevant packets. A major novelty of our \gls{rl}-based approach is that it can not only skip up to a predefined maximum number of samples like other approaches proposed in the domain of Natural Language Processing but can even skip arbitrarily many packets in one step. This enables saving even more computational resources for long sequences. Inspecting \ours{}'s behavior of choosing packets shows that it adopts different sampling strategies for different attack types and network flows. Finally we build an automatic steering mechanism that can guide \ours{} in deployment to achieve a desired level of sparsity.
 
 \end{abstract}
 
@@ -182,7 +182,7 @@ considerably. Compared to other common sampling techniques, \ours{} performs bet
 % Fares:
 The accuracy-sparsity tradeoff of \ours{} can be regulated by a reinforcement learning parameter that directly affects both quantities. However, as in some deployments, a certain sparsity has to be minimally achieved to limit the computational expense, we also develop a steering system that adapts the tradeoff parameter in a closed control loop. In this way the given budget of computation power is not exceeded.
 
-To make \ours{} as lightweight as possible, our implementation allows to let the sampling and the classifier to be implemented in the same neural network, meaning that no overhead is introduced. Without this option enabled, the computational power required is $2\times$ what would be required without the sampling. Thus, for this option, less than $50\%$ of packets must be sampled to gain a computational efficiency advantage. 
+To make \ours{} as lightweight as possible, our implementation allows to let the sampling and the classifier to be implemented in the same neural network, meaning that no overhead is introduced. With this option disabled, the computational power required is $2\times$ what would be required without the sampling. Thus, for this option, less than $50\%$ of packets must be sampled to gain a computational efficiency advantage. Fortunately, we can show that with shared weights the same accuracy can be achieved while having no computational overhead.  
 
 To encourage reproducibility and facilitate experimentation, we publicly release the source code, the trained ML models, the data and the figures of this work\footnote{\url{https://github.com/CN-TU/adversarial-recurrent-ids/tree/rl}}.
 
@@ -266,7 +266,7 @@ For a flow of length $N$ at each packet $n$ we have two reward metrics which we 
 The classification reward metric (\autoref{eq:R_classification}) captures how correct the classifier is on average for all future packets of a flow. The label of each packet in a flow has a value of 0 for non-attack traffic and 1 for attack traffic with one flow being only attack or non-attack but not mixed. The confidence is the sigmoided $\left(\frac{e^x}{1+e^x}\right)$ output of the classifier, yielding a value between 0 and 1, where 0 is absolute confidence for a flow being benign and 1 is absolute confidence for a flow being an attack.
 \begin{align}
 \begin{split}
-R_{\text{classification},n} = \frac{1}{N-n} \sum_{i=n+1}^{N} |1 - \left(\text{label}_i - \text{confidence}_i\right)|
+R_{\text{classification},n} = \frac{1}{N-n} \sum_{i=n+1}^{N} 1 - |\text{label}_i - \text{confidence}_i|
 \end{split}
 \label{eq:R_classification}
 \end{align}
@@ -298,7 +298,7 @@ l_{\text{v},n} =& \left(R_{\text{classification},n} - v_{\text{classification},n
 \end{split}
 \end{align}
 
-Now that the reward metrics and the critic's outputs are defined, we can define the overall utility $U$ that we want to maximize at each packet $n$ as follows:
+Now that the reward metrics and the critic's outputs are defined, we can define the overall utility $U$ that we want to maximize at each packet $n$ using the sparsity-accuracy tradeoff parameter $\alpha$ as follows:
 \begin{align}
 \begin{split}
 U_n =& \left(R_{\text{classification},n} + \alpha \cdot R_{\text{sparsity},n}\right) \\
@@ -306,7 +306,7 @@ U_n =& \left(R_{\text{classification},n} + \alpha \cdot R_{\text{sparsity},n}\ri
 \end{split}
 \end{align}
 
-With $\alpha$ being the sparsity-accuracy tradeoff parameter. This means that we want the reward to be higher than the critic's expectation. Note that it would be also possible to unify both reward metrics in one and have the critic have only one output, but we consider it to be more interpretable to have two separate outputs, which can be inspected by an operator.
+This means that we want the reward to be higher than the critic's expectation. Note that it would be also possible to unify both reward metrics in one and have the critic have only one output, but we consider it to be more interpretable to have two separate outputs, which can be inspected by an operator.
 
 The actor outputs a probability distribution at packet $n$, which is sampled to determine the number of packets that should be skipped next. It aims to change the distribution so that actions which result in a higher reward are chosen more frequently, maximizing the utility function. However, this strategy could lead to the actor getting stuck with what it considers the best decision and never try alternatives even though they might result in a higher reward. This would be equivalent to the actor being stuck in a local maximum. Thus, the actor not only tries to change the distribution so that the actions become more optimal (higher reward) but at the same time also aims to maximize the entropy of the distribution so that alternative choices are still explored reasonably often.
 
@@ -327,7 +327,7 @@ In related work regarding \gls{rl}-based sampling for sequences, only discrete a
 \begin{figure}[h]
 \centering
   \includegraphics[width=\columnwidth]{neural_network.pdf}
-  \caption{An overview of the complete neural network being used in our experiments. Ocher stands for the input, blue for linear layers, red for LSTM layers and purple for the outputs of the neural network. The numbers in parentheses next to each label stand for the width of that layer (i.e.~the number of neurons (except for the inputs and outputs)). Our implementation also supports sharing the LSTM between all three neural networks, which greatly reduces computational complexity: In this case, the first linear layers as well as the three layers of LSTM cells are shared while the last linear layers are still separate. We later show that shared weights perform almost on par with separate ones.}
+  \caption{An overview of the complete neural network being used in our experiments. Ocher stands for the input, blue for linear layers, red for LSTM layers and purple for the outputs of the neural network. The numbers in parentheses stand for the width of that layer. Our implementation also supports sharing the LSTM between all three neural networks, which greatly reduces computational complexity: In this case, the first linear layers as well as the three layers of LSTM cells are shared while the last linear layers are still separate. We later show that shared weights perform on par with separate ones.}
   \label{fig:neuralNetworkArchitecture}
 \end{figure}
 
@@ -354,10 +354,7 @@ For performing continuous actions we need a probability distribution which can b
 %\end{align}
 %is a log-normally distributed variable. Note that the log-normal distribution's mean $\mu$ and its standard deviation $\sigma$ are different from $\mu_\text{normal}$ and $\sigma_\text{normal}$, which are used to parametrize the distribution.
 
-The architecture in \autoref{fig:neuralNetworkArchitecture} shows that the actor network has two outputs: $\mu$ and $\sigma$. These encode the mean and standard deviation of a log-normal distribution and can never be smaller or equal to zero and hence we always apply a rectifier function at the output. We choose the softplus, which is a smooth rectifier function:
-\begin{align}
-\text{softplus}(x) = \log\left(1 + e^x \right)
-\end{align}
+The architecture in \autoref{fig:neuralNetworkArchitecture} shows that the actor network has two outputs: $\mu$ and $\sigma$. These encode the mean and standard deviation of a log-normal distribution and can never be smaller or equal to zero and hence we always apply a rectifier function at the output. We choose the softplus ($\log\left(1 + e^x \right)$), which is a smooth rectifier function:
 When sampling from the log-normal distribution, a real number is obtained. We round it down and then add 1. This gives us a natural number between 1 and $\infty$, which states how many packets should be skipped. 
 
 When experimenting with continuous actions, we encountered one practical problem: At the beginning of training, the classifier would still perform badly and would not give the actor a useful reward. As a result, the actor would only focus on sparsity and aim to maximize it, as the classification reward would always be equally bad no matter how many packets are chosen. Thus, the actor would learn to let $\mu$ go to infinity. This would increase the reward at the beginning when the interaction between the three components of our \gls{rl} system is still fragile. As a solution, we add a penalty to the reward calculation when the actor jumps far behind the last flow packet. The modified reward applies only to the last chosen packet and penalizes the actor jumping more than one packet behind the last packet. The sparsity reward formula (\autoref{eq:R_sparsity}) of the last packet is modified as follows, where \textit{last} refers to the index of the last chosen packet in the flow ($n=\textit{last}$):
@@ -398,30 +395,30 @@ After applying the sampling techniques, the sequence of selected packets is then
 %\note{blue}{Fares: if we submit to CNS (page limit is 9), we can remove this sections as it is not relevant and statistics can be found online}
 % Max: Should be fine :)
 
-\begin{table}[h]
-\caption{Occurrence frequency of the attack flows of CIC-IDS-2017.}
-\label{tab:occurrence}
-\centering
-\begin{tabular}{l r}
-\toprule
-Attack type & \hspace*{-4mm}Proportion \\ \midrule
-DoS Hulk	&	10.10\%	\\
-PortScan, Firewall	&	6.90\%	\\
-DDoS LOIT	&	4.08\%	\\
-Infiltration	&	3.30\%	\\
-DoS GoldenEye	&	0.32\%	\\
-DoS SlowHTTPTest	&	0.18\%	\\
-DoS Slowloris	&	0.17\%	\\
-Brute-force SSH	&	0.11\%	\\
-Botnet ARES	&	0.03\%	\\
-XSS attack	&	0.03\%	\\
-PortScan, no Fw.	&	0.02\%	\\
-Brute-force FTP	&	0.01\%	\\
-SQL injection	&	$<$0.01\%	\\
-Heartbleed	&	$<$0.01\%	\\
-\bottomrule
-\end{tabular}
-\end{table}
+%\begin{table}[h]
+%\caption{Occurrence frequency of the attack flows of CIC-IDS-2017.}
+%\label{tab:occurrence}
+%\centering
+%\begin{tabular}{l r}
+%\toprule
+%Attack type & \hspace*{-4mm}Proportion \\ \midrule
+%DoS Hulk	&	10.10\%	\\
+%PortScan, Firewall	&	6.90\%	\\
+%DDoS LOIT	&	4.08\%	\\
+%Infiltration	&	3.30\%	\\
+%DoS GoldenEye	&	0.32\%	\\
+%DoS SlowHTTPTest	&	0.18\%	\\
+%DoS Slowloris	&	0.17\%	\\
+%Brute-force SSH	&	0.11\%	\\
+%Botnet ARES	&	0.03\%	\\
+%XSS attack	&	0.03\%	\\
+%PortScan, no Fw.	&	0.02\%	\\
+%Brute-force FTP	&	0.01\%	\\
+%SQL injection	&	$<$0.01\%	\\
+%Heartbleed	&	$<$0.01\%	\\
+%\bottomrule
+%\end{tabular}
+%\end{table}
 
 %\begin{table}[h]
 %\caption{Occurrence frequency of the attack flows.}
@@ -467,7 +464,7 @@ Heartbleed	&	$<$0.01\%	\\
 %\end{tabular}
 %}{}
 %\end{table}
-For our experiments, we use the \textit{CIC-IDS-2017} \cite{sharafaldin_toward_2018} dataset, which includes more than 2 million flows of network data, containing both benign traffic and a large number of different attacks. The distribution of different attacks in the dataset are shown in \autoref{tab:occurrence}.
+For our experiments, we use the \textit{CIC-IDS-2017} \cite{sharafaldin_toward_2018} dataset, which includes more than 2 million flows of network data, containing both benign (74.75\%) traffic and a large number of different attacks (25.25\%, 14 attack types). % The distribution of different attacks in the dataset are shown in \autoref{tab:occurrence}.
 
 We use Z-score normalization and a train/test split of 2:1. To speed up experimentation, we cut flows at a maximum length of 20. As Figure \ref{fig:inspectingAll} shows, there are only few flows that exceed that length.
 
@@ -477,7 +474,7 @@ We use Z-score normalization and a train/test split of 2:1. To speed up experime
 \centering
 %  \includegraphics[width=\columnwidth]{{"img/events.out.tfevents.1579352256.gpu"}.pdf}
   \includegraphics[width=\columnwidth]{{"img/events.out.tfevents.1580988920.gpu"}.pdf}
-  \caption{Training with a tradeoff of 0.1 with continuous actions. Training accuracy increases sharply in the beginning while increasing more slowly later on. The behavior for sparsity is similar. As the classifier gets better, the \gls{rl} starts skipping more packets.}
+  \caption{Training with a tradeoff of 0.1 with continuous actions for several epochs. Training accuracy increases sharply in the beginning while increasing more slowly later on. The behavior for sparsity is similar. As the classifier gets better, the \gls{rl} starts skipping more packets.}
   \label{fig:training}
 \end{figure}
 
@@ -604,7 +601,7 @@ Next we compared the \gls{rl} technique used by \ours{} with several common samp
 %% XXX: Max: Without the vspace, the table violates the margins. WTF!!!
 %\vspace{0.075in}
 %\parbox{.45\linewidth}{
-\caption{Using shared weights for all components of \ours{}. This means that computational complexity in deployment is exactly the same compared to a classifier without our \gls{rl} framework.} \label{tab:results_shared}
+\caption{Using shared weights for all components of \ours{} resulting in no overhead in deployment compared to a classifier without our \gls{rl} framework.} \label{tab:results_shared}
 \centering
 \begin{tabular*}{\columnwidth}{>{\rowmac}l @{\extracolsep{\fill}} >{\rowmac}c>{\rowmac}c>{\rowmac}c>{\rowmac}c<{\clearrow}} \toprule
 Tradeoff & 0.0 & 0.1 & 0.5 & 1.0 \\	\midrule
@@ -649,7 +646,7 @@ Youden & \textbf{98.4\%} & 97.9\% & 98.2\% & 96.6\% \\
 
 \autoref{fig:inspecting} shows the sampling strategy for different attack types. Figure \ref{fig:inspectingNormal} shows that for benign traffic, the sampling strategy is quite heterogeneous: Not specific packets get always chosen, but different packets get chosen, depending on the flow. This contrasts with SSH Patator (Figure \ref{fig:inspectingPatator}), where the 0th, the 3rd, the 13th and the 15th packet are always chosen, since they appear to be especially indicative of an attack. Also, the flows seem to contain no useful information between the 3rd and the 13th packet, so that this part is always skipped altogether. Slowloris (Figure \ref{fig:inspectingSlowloris}) is more similar to what we saw for benign traffic: The sampling strategy varies a lot for different flows and not always the same pattern is used. When looking at all flows (Figure \ref{fig:inspectingAll}) it becomes apparent that the second packet (index 1) is almost never chosen, and the third is also chosen quite rarely. We attribute this to the fact that most communication flows are TCP and use handshakes, meaning that the second packet is simply a reply a part of the handshake, revealing no important information. In general, we see that the sampling strategy varies significantly between different attack types and for some attack types even for different flows within the same attack type, showing that \ours{} learns to choose the packets effectively, which reveal the malicious nature of a flow.
 
-One concern could be the overly deterministic nature of the decisions of \ours{} for some attack types: An adversary could see that only certain packets of a flow are looked at by the \gls{rl} system and thus only manipulate the few packets that the classifier looks at to generate adversarial samples with methods like the ones studied by \cite{hartl_explainability_2020}. One potential remedy for this is to also randomly sample from the distribution of the actor during deployment like it is done during training. This could result in slightly worse accuracy but lead to behavior that is harder to predict for an adversary. Currently we take the mean of the probability distribution for continuous actions and the mode for the discrete one, resulting in deterministic behavior.
+%One concern could be the overly deterministic nature of the decisions of \ours{} for some attack types: An adversary could see that only certain packets of a flow are looked at by the \gls{rl} system and thus only manipulate the few packets that the classifier looks at to generate adversarial samples with methods like the ones studied by \cite{hartl_explainability_2020}. One potential remedy for this is to also randomly sample from the distribution of the actor during deployment like it is done during training. This could result in slightly worse accuracy but lead to behavior that is harder to predict for an adversary. Currently we take the mean of the probability distribution for continuous actions and the mode for the discrete one, resulting in deterministic behavior.
 
 \section{Steering}
 
@@ -663,7 +660,7 @@ We thus propose a method that enables steering the tradeoff to achieve a certain
 \begin{figure}[h]
 \centering
   \includegraphics[width=\columnwidth]{{"img/Feb07_17-08-56_gpu_lstm_module_8.pth_global_tradeoff_1.0_steering_step_size_0.1_steering_target_sparsity_0.5_batches_to_consider_for_steering_1000_sampling_rl"}.pdf}
-  \caption{Steering the tradeoff with an allowed minimum sparsity of 50\% over the test dataset. The tradeoff is initialized as 1 and continuously lowered in a streaming fashion as long as the sparsity is higher than 50\%. The procedure stops if the minimum sparsity is reached or the tradeoff reached its minimum of 0, which is the case here. Sparsity falls from a high of around 72.5\% to a low of 71\%.}
+  \caption{Steering the tradeoff with an allowed minimum sparsity of 50\% over the test dataset. The tradeoff is initialized as 1 and continuously lowered in a streaming fashion as long as the sparsity is higher than 50\%. The procedure stops if the minimum sparsity is reached or the tradeoff reached its minimum of 0, which is the case here.}
   \label{fig:steering}
 \end{figure}
 
@@ -674,12 +671,11 @@ We thus propose a method that enables steering the tradeoff to achieve a certain
 
 \section{Conclusion}
 \label{sec:conclusion}
-In this paper we aimed to develop smart packet sampling methods for the use case of \glspl{ids} to save computational power. To this end, we proposed \ours{} which is a framework for packet sampling based on \gls{rl}.
-
-% Max: 1/4 is already pronounced one fourth
-We showed that the \gls{rl}-based approach with a tradeoff between classification accuracy and sparsity indeed results in higher sparsity the larger the tradeoff parameter, while potentially classification performance is sacrificed. Surprisingly, we saw that \ours{} on average chooses very few packets per flow: Typically $\approx \frac{1}{4}$. Furthermore, it outperforms non-smart sampling techniques.
+In this paper we aimed to develop smart packet sampling methods for the use case of \glspl{ids} to save computational power. To this end, we proposed \ours{} which is a framework for packet sampling based on \gls{rl}. We showed that the \gls{rl}-based approach with a tradeoff between classification accuracy and sparsity indeed results in higher sparsity the larger the tradeoff parameter, while potentially classification performance is sacrificed. Surprisingly, we saw that \ours{} on average chooses very few packets per flow: Typically $\approx \frac{1}{4}$. Furthermore, it outperforms non-smart sampling techniques.
 
 Besides discrete actions for our \gls{rl} system we also implemented continuous ones. We showed that a naive implementation would not work as the training is too fragile in the beginning and the \gls{rl} system learned to maximize only one of the rewards (sparsity) in the beginning. This was solved by adding a penalty for jumping behind the end of the sequence which proved effective. Comparing with discrete actions, continuous actions seem to perform slightly better given the same training time. Additionally it is also an advantage that for continuous actions the neural network only needs to have two outputs (mean and standard deviation) while for discrete ones it needs as many outputs as there are actions. The continuous action framework is thus more lightweight and also can learn to skip arbitrarily many packets.
+
+We show that using a shared neural network for both the \gls{ids} as well as the sampling can achieve the same classification accuracy and sparsity while not resulting in any computational overhead during deployment. 
 
 Inspecting the decisions of our \gls{rl} framework showed that the sampling strategy is clearly different for different attack strategies and also within some attack families, indicating that \ours{} indeed adopts different sampling strategies for different conversation flows.
 
