@@ -182,7 +182,7 @@ considerably. Compared to other common sampling techniques, \ours{} performs bet
 % Fares:
 The accuracy-sparsity tradeoff of \ours{} can be regulated by a reinforcement learning parameter that directly affects both quantities. However, as in some deployments, a certain sparsity has to be minimally achieved to limit the computational expense, we also develop a steering system that adapts the tradeoff parameter in a closed control loop. In this way the given budget of computation power is not exceeded.
 
-To make \ours{} as lightweight as possible, our implementation allows to let the sampling and the classifier to be implemented in the same neural network, meaning that no overhead is introduced. With this option disabled, the computational power required is $2\times$ what would be required without the sampling. Thus, for this option, less than $50\%$ of packets must be sampled to gain a computational efficiency advantage. Fortunately, we can show that with shared weights the same accuracy can be achieved while having no computational overhead.  
+To make \ours{} as lightweight as possible, our implementation allows to let the sampling and the classifier be implemented in the same neural network, meaning that no overhead is introduced. With this option disabled, the computational power required is $2\times$ of what would be required without the sampling. Thus, for this option, less than $50\%$ of packets must be sampled to gain a computational efficiency advantage. Fortunately, we can show that with shared weights the same accuracy can be achieved while having no computational overhead.  
 
 To encourage reproducibility and facilitate experimentation, we publicly release the source code, the trained ML models, the data and the figures of this work\footnote{\url{https://github.com/CN-TU/adversarial-recurrent-ids/tree/rl}}.
 
@@ -479,7 +479,7 @@ We use Z-score normalization and a train/test split of 2:1. To speed up experime
 \end{figure}
 
 %The results of the sampling part are discussed in this section.
-We study the effect of the sparsity-accuracy tradeoff first, then we evaluate both discrete and continuous actions and, finally, we compare our results with other sampling techniques. Overall, sampling based on \gls{rl} reveals that a high number of packets can be skipped while maintaining good accuracy. Then, we inspect how the \gls{rl} chooses packets and show that certain patterns can be spotted.
+%We study the effect of the sparsity-accuracy tradeoff first, then we evaluate both discrete and continuous actions, finally, we compare our results with other sampling techniques. Overall, sampling based on \gls{rl} reveals that a high number of packets can be skipped while maintaining good accuracy. Then, we inspect how the \gls{rl} chooses packets and show that certain patterns can be spotted.
 
 For all our experiments we train our neural networks for 8 epochs ($>10$ million flows) with the Adam optimizer with a learning rate of $0.001$. An important implementation detail is that we always start with the first packet of a flow, meaning that it cannot be skipped. Also, we set the entropy parameter to $0.01$. 
 \autoref{fig:training} shows how, during training, accuracy increases quickly at the beginning and then gradually afterwards. At the same time, sparsity gets higher as the \gls{rl} learns which packets can be skipped since they do not influence classification performance. %We then evaluate the resulting neural networks on the test dataset. 
@@ -561,7 +561,7 @@ Youden & \textbf{98.5\%} & 97.8\% \\
 
 \begin{table}[h]
 % XXX: Max: Without the vspace, the table violates the margins. WTF!!!
-\vspace{0.075in}
+%\vspace{0.075in}
 \caption{Comparing classification metrics per flow between \gls{rl}-based sampling with continuous actions (tradeoff 0.1) and alternative strategies.}
 \label{tab:results_others}
 \centering
@@ -599,7 +599,7 @@ Next we compared the \gls{rl} technique used by \ours{} with several common samp
 \subsection{Shared weights}
 \begin{table}[h]
 %% XXX: Max: Without the vspace, the table violates the margins. WTF!!!
-%\vspace{0.075in}
+\vspace{0.075in}
 %\parbox{.45\linewidth}{
 \caption{Using shared weights for all components of \ours{} resulting in no overhead in deployment compared to a classifier without our \gls{rl} framework.} \label{tab:results_shared}
 \centering
@@ -615,7 +615,9 @@ Youden & \textbf{98.4\%} & 97.9\% & 98.2\% & 96.6\% \\
 \end{tabular*}
 %}
 \end{table}
-\autoref{tab:results_shared} shows that when sharing the neural network weights of the classifier, the actor and the critic, \ours{} achieves the same very high accuracy as in the case in which all every component has its own weights (\autoref{tab:results_tradeoff}). The achieved sparsity is even higher when using separate weights. One explanation for this might be that sharing weights has a regularizing effect. With shared weights, the \gls{rl} mechanism adds no computational complexity since all the operations in the neural network are the same for the actor and the classifier (the critic is not needed during deployment). The only part that is not shared is the last linear layer, which connects the last LSTM layer with the outputs.
+\autoref{tab:results_shared} shows that when sharing the neural network weights of the classifier, the actor and the critic, \ours{} achieves the same very high accuracy as in the case in which all every component has its own weights (\autoref{tab:results_tradeoff}). The achieved sparsity is even higher when using separate weights. One explanation for this might be that sharing weights has a regularizing effect. 
+
+With shared weights, the \gls{rl} mechanism adds no computational complexity since all the operations in the neural network are the same for the actor and the classifier (the critic is not needed during deployment). The only part that is not shared is the last linear layer, which connects the last LSTM layer with the outputs.
 
 \subsection{Inspecting the \gls{rl}'s behavior}
 \label{subsec:inspecting}
@@ -675,7 +677,7 @@ In this paper we aimed to develop smart packet sampling methods for the use case
 
 Besides discrete actions for our \gls{rl} system we also implemented continuous ones. We showed that a naive implementation would not work as the training is too fragile in the beginning and the \gls{rl} system learned to maximize only one of the rewards (sparsity) in the beginning. This was solved by adding a penalty for jumping behind the end of the sequence which proved effective. Comparing with discrete actions, continuous actions seem to perform slightly better given the same training time. Additionally it is also an advantage that for continuous actions the neural network only needs to have two outputs (mean and standard deviation) while for discrete ones it needs as many outputs as there are actions. The continuous action framework is thus more lightweight and also can learn to skip arbitrarily many packets.
 
-We show that using a shared neural network for both the \gls{ids} as well as the sampling can achieve the same classification accuracy and sparsity while not resulting in any computational overhead during deployment. 
+We showed that using a shared neural network for both the \gls{ids} as well as the sampling can achieve the same classification accuracy and sparsity while not resulting in any computational overhead during deployment. 
 
 Inspecting the decisions of our \gls{rl} framework showed that the sampling strategy is clearly different for different attack strategies and also within some attack families, indicating that \ours{} indeed adopts different sampling strategies for different conversation flows.
 
