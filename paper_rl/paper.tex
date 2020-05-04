@@ -22,6 +22,7 @@
 %% in the same archive or directory.)
 %%
 %% The first command in your LaTeX source must be the \documentclass command.
+\newcommand{\CLASSINPUTtoptextmargin}{0.8in}
 \documentclass[conference]{IEEEtran}
 %% IEEE CNS addition:
 \makeatletter
@@ -38,7 +39,8 @@
 \usepackage[inline]{enumitem}
 \usepackage{xcolor}
 \usepackage{booktabs}
-\usepackage{hyperref}
+% Use the draft option of hyperref for IEEE compliance
+\usepackage[draft]{hyperref}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{graphicx}
@@ -257,6 +259,7 @@ For a flow of length $N$ at each packet $n$ we have two reward metrics which we 
 %\end{figure}
 
 \begin{figure*}
+
 \centering
   \includegraphics[width=0.8\textwidth]{img/rewards_calc_example.pdf}
   \caption{The computation of the rewards for a sample malicious flow: Gray packets (0) are skipped while black ones (1) are chosen. ``\#Skipped\//\#Total'' (number of packets skipped with respect to the total number of packets both starting from the current position) and ``Confidence'' are the underlying parameters for rewards calculations (see \autoref{eq:R_classification} and \autoref{eq:R_sparsity}). Numbers are rounded to two digits after the decimal point.}
@@ -599,7 +602,7 @@ Next we compared the \gls{rl} technique used by \ours{} with several common samp
 \subsection{Shared weights}
 \begin{table}[h]
 %% XXX: Max: Without the vspace, the table violates the margins. WTF!!!
-\vspace{0.075in}
+%\vspace{0.075in}
 %\parbox{.45\linewidth}{
 \caption{Using shared weights for all components of \ours{} resulting in no overhead in deployment compared to a classifier without our \gls{rl} framework.} \label{tab:results_shared}
 \centering
