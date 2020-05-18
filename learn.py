@@ -201,9 +201,8 @@ def train():
 	lstm_module.train()
 
 	if opt.rl:
-
-	train_indices, _ = get_nth_split(dataset, n_fold, fold)
-	train_data = torch.utils.data.Subset(dataset, train_indices)
+		train_indices, _ = get_nth_split(dataset, n_fold, fold)
+		train_data = torch.utils.data.Subset(dataset, train_indices)
 	if opt.advTraining:
 		train_data = AdvDataset(train_data)
 		adv_generator = adv_internal(in_training=True, iterations=10)
@@ -1563,7 +1562,7 @@ if __name__=="__main__":
 	parser.add_argument('--n_layers', type=int, default=3, help='number of LSTM layers')
 	parser.add_argument('--adjustFeatImpDistribution', action='store_true', help='adjust randomization feature importance distributions to a practically relevant shape')
 	parser.add_argument('--skipArsDistanceCheck', action='store_true', help='stop ARS computation as soon as 50% theshold is reached')
-	parser.add_argument('--rl', required=True, help='do RL')
+	parser.add_argument('--rl', required=False, help='do RL')
 	parser.add_argument('--lookaheadSteps', type=int, default=8, help='number of steps to look into the future for RL')
 
 	# parser.add_argument('--nSamples', type=int, default=1, help='number of items to sample for the feature importance metric')
