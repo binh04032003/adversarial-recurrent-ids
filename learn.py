@@ -200,9 +200,8 @@ def train():
 	fold = opt.fold
 	lstm_module.train()
 
-	if opt.rl:
-		train_indices, _ = get_nth_split(dataset, n_fold, fold)
-		train_data = torch.utils.data.Subset(dataset, train_indices)
+	train_indices, _ = get_nth_split(dataset, n_fold, fold)
+	train_data = torch.utils.data.Subset(dataset, train_indices)
 	if opt.advTraining:
 		train_data = AdvDataset(train_data)
 		adv_generator = adv_internal(in_training=True, iterations=10)
@@ -1539,7 +1538,6 @@ if __name__=="__main__":
 	parser.add_argument('--nFold', type=int, default=3, help='total number of folds')
 	parser.add_argument('--batchSize', type=int, default=128, help='input batch size')
 	parser.add_argument('--net', default='', help="path to net (to continue training)")
-	parser.add_argument('--net_rl', default='', help="path to net (to continue training) for RL")
 	parser.add_argument('--function', default='train', help='the function that is going to be called')
 	parser.add_argument('--manualSeed', default=0, type=int, help='manual seed')
 	parser.add_argument('--maxLength', type=int, default=100, help='max length')
@@ -1562,8 +1560,6 @@ if __name__=="__main__":
 	parser.add_argument('--n_layers', type=int, default=3, help='number of LSTM layers')
 	parser.add_argument('--adjustFeatImpDistribution', action='store_true', help='adjust randomization feature importance distributions to a practically relevant shape')
 	parser.add_argument('--skipArsDistanceCheck', action='store_true', help='stop ARS computation as soon as 50% theshold is reached')
-	parser.add_argument('--rl', required=False, help='do RL')
-	parser.add_argument('--lookaheadSteps', type=int, default=8, help='number of steps to look into the future for RL')
 
 	# parser.add_argument('--nSamples', type=int, default=1, help='number of items to sample for the feature importance metric')
 
@@ -1621,12 +1617,5 @@ if __name__=="__main__":
 	if opt.net != '':
 		print("Loading", opt.net)
 		lstm_module.load_state_dict(torch.load(opt.net, map_location=device))
-
-	if opt.rl:
-		lstm_module_rl = OurLSTMModule(x[0].shape[-1], opt.lookaheadSteps, opt.hidden_size, opt.n_layers, batchSize, device).to(device)
-
-		if opt.net_rl != '':
-			print("Loading", opt.net_rl)
-			lstm_module_rl.load_state_dict(torch.load(opt.net_rl, map_location=device))
 
 	globals()[opt.function]()
