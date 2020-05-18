@@ -40,12 +40,13 @@
 \usepackage{xcolor}
 \usepackage{booktabs}
 % Use the draft option of hyperref for IEEE compliance
-\usepackage[draft]{hyperref}
+\usepackage{hyperref}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{graphicx}
 \usepackage[numbers]{natbib}
 \usepackage{subfig}
+\usepackage{tikz}
 
 \usepackage[nomain, toc, acronym]{glossaries}
 \glsdisablehyper
@@ -90,7 +91,20 @@ firstname.lastname@tuwien.ac.at}}
 
 % \renewcommand*{\bibfont}{\footnotesize}
 
+\newcommand\copyrighttext{%
+  \footnotesize \textcopyright 2020 IEEE. Personal use of this material is permitted.
+  Permission from IEEE must be obtained for all other uses, in any current or future
+  media, including reprinting/republishing this material for advertising or promotional
+  purposes, creating new collective works, for resale or redistribution to servers or
+  lists, or reuse of any copyrighted component of this work in other works.}
+\newcommand\copyrightnotice{%
+\begin{tikzpicture}[remember picture,overlay]
+\node[anchor=south,yshift=10pt] at (current page.south) {\fbox{\parbox{\dimexpr\textwidth-\fboxsep-\fboxrule\relax}{\copyrighttext}}};
+\end{tikzpicture}%
+}
+
 \maketitle%
+\copyrightnotice
 
 %\thispagestyle{plain}
 %\pagestyle{plain}
