@@ -1,0 +1,88 @@
+%
+% Beispieldokument für TU beamer theme
+%
+% v1.0: 12.10.2014
+% 
+\documentclass[xcolor={dvipsnames}]{beamer}
+\usetheme{TU}
+
+\title{SparseIDS: Learning Packet Sampling with Reinforcement Learning}
+
+\author[Maximilian Bachl]{%
+	Maximilian Bachl\email{maximilian.bachl@tuwien.ac.at} \and Fares Meghdouri\email{fares.meghdouri@tuwien.ac.at} \and Tanja Zseby\email{tanja.zseby@tuwien.ac.at} \and Joachim Fabini\email{joachim.fabini@tuwien.ac.at}
+}
+
+\institute{%
+	Technische Universität Wien, Vienna, Austria
+}
+
+%\session{XXXX \#}
+
+%Kann angepasst werden, wie es beliebt. Entweder das Datum der Präsentation oder das Datum der aktuellen Präsentations-Version.
+%\date[\the\day.\the\month.\the\year]{\today}
+\date[July 1, 2020]{July 1, 2020}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+\begin{frame}{Recurrent Neural Networks (RNNs)}
+\begin{itemize}
+\item RNNs are neural networks for \textbf{sequences}
+\item Good performance for network traffic (\textit{Explainability and Adversarial Robustness for RNNs}, Hartl, Bachl, Fabini, Zseby, 2020) with \textbf{supervised} training
+\item Can detect intrusion \textbf{before} attack is over
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Sampling for RNNs}
+\begin{itemize}
+\item Processing every packet by a neural network is \textbf{resource-intensive}
+\item Often, attack is apparent after the first packets of a flow $\rightarrow$ not \textbf{necessary} to continue inspecting packets
+\item Some packets might contain \textbf{no information} that is useful for classification
+\end{itemize}
+
+\pause
+\begin{block}{Insight:}
+Only process packets if the are useful for the classifier! 
+\end{block}
+
+\end{frame}
+
+\section{Concept}
+
+\begin{frame}{Defining the goal}
+Classifier should
+\begin{itemize}
+\item be \textbf{reasonably accurate}
+\item \textbf{skip} packets if they \textbf{don't provide substantial benefit}
+\end{itemize}
+
+\pause
+\begin{block}{Insight:}
+Specify tradeoff between accuracy/sparsity 
+\end{block}
+
+\end{frame}
+
+\begin{frame}{Defining the goal}
+Optimize
+\begin{align*}
+\text{Objective} = \text{Accuracy} + \alpha \times \text{Sparsity}
+\end{align*}
+\end{frame}
+
+\begin{frame}{Neural Network architecture}
+
+\centering
+\includegraphics[width=0.6\columnwidth]{{neural_network}.pdf}
+
+\end{frame}
+
+% -------------
+% Last page
+% -------------
+\makelastslide
+
+\end{document}
