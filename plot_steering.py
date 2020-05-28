@@ -41,7 +41,7 @@ ax2 = ax1.twinx()
 
 lines += ax2.plot(x, tradeoffs_sampling_rl, color=colors[1])
 # plt.legend(lines, ["Sparsity", "Tradeoff"], loc='upper right')
-ax2.set_ylabel('Tradeoff')
+ax2.set_ylabel(r'Tradeoff $\alpha$')
 ax1.set_ylabel_legend(lines[0])
 ax2.set_ylabel_legend(lines[1])
 
