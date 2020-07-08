@@ -65,15 +65,15 @@
 \includegraphics[width=\columnwidth]{figures/ids.pdf}
 \end{frame}
 
-\section{Intrusion Detection using RNNs}
-\begin{frame}{Intrusion Detection using RNNs}
+\section{An RNN for Intrusion Detection}
+\begin{frame}{Using a Recurrent Neural Network}
 \begin{itemize}
 \item Detect attacks before they are over
 \item Classifier obtains all available information
 \end{itemize}
 \vspace{10pt}
 \centering
-\includegraphics[width=0.7\columnwidth]{figures/rnn.pdf}
+\includegraphics[width=0.8\columnwidth]{figures/rnn.pdf}
 \end{frame}
 
 
@@ -115,11 +115,11 @@
 
 \begin{frame}{Finding Adversarial Samples}
 \begin{itemize}
-\item Carlini-Wagner {\footnotesize ($X$...orig. sample, $Z$...logit output, $\kappa,\delta$...parameters) \hspace*{-1cm} }
+\item Carlini-Wagner {\footnotesize ($X$...orig.~sample; $Z$...logit output; $\kappa,\delta$...parameters) \hspace*{-1cm} }
 \begin{equation*} \label{eq:carliniWagner}
 \argmin_{\tilde X}d(X,\tilde X) + \kappa  \max(Z(\tilde X), \delta)
 \end{equation*}
-\item FGSM {\footnotesize ($L$...neural network loss, $\epsilon$...parameter) }
+\item FGSM {\footnotesize ($L$...neural network loss; $\epsilon$...parameter) }
 \begin{equation*}
 \tilde X = X + \epsilon \, \text{sgn}( \nabla_X L(X))
 \end{equation*}
@@ -138,7 +138,7 @@
 \begin{frame}{The Adversarial Robustness Score}
 \begin{itemize}
 \item Quantify ease of generating adversarial samples
-\item Carlini-Wagner {\footnotesize ($X$...orig. sample, $Z$...logit output, $\kappa,\delta$...parameters) \hspace*{-1cm} }
+\item Carlini-Wagner {\footnotesize ($X$...orig.~sample; $Z$...logit output; $\kappa,\delta$...parameters) \hspace*{-1cm} }
 \begin{equation*} \label{eq:carliniWagner}
 \argmin_{\tilde X} d(X,\tilde X) + \kappa  \max(Z(\tilde X), \delta)
 \end{equation*}
@@ -208,8 +208,8 @@ How fast does RNN come to a decision?
 \begin{itemize}
 \item Omit manipulable features
 \begin{itemize}
-\item Either all packet lengths and IATs
-\item or just in one direction
+\item Either omit all packet lengths and IATs
+\item or retain features in non-manipulable direction
 \end{itemize}
 $\rightarrow$ Surprisingly good accuracy \vspace{10pt}
 \item Adversarial Training
@@ -226,12 +226,12 @@ $\rightarrow$ Surprisingly good accuracy \vspace{10pt}
 \item Adversarial ML algorithms work
 \begin{itemize}
 \item Defenses work, too
-\item ARS for quantifying robustness
+\item \textit{Adversarial Robustness Score} for quantifying robustness
 \end{itemize}
 \item Explainability
 \begin{itemize}
 \item Feature importance and sensitivity, dependent on purpose 
-\item Visualization, e.g. sequential PDPs
+\item Visualization\\$\rightarrow$ e.g. \textit{sequential Partial Dependence Plots}
 \item Find packets which are characteristic for attack
 \end{itemize}
 \end{itemize}
