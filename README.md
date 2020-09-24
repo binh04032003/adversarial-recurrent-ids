@@ -13,7 +13,7 @@ We use two datasets in the paper: CIC-IDS-2017 and UNSW-NB-15. The repository co
 Proceed analogously for ```flows15.pickle```. 
 
 If you want to produce the preprocessed files yourself: 
-* Follow the information on how to reproduce the preprocessed datasets in the [Datasets-preprocessing](https://github.com/CN-TU/Datasets-preprocessing) repository.
+* Follow the information on how to reproduce the preprocessed datasets in the [Datasets-preprocessing](https://github.com/CN-TU/Datasets-preprocessing) repository to generate labeled data for the `packet` feature vector.
 * Run the ```parse.py``` script on the resulting ```.csv``` file to get the final ```.pickle``` file. 
 
 # Usage examples
