@@ -1,7 +1,9 @@
 # adversarial-recurrent-ids
 Contact: Alexander Hartl, Maximilian Bachl. 
 
-This repository contains the code and the figures for the [upcoming paper](https://arxiv.org/abs/1912.09855) dealing with Explainability and Adversarial Robustness for RNNs. We perform our study in the context of Intrusion Detection Systems.
+This repository contains the code and the figures for the [paper](https://ieeexplore.ieee.org/abstract/document/9179605) ([arXiv](https://arxiv.org/abs/1912.09855)) dealing with Explainability and Adversarial Robustness for RNNs. We perform our study in the context of Intrusion Detection Systems.
+
+For the code of the *SparseIDS* paper please check out the *rl* branch. 
 
 # Datasets
 We use two datasets in the paper: CIC-IDS-2017 and UNSW-NB-15. The repository contains a preprocessed version of the datasets (refer to the paper for more information). 
