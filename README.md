@@ -1,7 +1,7 @@
 # SparseIDS: Learning Packet Sampling with Reinforcement Learning
 Contact: Maximilian Bachl, Fares Meghdouri
 
-This repository contains the code, the data and the machine learning models for our upcoming paper called *SparseIDS: Learning Packet Sampling with Reinforcement Learning*.
+This repository contains the code, the data and the machine learning models for our paper called [*SparseIDS: Learning Packet Sampling with Reinforcement Learning*](https://ieeexplore.ieee.org/document/9162253).
 
 # Dataset
 We use the CIC-IDS-2017 dataset. The repository contains a preprocessed version of the dataset (refer to the paper for more information). 
