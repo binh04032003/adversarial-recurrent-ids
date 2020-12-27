@@ -10,6 +10,12 @@ import random
 import time
 from functools import reduce
 from tqdm import tqdm
+import sklearn
+import sklearn.tree
+import gzip
+import socket
+
+from datetime import datetime
 
 import collections
 import itertools
@@ -1529,6 +1535,64 @@ def overwrite_manipulable_entries(seq, filler=-1):
 		seq[wrong_direction,:][:,3:5] = filler
 		return seq
 
+MULTIPLIER = 2**16
+
+def get_logdir(fold, n_fold):
+	return os.path.join('runs', current_time + '_' + socket.gethostname() + "_" + str(fold) +"_"+str(n_fold))
+
+def train_dt():
+
+	n_fold = opt.nFold
+	fold = opt.fold
+
+	train_indices, test_indices = get_nth_split(dataset, n_fold, fold)
+	train_data = torch.utils.data.Subset(dataset, train_indices)
+
+	data_list = []
+	for item in train_data:
+		data_list.append(item)
+
+	new_dataset = []
+
+	for item, y, _ in data_list:
+		item = item.numpy()
+		y = y.numpy()
+
+		average = np.zeros(3)
+		deviation = np.zeros(3)
+		for i in range(item.shape[0]):
+			current_vector = item[i,:6] * MULTIPLIER
+
+			average += current_vector[3:]
+			current_average = average/(i+1)
+
+			deviation += np.abs(current_vector[3:]-current_average)
+			current_deviation = deviation/(i+1)
+
+			final_vector = np.concatenate((current_vector, current_average, current_deviation))
+		new_dataset.append((final_vector, y[0]))
+
+	dt = sklearn.tree.DecisionTreeClassifier(max_depth=10, max_leaf_nodes=1000)
+
+	final_x, final_y = zip(*new_dataset)
+	dt.fit(final_x, final_y)
+
+	# import pdb; pdb.set_trace()
+
+	with open('%s_childrenLeft' % get_logdir(opt.fold, opt.nFold), 'wb') as f:
+		dt.tree_.children_left.tofile(f)
+	with open('%s_childrenRight' % get_logdir(opt.fold, opt.nFold), 'wb') as f:
+		dt.tree_.children_right.tofile(f)
+	with open('%s_value' % get_logdir(opt.fold, opt.nFold), 'wb') as f:
+		dt.tree_.value.argmax(axis=1).tofile(f)
+	with open('%s_feature' % get_logdir(opt.fold, opt.nFold), 'wb') as f:
+		dt.tree_.feature.tofile(f)
+	with open('%s_threshold' % get_logdir(opt.fold, opt.nFold), 'wb') as f:
+		dt.tree_.threshold.round().astype(np.int64).tofile(f)
+
+	with gzip.open('%s.dtmodel.gz' % get_logdir(opt.fold, opt.nFold), 'wb') as f:
+		pickle.dump(dt, f)
+
 if __name__=="__main__":
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--canManipulateBothDirections', action='store_true', help='if the attacker can change packets in both directions of the flow')
@@ -1562,6 +1626,8 @@ if __name__=="__main__":
 	parser.add_argument('--skipArsDistanceCheck', action='store_true', help='stop ARS computation as soon as 50% theshold is reached')
 
 	# parser.add_argument('--nSamples', type=int, default=1, help='number of items to sample for the feature importance metric')
+
+	current_time = datetime.now().strftime('%b%d_%H-%M-%S')
 
 	opt = parser.parse_args()
 	print(opt)
@@ -1601,21 +1667,24 @@ if __name__=="__main__":
 		file_name = opt.normalizationData
 		with open(file_name, "rb") as f:
 			means, stds = pickle.load(f)
-	assert means.shape[0] == x[0].shape[-1], "means.shape: {}, x.shape: {}".format(means.shape, x[0].shape)
-	assert stds.shape[0] == x[0].shape[-1], "stds.shape: {}, x.shape: {}".format(stds.shape, x[0].shape)
-	assert not (stds==0).any(), "stds: {}".format(stds)
-	x = [(item-means)/stds for item in x]
 
-	cuda_available = torch.cuda.is_available()
-	device = torch.device("cuda:0" if cuda_available else "cpu")
+	if not "dt" in opt.function:
+		assert means.shape[0] == x[0].shape[-1], "means.shape: {}, x.shape: {}".format(means.shape, x[0].shape)
+		assert stds.shape[0] == x[0].shape[-1], "stds.shape: {}, x.shape: {}".format(stds.shape, x[0].shape)
+		assert not (stds==0).any(), "stds: {}".format(stds)
+		x = [(item-means)/stds for item in x]
+
+		cuda_available = torch.cuda.is_available()
+		device = torch.device("cuda:0" if cuda_available else "cpu")
 
 	dataset = OurDataset(x, y, categories)
 
-	batchSize = 1 if opt.function == 'pred_plots' else opt.batchSize # FIXME Max: Why? What's wrong?
-	lstm_module = OurLSTMModule(x[0].shape[-1], y[0].shape[-1], opt.hidden_size, opt.n_layers, batchSize, device).to(device)
+	if not "dt" in opt.function:
+		batchSize = 1 if opt.function == 'pred_plots' else opt.batchSize # FIXME Max: Why? What's wrong?
+		lstm_module = OurLSTMModule(x[0].shape[-1], y[0].shape[-1], opt.hidden_size, opt.n_layers, batchSize, device).to(device)
 
-	if opt.net != '':
-		print("Loading", opt.net)
-		lstm_module.load_state_dict(torch.load(opt.net, map_location=device))
+		if opt.net != 'dt':
+			print("Loading", opt.net)
+			lstm_module.load_state_dict(torch.load(opt.net, map_location=device))
 
 	globals()[opt.function]()
