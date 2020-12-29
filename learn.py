@@ -1556,18 +1556,18 @@ def train_dt():
 
 	for item, y, _ in data_list:
 		item = item.numpy()
-		y = y.numpy()
+		y = y.numpy().astype(np.int64)
 
-		average = np.zeros(3)
-		deviation = np.zeros(3)
+		average = np.zeros(3, dtype=np.int64)
+		deviation = np.zeros(3, dtype=np.int64)
 		for i in range(item.shape[0]):
-			current_vector = item[i,:6] * MULTIPLIER
+			current_vector = item[i,:6].astype(np.int64) * MULTIPLIER
 
 			average += current_vector[3:]
-			current_average = average/(i+1)
+			current_average = (average/(i+1)).astype(np.int64)
 
 			deviation += np.abs(current_vector[3:]-current_average)
-			current_deviation = deviation/(i+1)
+			current_deviation = (deviation/(i+1)).astype(np.int64)
 
 			final_vector = np.concatenate((current_vector, current_average, current_deviation))
 		new_dataset.append((final_vector, y[0]))
@@ -1577,18 +1577,18 @@ def train_dt():
 	final_x, final_y = zip(*new_dataset)
 	dt.fit(final_x, final_y)
 
-	# import pdb; pdb.set_trace()
-
 	with open('%s_childrenLeft' % get_logdir(opt.fold, opt.nFold), 'wb') as f:
 		dt.tree_.children_left.tofile(f)
 	with open('%s_childrenRight' % get_logdir(opt.fold, opt.nFold), 'wb') as f:
 		dt.tree_.children_right.tofile(f)
 	with open('%s_value' % get_logdir(opt.fold, opt.nFold), 'wb') as f:
-		dt.tree_.value.argmax(axis=1).tofile(f)
+		dt.tree_.value.squeeze().argmax(axis=1).tofile(f)
 	with open('%s_feature' % get_logdir(opt.fold, opt.nFold), 'wb') as f:
 		dt.tree_.feature.tofile(f)
 	with open('%s_threshold' % get_logdir(opt.fold, opt.nFold), 'wb') as f:
 		dt.tree_.threshold.round().astype(np.int64).tofile(f)
+
+	# import pdb; pdb.set_trace()
 
 	with gzip.open('%s.dtmodel.gz' % get_logdir(opt.fold, opt.nFold), 'wb') as f:
 		pickle.dump(dt, f)
