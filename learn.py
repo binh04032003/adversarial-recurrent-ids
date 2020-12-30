@@ -1577,6 +1577,8 @@ def train_dt():
 	final_x, final_y = zip(*new_dataset)
 	dt.fit(final_x, final_y)
 
+	# import pdb; pdb.set_trace()
+
 	with open('%s_childrenLeft' % get_logdir(opt.fold, opt.nFold), 'wb') as f:
 		dt.tree_.children_left.tofile(f)
 	with open('%s_childrenRight' % get_logdir(opt.fold, opt.nFold), 'wb') as f:
@@ -1587,8 +1589,6 @@ def train_dt():
 		dt.tree_.feature.tofile(f)
 	with open('%s_threshold' % get_logdir(opt.fold, opt.nFold), 'wb') as f:
 		dt.tree_.threshold.round().astype(np.int64).tofile(f)
-
-	# import pdb; pdb.set_trace()
 
 	with gzip.open('%s.dtmodel.gz' % get_logdir(opt.fold, opt.nFold), 'wb') as f:
 		pickle.dump(dt, f)
