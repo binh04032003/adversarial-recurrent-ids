@@ -1540,16 +1540,10 @@ MULTIPLIER = 2**16
 def get_logdir(fold, n_fold):
 	return os.path.join('runs', current_time + '_' + socket.gethostname() + "_" + str(fold) +"_"+str(n_fold))
 
-def train_dt():
-
-	n_fold = opt.nFold
-	fold = opt.fold
-
-	train_indices, test_indices = get_nth_split(dataset, n_fold, fold)
-	train_data = torch.utils.data.Subset(dataset, train_indices)
+def get_dataset(data):
 
 	data_list = []
-	for item in train_data:
+	for item in data:
 		data_list.append(item)
 
 	new_dataset = []
@@ -1571,11 +1565,28 @@ def train_dt():
 
 			final_vector = np.concatenate((current_vector, current_average, current_deviation))
 		new_dataset.append((final_vector, y[0]))
+	return new_dataset
+
+def train_dt():
+
+	n_fold = opt.nFold
+	fold = opt.fold
+
+	train_indices, test_indices = get_nth_split(dataset, n_fold, fold)
+	train_data = torch.utils.data.Subset(dataset, train_indices)
+	test_data = torch.utils.data.Subset(dataset, test_indices)
+
+	new_dataset_train, new_dataset_test = get_dataset(train_data), get_dataset(test_data)
 
 	dt = sklearn.tree.DecisionTreeClassifier(max_depth=10, max_leaf_nodes=1000)
 
-	final_x, final_y = zip(*new_dataset)
+	final_x, final_y = zip(*new_dataset_train)
 	dt.fit(final_x, final_y)
+
+	final_x_test, final_y_test = zip(*new_dataset_test)
+
+	predictions = dt.predict(final_x_test)
+	output_scores(final_y_test, predictions)
 
 	# import pdb; pdb.set_trace()
 
