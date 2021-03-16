@@ -1590,18 +1590,20 @@ def train_dt():
 
 	# import pdb; pdb.set_trace()
 
-	with open('%s_childrenLeft' % get_logdir(opt.fold, opt.nFold), 'wb') as f:
+	current_logdir = get_logdir(opt.fold, opt.nFold)
+	os.makedirs(current_logdir, exist_ok=True)
+	with open('%s/childrenLeft' % current_logdir, 'wb') as f:
 		dt.tree_.children_left.tofile(f)
-	with open('%s_childrenRight' % get_logdir(opt.fold, opt.nFold), 'wb') as f:
+	with open('%s/childrenRight' % current_logdir, 'wb') as f:
 		dt.tree_.children_right.tofile(f)
-	with open('%s_value' % get_logdir(opt.fold, opt.nFold), 'wb') as f:
+	with open('%s/value' % current_logdir, 'wb') as f:
 		dt.tree_.value.squeeze().argmax(axis=1).tofile(f)
-	with open('%s_feature' % get_logdir(opt.fold, opt.nFold), 'wb') as f:
+	with open('%s/feature' % current_logdir, 'wb') as f:
 		dt.tree_.feature.tofile(f)
-	with open('%s_threshold' % get_logdir(opt.fold, opt.nFold), 'wb') as f:
+	with open('%s/threshold' % current_logdir, 'wb') as f:
 		dt.tree_.threshold.round().astype(np.int64).tofile(f)
 
-	with gzip.open('%s.dtmodel.gz' % get_logdir(opt.fold, opt.nFold), 'wb') as f:
+	with gzip.open('%s.dtmodel.gz' % current_logdir, 'wb') as f:
 		pickle.dump(dt, f)
 
 if __name__=="__main__":
